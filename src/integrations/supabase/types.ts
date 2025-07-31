@@ -14,13 +14,226 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      order_comments: {
+        Row: {
+          attachments: Json | null
+          comment: string
+          created_at: string
+          id: string
+          is_internal: boolean | null
+          order_id: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          comment: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          order_id: string
+          user_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          comment?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          order_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_comments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_history: {
+        Row: {
+          comment: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          order_id: string
+          to_status: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          order_id: string
+          to_status: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          order_id?: string
+          to_status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          active: boolean | null
+          avatar_url: string | null
+          created_at: string
+          department: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          avatar_url?: string | null
+          created_at?: string
+          department?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          avatar_url?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_orders: {
+        Row: {
+          actual_hours: number | null
+          assigned_to: string | null
+          attachments: Json | null
+          category: string
+          completed_at: string | null
+          cost: number | null
+          created_at: string
+          description: string
+          due_date: string | null
+          estimated_hours: number | null
+          id: string
+          location: string | null
+          order_number: string
+          priority: string
+          requester_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_hours?: number | null
+          assigned_to?: string | null
+          attachments?: Json | null
+          category: string
+          completed_at?: string | null
+          cost?: number | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          estimated_hours?: number | null
+          id?: string
+          location?: string | null
+          order_number: string
+          priority?: string
+          requester_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_hours?: number | null
+          assigned_to?: string | null
+          attachments?: Json | null
+          category?: string
+          completed_at?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          estimated_hours?: number | null
+          id?: string
+          location?: string | null
+          order_number?: string
+          priority?: string
+          requester_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
