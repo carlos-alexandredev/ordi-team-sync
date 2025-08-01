@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/navigation/Sidebar";
-import { TopBar } from "@/components/navigation/TopBar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -21,7 +21,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -187,26 +186,32 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Import components */}
-      <Sidebar 
-        userRole={userProfile?.role || 'cliente_final'} 
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
-      
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar 
-          userProfile={userProfile}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar 
+          userRole={userProfile?.role || 'cliente_final'} 
           onSignOut={handleSignOut}
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        
+        <div className="flex-1 flex flex-col">
+          <header className="h-12 flex items-center border-b px-4">
+            <SidebarTrigger />
+            <div className="ml-4 flex-1">
+              <span className="text-sm text-muted-foreground">
+                Bem-vindo, {userProfile?.name || "Usuário"} - 
+                {userProfile?.role === 'admin' ? ' Administrador' : 
+                 userProfile?.role === 'admin_cliente' ? ' Admin Cliente' :
+                 userProfile?.role === 'tecnico' ? ' Técnico' : ' Cliente Final'}
+              </span>
+            </div>
+          </header>
+          
+          <main className="flex-1 overflow-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
 
