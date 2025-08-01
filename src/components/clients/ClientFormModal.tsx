@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
   id: string;
@@ -25,56 +30,179 @@ interface ClientFormModalProps {
   companies: Company[];
 }
 
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  company_id: string;
+  active: boolean;
+}
+
 export function ClientFormModal({ open, onClose, client, companies }: ClientFormModalProps) {
-  console.log("ClientFormModal render - open:", open, "client:", client, "companies:", companies);
-  
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    phone: "",
+    company_id: "",
+    active: true,
+  });
 
   useEffect(() => {
-    console.log("ClientFormModal useEffect - modal opened:", open, "client data:", client);
-  }, [client, open]);
+    if (open && client) {
+      setFormData({
+        name: client.name || "",
+        email: client.email || "",
+        phone: client.phone || "",
+        company_id: client.company_id || "",
+        active: client.active,
+      });
+    } else if (open && !client) {
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        company_id: "",
+        active: true,
+      });
+    }
+  }, [open, client]);
 
-  console.log("ClientFormModal render start - open:", open);
-  
-  if (!open) {
-    console.log("Modal não está aberto, retornando null");
-    return null;
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    console.log("Tentando renderizar o modal...");
-    return (
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {client ? "Editar Cliente" : "Novo Cliente"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="p-4 space-y-4">
-            <p className="text-green-600 font-semibold">✅ Modal está funcionando!</p>
-            <p>Cliente: {client ? client.name : 'Novo'}</p>
-            <p>Empresas disponíveis: {companies?.length || 0}</p>
-            <Button onClick={onClose} className="w-full">
-              Fechar Modal
+    try {
+      if (client) {
+        // Update existing client
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            name: formData.name,
+            phone: formData.phone,
+            company_id: formData.company_id || null,
+            active: formData.active,
+          })
+          .eq("user_id", client.user_id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Cliente atualizado",
+          description: "As informações do cliente foram atualizadas com sucesso.",
+        });
+      } else {
+        // Create new client - this would require auth signup
+        toast({
+          title: "Funcionalidade em desenvolvimento",
+          description: "A criação de novos clientes será implementada em breve.",
+          variant: "destructive",
+        });
+      }
+
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao salvar cliente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {client ? "Editar Cliente" : "Novo Cliente"}
+          </DialogTitle>
+          <DialogDescription>
+            {client ? "Atualize as informações do cliente." : "Adicione um novo cliente ao sistema."}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              disabled={!!client}
+              required
+            />
+            {client && (
+              <p className="text-xs text-muted-foreground">
+                O email não pode ser alterado
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="company">Empresa</Label>
+            <Select 
+              value={formData.company_id} 
+              onValueChange={(value) => setFormData({ ...formData, company_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhuma empresa</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="active"
+              checked={formData.active}
+              onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+            />
+            <Label htmlFor="active">Cliente ativo</Label>
+          </div>
+
+          <div className="flex space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? "Salvando..." : "Salvar"}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    );
-  } catch (error: any) {
-    console.error("Erro no modal:", error);
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg">
-          <h2 className="text-red-600 font-bold">Erro no modal</h2>
-          <p>{error?.message || 'Erro desconhecido'}</p>
-          <Button onClick={onClose} className="mt-4">
-            Fechar
-          </Button>
-        </div>
-      </div>
-    );
-  }
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
