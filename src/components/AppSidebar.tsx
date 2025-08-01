@@ -92,7 +92,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const isExpanded = menuItems.some((item) => isActive(item.url));
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-sm font-semibold">
