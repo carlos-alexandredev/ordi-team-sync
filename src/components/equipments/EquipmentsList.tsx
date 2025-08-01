@@ -57,8 +57,8 @@ export const EquipmentsList: React.FC = () => {
         .from('equipments')
         .select(`
           *,
-          client_profile: profiles!equipments_client_id_fkey(name),
-          company: companies(name)
+          profiles!equipments_client_id_fkey(name),
+          companies(name)
         `)
         .order('created_at', { ascending: false });
 
@@ -232,7 +232,7 @@ export const EquipmentsList: React.FC = () => {
                     <TableCell>{equipment.model || '-'}</TableCell>
                     <TableCell>{equipment.serial_number || '-'}</TableCell>
                     <TableCell>{equipment.location || '-'}</TableCell>
-                    <TableCell>{equipment.client_profile?.name || '-'}</TableCell>
+                    <TableCell>{(equipment as any).profiles?.name || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusColor(equipment.status)}>
                         {equipment.status}

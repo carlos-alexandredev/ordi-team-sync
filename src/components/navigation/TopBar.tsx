@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -18,9 +17,9 @@ import {
   Settings, 
   LogOut, 
   Menu,
-  ChevronDown,
-  X
+  ChevronDown
 } from "lucide-react";
+import { GlobalSearch } from "./GlobalSearch";
 
 interface TopBarProps {
   userProfile: any;
@@ -68,42 +67,14 @@ export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps)
         {/* Right side - Search and Profile */}
         <div className="flex items-center gap-2 sm:gap-3 ml-auto">
           {/* Search */}
-          <div className="relative">
-            {isSearchOpen ? (
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar equipamentos, clientes, fornecedores..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 h-9 w-64 sm:w-80"
-                    autoFocus
-                  />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsSearchOpen(false);
-                    setSearchQuery("");
-                  }}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSearchOpen(true)}
-                className="h-8 w-8 p-0"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchOpen(true)}
+            className="h-8 w-8 p-0"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
 
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
@@ -163,6 +134,13 @@ export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps)
           </DropdownMenu>
         </div>
       </div>
+      
+      <GlobalSearch 
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+      />
     </header>
   );
 }
