@@ -133,11 +133,11 @@ export default function Dashboard() {
 
   return (
     <AuthLayout>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-4 sm:space-y-6">
       {/* Header Simplificado */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
             Bem-vindo, {userProfile?.name || "Usuário"}
           </p>
@@ -153,49 +153,61 @@ export default function Dashboard() {
 
       {/* Dashboard específico por tipo de usuário */}
       {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') ? (
-        <Tabs defaultValue="supervision" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-10">
-            <TabsTrigger value="supervision" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              Supervisão
+        <Tabs defaultValue="supervision" className="space-y-4 sm:space-y-6">
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="grid w-max grid-cols-10 min-w-full">
+              <TabsTrigger value="supervision" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                <BarChart className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Supervisão</span>
+                <span className="sm:hidden">Super</span>
+              </TabsTrigger>
+            <TabsTrigger value="sla" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">SLA & Alertas</span>
+              <span className="sm:hidden">SLA</span>
             </TabsTrigger>
-            <TabsTrigger value="sla" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              SLA & Alertas
+            <TabsTrigger value="reports" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+              <span className="sm:hidden">Rel</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Relatórios
+            <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Mapa</span>
+              <span className="sm:hidden">Map</span>
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Mapa
+            <TabsTrigger value="schedule" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Agenda</span>
+              <span className="sm:hidden">Age</span>
             </TabsTrigger>
-            <TabsTrigger value="schedule" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Agenda
+            <TabsTrigger value="evaluation" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Star className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Avaliações</span>
+              <span className="sm:hidden">Ava</span>
             </TabsTrigger>
-            <TabsTrigger value="evaluation" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              Avaliações
+            <TabsTrigger value="equipment-history" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Histórico</span>
+              <span className="sm:hidden">His</span>
             </TabsTrigger>
-            <TabsTrigger value="equipment-history" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Histórico
+            <TabsTrigger value="rbac" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">RBAC</span>
+              <span className="sm:hidden">RB</span>
             </TabsTrigger>
-            <TabsTrigger value="rbac" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              RBAC
+            <TabsTrigger value="admin-settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Config</span>
+              <span className="sm:hidden">Cfg</span>
             </TabsTrigger>
-            <TabsTrigger value="admin-settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Config
+            <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Visão Geral</span>
+              <span className="sm:hidden">Ger</span>
             </TabsTrigger>
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Visão Geral
-            </TabsTrigger>
-          </TabsList>
+            </TabsList>
+          </div>
 
           <TabsContent value="supervision">
             <SupervisorPanel />
@@ -235,14 +247,14 @@ export default function Dashboard() {
 
           <TabsContent value="overview">
             {/* Estatísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Ordens</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total de Ordens</CardTitle>
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.total}</div>
+                  <div className="text-lg sm:text-2xl font-bold">{stats.total}</div>
                 </CardContent>
               </Card>
               

@@ -117,7 +117,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md mx-4 sm:mx-auto">
         <DialogHeader>
           <DialogTitle>
             {client ? "Editar Cliente" : "Novo Cliente"}
