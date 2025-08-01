@@ -197,12 +197,12 @@ export function ClientsList() {
             
             <div className="space-y-2">
               <Label htmlFor="company-filter">Empresa</Label>
-              <Select value={companyFilter} onValueChange={setCompanyFilter}>
+              <Select value={companyFilter || "all"} onValueChange={(value) => setCompanyFilter(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todas as empresas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as empresas</SelectItem>
+                  <SelectItem value="all">Todas as empresas</SelectItem>
                   {companies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}
@@ -214,12 +214,12 @@ export function ClientsList() {
             
             <div className="space-y-2">
               <Label htmlFor="status-filter">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="active">Ativos</SelectItem>
                   <SelectItem value="inactive">Inativos</SelectItem>
                 </SelectContent>
