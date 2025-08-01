@@ -167,24 +167,24 @@ export function UsersList() {
           />
         </div>
         
-        <Select value={filterRole} onValueChange={setFilterRole}>
+        <Select value={filterRole || "all"} onValueChange={(value) => setFilterRole(value === "all" ? "" : value)}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por perfil" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os perfis</SelectItem>
+            <SelectItem value="all">Todos os perfis</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="tecnico">Técnico</SelectItem>
             <SelectItem value="cliente_final">Cliente Final</SelectItem>
           </SelectContent>
         </Select>
 
-        <Select value={filterCompany} onValueChange={setFilterCompany}>
+        <Select value={filterCompany || "all"} onValueChange={(value) => setFilterCompany(value === "all" ? "" : value)}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por empresa" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as empresas</SelectItem>
+            <SelectItem value="all">Todas as empresas</SelectItem>
             {companies.map((company) => (
               <SelectItem key={company.id} value={company.id}>
                 {company.name}
