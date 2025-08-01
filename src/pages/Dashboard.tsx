@@ -3,9 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings, Shield, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { SupervisorPanel } from "@/components/dashboard/SupervisorPanel";
+import { ExportTools } from "@/components/reports/ExportTools";
+import { SLAMonitor } from "@/components/sla/SLAMonitor";
 
 interface ServiceOrder {
   id: string;
@@ -132,6 +136,7 @@ export default function Dashboard() {
           {userProfile?.role && (
             <p className="text-sm text-muted-foreground">
               Perfil: {userProfile.role === 'admin' ? 'Administrador' : 
+                      userProfile.role === 'admin_cliente' ? 'Admin Cliente' :
                       userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
             </p>
           )}
@@ -246,100 +251,236 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Ordens</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Abertas</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.open}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Em Progresso</CardTitle>
-            <Clock className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{stats.in_progress}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Dashboard específico por tipo de usuário */}
+      {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') ? (
+        <Tabs defaultValue="supervision" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="supervision" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              Supervisão
+            </TabsTrigger>
+            <TabsTrigger value="sla" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              SLA & Alertas
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Relatórios
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Visão Geral
+            </TabsTrigger>
+          </TabsList>
 
-      {/* Lista de Ordens Recentes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ordens Recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {orders.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
-              <Button className="mt-4">
-                <Plus className="h-4 w-4 mr-2" />
-                Criar primeira ordem
-              </Button>
+          <TabsContent value="supervision">
+            <SupervisorPanel />
+          </TabsContent>
+
+          <TabsContent value="sla">
+            <SLAMonitor />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <ExportTools />
+          </TabsContent>
+
+          <TabsContent value="overview">
+            {/* Estatísticas */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total de Ordens</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.total}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Abertas</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">{stats.open}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Em Progresso</CardTitle>
+                  <Clock className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">{stats.in_progress}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+                </CardContent>
+              </Card>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{order.order_number}</span>
-                        <Badge variant={getPriorityColor(order.priority) as any}>
-                          {order.priority}
-                        </Badge>
-                        <Badge variant={getStatusColor(order.status) as any}>
-                          {order.status}
-                        </Badge>
-                      </div>
-                      <h3 className="font-medium">{order.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {order.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>Categoria: {order.category}</span>
-                        <span>Criado em: {formatDate(order.created_at)}</span>
-                        {order.due_date && (
-                          <span>Prazo: {formatDate(order.due_date)}</span>
-                        )}
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Ver Detalhes
+
+            {/* Lista de Ordens Recentes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Ordens Recentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
+                    <Button className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar primeira ordem
                     </Button>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{order.order_number}</span>
+                              <Badge variant={getPriorityColor(order.priority) as any}>
+                                {order.priority}
+                              </Badge>
+                              <Badge variant={getStatusColor(order.status) as any}>
+                                {order.status}
+                              </Badge>
+                            </div>
+                            <h3 className="font-medium">{order.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {order.description}
+                            </p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>Categoria: {order.category}</span>
+                              <span>Criado em: {formatDate(order.created_at)}</span>
+                              {order.due_date && (
+                                <span>Prazo: {formatDate(order.due_date)}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Ver Detalhes
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        // Dashboard para cliente final e técnicos (visão simples)
+        <>
+          {/* Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Ordens</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Abertas</CardTitle>
+                <AlertCircle className="h-4 w-4 text-destructive" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-destructive">{stats.open}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Em Progresso</CardTitle>
+                <Clock className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">{stats.in_progress}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Lista de Ordens Recentes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ordens Recentes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
+                  <Button className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar primeira ordem
+                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{order.order_number}</span>
+                            <Badge variant={getPriorityColor(order.priority) as any}>
+                              {order.priority}
+                            </Badge>
+                            <Badge variant={getStatusColor(order.status) as any}>
+                              {order.status}
+                            </Badge>
+                          </div>
+                          <h3 className="font-medium">{order.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {order.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>Categoria: {order.category}</span>
+                            <span>Criado em: {formatDate(order.created_at)}</span>
+                            {order.due_date && (
+                              <span>Prazo: {formatDate(order.due_date)}</span>
+                            )}
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
