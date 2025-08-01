@@ -15,6 +15,7 @@ import Technician from "./pages/Technician";
 import Reports from "./pages/Reports";
 import ClientPortal from "./pages/ClientPortal";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
+import Desk from "./pages/Desk";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/reports" element={<Reports />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/supervisor" element={<SupervisorDashboard />} />
+          <Route path="/desk" element={<Desk />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

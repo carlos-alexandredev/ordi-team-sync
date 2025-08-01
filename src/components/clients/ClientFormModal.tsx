@@ -114,15 +114,17 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
     try {
       if (client) {
         // Atualizar cliente existente - apenas o perfil
+        const updateData = {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || null,
+          company_id: formData.company_id || null,
+          active: formData.active,
+        };
+
         const { error } = await supabase
           .from("profiles")
-          .update({
-            name: formData.name.trim(),
-            email: formData.email.trim(),
-            phone: formData.phone.trim() || null,
-            company_id: formData.company_id || null,
-            active: formData.active,
-          })
+          .update(updateData)
           .eq("id", client.id);
 
         if (error) throw error;
@@ -153,16 +155,18 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
         // Precisamos aguardar um pouco e depois atualizar com os dados específicos do cliente
         setTimeout(async () => {
           try {
+            const updateData = {
+              name: formData.name.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim() || null,
+              company_id: formData.company_id || null,
+              active: formData.active,
+              role: 'cliente_final',
+            };
+
             const { error: profileError } = await supabase
               .from("profiles")
-              .update({
-                name: formData.name.trim(),
-                email: formData.email.trim(),
-                phone: formData.phone.trim() || null,
-                company_id: formData.company_id || null,
-                active: formData.active,
-                role: 'cliente_final',
-              })
+              .update(updateData)
               .eq("user_id", authData.user.id);
 
             if (profileError) {
@@ -206,8 +210,8 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome *</Label>
               <Input
@@ -231,9 +235,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
                 disabled={!!client} // E-mail não pode ser alterado após criação
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input
@@ -246,12 +248,15 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
 
             <div className="space-y-2">
               <Label htmlFor="company_id">Empresa</Label>
-              <Select value={formData.company_id || "none"} onValueChange={(value) => setFormData({ ...formData, company_id: value === "none" ? "" : value })}>
+              <Select 
+                value={formData.company_id || ""} 
+                onValueChange={(value) => setFormData({ ...formData, company_id: value || null })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma empresa" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhuma empresa</SelectItem>
+                  <SelectItem value="">Nenhuma empresa</SelectItem>
                   {companies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}

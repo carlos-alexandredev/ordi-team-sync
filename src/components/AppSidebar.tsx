@@ -49,6 +49,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
     if (userRole === 'admin') {
       return [
         ...baseItems,
+        { title: "Desk", url: "/desk", icon: Settings },
         { title: "Usuários", url: "/users", icon: Users },
         { title: "Empresas", url: "/companies", icon: Building },
         { title: "Clientes", url: "/clients", icon: UserCheck },
@@ -63,6 +64,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
     if (userRole === 'admin_cliente') {
       return [
         ...baseItems,
+        { title: "Desk", url: "/desk", icon: Settings },
         { title: "Clientes", url: "/clients", icon: UserCheck },
         { title: "Chamados", url: "/calls", icon: FileText },
         { title: "Ordens", url: "/orders", icon: ClipboardList },
