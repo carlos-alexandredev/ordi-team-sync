@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -169,6 +169,12 @@ export default function Dashboard() {
                   Ordens
                 </Button>
               </Link>
+              <Link to="/equipments">
+                <Button variant="outline">
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Equipamentos
+                </Button>
+              </Link>
             </>
           )}
           {userProfile?.role === 'admin_cliente' && (
@@ -189,6 +195,12 @@ export default function Dashboard() {
                 <Button variant="outline">
                   <ClipboardList className="h-4 w-4 mr-2" />
                   Ordens
+                </Button>
+              </Link>
+              <Link to="/equipments">
+                <Button variant="outline">
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Equipamentos
                 </Button>
               </Link>
             </>

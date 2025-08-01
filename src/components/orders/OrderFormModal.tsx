@@ -10,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EquipmentSelector } from "./EquipmentSelector";
+import { TimeTracker } from "./TimeTracker";
 
 const orderSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -402,6 +404,24 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
                 </FormItem>
               )}
             />
+
+            {order && (
+              <div className="space-y-4">
+                <EquipmentSelector 
+                  orderId={order.id}
+                  clientId={order.client_id}
+                  selectedEquipments={[]}
+                  onSelectionChange={() => {}}
+                />
+                {order.technician_id && (
+                  <TimeTracker 
+                    orderId={order.id} 
+                    technicianId={order.technician_id}
+                    isReadOnly={form.watch('status') === 'concluída'}
+                  />
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end gap-3">
               <Button
