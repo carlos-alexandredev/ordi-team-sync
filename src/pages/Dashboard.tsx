@@ -5,7 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings, Shield, Download, MapPin, Calendar, Star } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings, Shield, Download, MapPin, Calendar, Star, ChevronDown, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { SupervisorPanel } from "@/components/dashboard/SupervisorPanel";
@@ -42,6 +50,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({ total: 0, open: 0, in_progress: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -153,99 +162,122 @@ export default function Dashboard() {
 
       {/* Dashboard específico por tipo de usuário */}
       {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') ? (
-        <Tabs defaultValue="supervision" className="space-y-4 sm:space-y-6">
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="grid w-max grid-cols-10 min-w-full">
-              <TabsTrigger value="supervision" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-                <BarChart className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Supervisão</span>
-                <span className="sm:hidden">Super</span>
-              </TabsTrigger>
-            <TabsTrigger value="sla" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">SLA & Alertas</span>
-              <span className="sm:hidden">SLA</span>
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Relatórios</span>
-              <span className="sm:hidden">Rel</span>
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Mapa</span>
-              <span className="sm:hidden">Map</span>
-            </TabsTrigger>
-            <TabsTrigger value="schedule" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Agenda</span>
-              <span className="sm:hidden">Age</span>
-            </TabsTrigger>
-            <TabsTrigger value="evaluation" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Star className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Avaliações</span>
-              <span className="sm:hidden">Ava</span>
-            </TabsTrigger>
-            <TabsTrigger value="equipment-history" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Histórico</span>
-              <span className="sm:hidden">His</span>
-            </TabsTrigger>
-            <TabsTrigger value="rbac" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">RBAC</span>
-              <span className="sm:hidden">RB</span>
-            </TabsTrigger>
-            <TabsTrigger value="admin-settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Config</span>
-              <span className="sm:hidden">Cfg</span>
-            </TabsTrigger>
-            <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Visão Geral</span>
-              <span className="sm:hidden">Ger</span>
-            </TabsTrigger>
-            </TabsList>
+        <div className="space-y-4 sm:space-y-6">
+          {/* Header com menu dropdown */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-semibold">Painel Administrativo</h2>
+              
+              {/* Menu Principal */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={activeTab === "overview" ? "default" : "outline"}
+                  onClick={() => setActiveTab("overview")}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Visão Geral
+                </Button>
+                
+                {/* Dropdown para Supervisão e Monitoramento */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <BarChart className="h-4 w-4" />
+                      Supervisão
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Supervisão e Monitoramento</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setActiveTab("supervision")}>
+                      <BarChart className="mr-2 h-4 w-4" />
+                      Painel Supervisor
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab("sla")}>
+                      <Shield className="mr-2 h-4 w-4" />
+                      SLA & Alertas
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab("map")}>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Mapa Interativo
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab("schedule")}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Agenda Técnicos
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Dropdown para Relatórios e Análises */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Relatórios
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Relatórios e Análises</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setActiveTab("reports")}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar Dados
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab("evaluation")}>
+                      <Star className="mr-2 h-4 w-4" />
+                      Avaliações
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab("equipment-history")}>
+                      <Clock className="mr-2 h-4 w-4" />
+                      Histórico Equipamentos
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Dropdown para Configurações */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Configurações
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Configurações do Sistema</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setActiveTab("rbac")}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Controle de Acesso
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveTab("admin-settings")}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Configurações Admin
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
           </div>
 
-          <TabsContent value="supervision">
-            <SupervisorPanel />
-          </TabsContent>
+          {/* Conteúdo das abas */}
+          <div className="space-y-6">
 
-          <TabsContent value="sla">
-            <SLAMonitor />
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <ExportTools />
-          </TabsContent>
-
-          <TabsContent value="map">
-            <InteractiveMap />
-          </TabsContent>
-
-          <TabsContent value="schedule">
-            <TechnicianSchedule />
-          </TabsContent>
-
-          <TabsContent value="evaluation">
-            <ServiceEvaluation />
-          </TabsContent>
-
-          <TabsContent value="equipment-history">
-            <EquipmentHistory />
-          </TabsContent>
-
-          <TabsContent value="rbac">
-            <RBACManager />
-          </TabsContent>
-
-          <TabsContent value="admin-settings">
-            <AdminSettings />
-          </TabsContent>
-
-          <TabsContent value="overview">
+            {activeTab === "supervision" && <SupervisorPanel />}
+            {activeTab === "sla" && <SLAMonitor />}
+            {activeTab === "reports" && <ExportTools />}
+            {activeTab === "map" && <InteractiveMap />}
+            {activeTab === "schedule" && <TechnicianSchedule />}
+            {activeTab === "evaluation" && <ServiceEvaluation />}
+            {activeTab === "equipment-history" && <EquipmentHistory />}
+            {activeTab === "rbac" && <RBACManager />}
+            {activeTab === "admin-settings" && <AdminSettings />}
+            
+            {activeTab === "overview" && (
+              <div className="space-y-6">
             {/* Estatísticas */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <Card>
@@ -342,8 +374,10 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
         // Dashboard para cliente final e técnicos (visão simples)
         <>
