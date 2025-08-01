@@ -43,6 +43,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log("ClientFormModal - modal opened:", open, "client data:", client);
     if (client) {
       setFormData({
         name: client.name || "",
@@ -118,7 +119,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
           name: formData.name.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim() || null,
-          company_id: formData.company_id || null,
+          company_id: formData.company_id === "" ? null : formData.company_id,
           active: formData.active,
         };
 
@@ -159,7 +160,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
               name: formData.name.trim(),
               email: formData.email.trim(),
               phone: formData.phone.trim() || null,
-              company_id: formData.company_id || null,
+              company_id: formData.company_id === "" ? null : formData.company_id,
               active: formData.active,
               role: 'cliente_final',
             };
@@ -250,7 +251,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
               <Label htmlFor="company_id">Empresa</Label>
               <Select 
                 value={formData.company_id || ""} 
-                onValueChange={(value) => setFormData({ ...formData, company_id: value === "" ? "" : value })}
+                onValueChange={(value) => setFormData({ ...formData, company_id: value || "" })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma empresa" />
