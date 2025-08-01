@@ -160,18 +160,26 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
         scheduled_date: data.scheduled_date ? new Date(data.scheduled_date).toISOString() : null,
       };
 
-      let error;
+      let error, orderResult;
+      const wasAssigned = order?.technician_id;
+      const isBeingAssigned = data.technician_id && data.technician_id !== order?.technician_id;
+      const isCompleted = data.status === 'concluída' && order?.status !== 'concluída';
+      
       if (order) {
         // Atualizar ordem existente
-        ({ error } = await supabase
+        ({ data: orderResult, error } = await supabase
           .from("orders")
           .update(orderData)
-          .eq("id", order.id));
+          .eq("id", order.id)
+          .select()
+          .single());
       } else {
         // Criar nova ordem
-        ({ error } = await supabase
+        ({ data: orderResult, error } = await supabase
           .from("orders")
-          .insert(orderData));
+          .insert(orderData)
+          .select()
+          .single());
       }
 
       if (error) {
@@ -182,6 +190,39 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
           variant: "destructive",
         });
         return;
+      }
+
+      // Enviar notificações por e-mail
+      try {
+        if (!order) {
+          // Nova ordem criada
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'order_created',
+              recordId: orderResult.id
+            }
+          });
+        } else if (isBeingAssigned) {
+          // Ordem foi atribuída a um técnico
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'order_assigned',
+              recordId: orderResult.id
+            }
+          });
+        } else if (isCompleted) {
+          // Ordem foi concluída
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'order_completed',
+              recordId: orderResult.id
+            }
+          });
+        }
+        console.log("Email notification sent for order:", orderResult.id);
+      } catch (emailError) {
+        console.warn("Failed to send email notification:", emailError);
+        // Não bloquear o fluxo se o e-mail falhar
       }
 
       toast({

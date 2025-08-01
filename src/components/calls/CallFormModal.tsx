@@ -68,7 +68,7 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
         return;
       }
 
-      const { error } = await supabase
+      const { data: callData, error } = await supabase
         .from("calls")
         .insert({
           title: data.title,
@@ -76,7 +76,9 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
           priority: data.priority,
           client_id: profile.id,
           company_id: profile.company_id,
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error("Erro ao criar chamado:", error);
@@ -86,6 +88,20 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
           variant: "destructive",
         });
         return;
+      }
+
+      // Enviar notificação por e-mail
+      try {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            type: 'call_created',
+            recordId: callData.id
+          }
+        });
+        console.log("Email notification sent for call:", callData.id);
+      } catch (emailError) {
+        console.warn("Failed to send email notification:", emailError);
+        // Não bloquear o fluxo se o e-mail falhar
       }
 
       toast({
