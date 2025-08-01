@@ -159,7 +159,7 @@ export function ClientsList() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/20 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-primary via-primary to-primary-glow rounded-2xl p-8 text-white shadow-2xl">
+        <div className="relative overflow-hidden bg-primary rounded-2xl p-8 text-white shadow-2xl">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div className="space-y-2">
