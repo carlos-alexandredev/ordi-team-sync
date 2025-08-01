@@ -132,22 +132,19 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         )}
         
         {/* Sidebar */}
-        <div className={`
-          fixed md:relative inset-y-0 left-0 z-50 w-64 md:w-auto
-          transform transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}>
-          <AppSidebar userRole={userProfile.role} onSignOut={handleSignOut} />
-        </div>
+        <AppSidebar userRole={userProfile.role} onSignOut={handleSignOut} />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top Bar */}
-          <TopBar 
-            userProfile={userProfile} 
-            onSignOut={handleSignOut}
-            onToggleSidebar={toggleSidebar}
-          />
+          <div className="flex items-center border-b bg-background p-4">
+            <SidebarTrigger className="mr-4" />
+            <TopBar 
+              userProfile={userProfile} 
+              onSignOut={handleSignOut}
+              onToggleSidebar={toggleSidebar}
+            />
+          </div>
           
           {/* Page Content */}
           <main className="flex-1 overflow-auto p-4 md:p-6">
