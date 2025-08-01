@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Sidebar } from "@/components/navigation/Sidebar";
+import { TopBar } from "@/components/navigation/TopBar";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -35,7 +39,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             try {
               const { data: profile, error } = await supabase
                 .from("profiles")
-                .select("role, name")
+                .select("*")
                 .eq("user_id", session.user.id)
                 .single();
 
@@ -45,6 +49,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               }
 
               if (profile) {
+                setUserProfile(profile);
+                
                 // Mensagem de boas-vindas
                 toast({
                   title: `Bem-vindo, ${profile.name}!`,
@@ -65,7 +71,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                     navigate('/technician');
                     break;
                   case 'cliente_final':
-                    navigate('/orders');
+                    navigate('/calls');
                     break;
                   default:
                     navigate('/dashboard');
@@ -80,9 +86,24 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     );
 
     // DEPOIS verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Carregar perfil se usuário logado
+      if (session?.user) {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .single();
+          setUserProfile(profile);
+        } catch (error) {
+          console.error("Erro ao carregar perfil:", error);
+        }
+      }
+      
       setLoading(false);
     });
 
@@ -166,16 +187,25 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b">
-        <div className="flex h-16 items-center px-4 justify-between">
-          <h1 className="text-xl font-semibold">Sistema Ordi</h1>
-          <Button variant="outline" onClick={handleSignOut}>
-            Sair
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background flex">
+      {/* Import components */}
+      <Sidebar 
+        userRole={userProfile?.role || 'cliente_final'} 
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar 
+          userProfile={userProfile}
+          onSignOut={handleSignOut}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </div>
-      {children}
     </div>
   );
 }
