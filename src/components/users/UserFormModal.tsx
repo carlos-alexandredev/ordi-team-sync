@@ -99,13 +99,26 @@ export function UserFormModal({ isOpen, onClose, onSuccess, editingUser, compani
           email: formData.email,
           password: formData.password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               name: formData.name,
             }
           }
         });
 
-        if (authError) throw authError;
+        if (authError) {
+          // Tratar erro específico de email já existente
+          if (authError.message.includes("already registered")) {
+            toast({
+              title: "Erro",
+              description: "Este e-mail já está cadastrado no sistema",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+          throw authError;
+        }
 
         if (authData.user) {
           // Atualizar o profile criado automaticamente pelo trigger
@@ -195,6 +208,7 @@ export function UserFormModal({ isOpen, onClose, onSuccess, editingUser, compani
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="admin_cliente">Admin Cliente</SelectItem>
                 <SelectItem value="tecnico">Técnico</SelectItem>
                 <SelectItem value="cliente_final">Cliente Final</SelectItem>
               </SelectContent>

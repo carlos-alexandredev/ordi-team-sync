@@ -5,7 +5,7 @@ import { TechnicianDashboard } from "@/components/technician/TechnicianDashboard
 const Technician = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente"]}>
+      <ProtectedRoute allowedRoles={["admin", "admin_cliente", "tecnico"]}>
         <TechnicianDashboard />
       </ProtectedRoute>
     </AuthLayout>

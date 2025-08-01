@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -19,14 +19,63 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Configurar listener de mudanças de auth PRIMEIRO
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Redirecionamento inteligente após login
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(async () => {
+            try {
+              const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("role, name")
+                .eq("user_id", session.user.id)
+                .single();
+
+              if (error) {
+                console.error("Erro ao buscar perfil:", error);
+                return;
+              }
+
+              if (profile) {
+                // Mensagem de boas-vindas
+                toast({
+                  title: `Bem-vindo, ${profile.name}!`,
+                  description: `Acesso autorizado como ${profile.role === 'admin' ? 'Administrador' : 
+                    profile.role === 'admin_cliente' ? 'Admin Cliente' : 
+                    profile.role === 'tecnico' ? 'Técnico' : 'Cliente'}.`,
+                });
+
+                // Redirecionamento baseado no role
+                switch (profile.role) {
+                  case 'admin':
+                    navigate('/dashboard');
+                    break;
+                  case 'admin_cliente':
+                    navigate('/dashboard');
+                    break;
+                  case 'tecnico':
+                    navigate('/technician');
+                    break;
+                  case 'cliente_final':
+                    navigate('/orders');
+                    break;
+                  default:
+                    navigate('/dashboard');
+                }
+              }
+            } catch (error) {
+              console.error("Erro no redirecionamento:", error);
+            }
+          }, 100);
+        }
       }
     );
 
@@ -38,7 +87,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate, toast]);
 
 
   const handleSignIn = async (email: string, password: string) => {
@@ -69,13 +118,31 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // Limpeza de estado de autenticação
+      const cleanupAuthState = () => {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+      };
+
+      cleanupAuthState();
+
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) {
         toast({
           title: "Erro ao sair",
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Logout realizado",
+          description: "Você foi desconectado com sucesso.",
+        });
+        // Força refresh da página para garantir limpeza completa
+        window.location.href = '/';
       }
     } catch (error) {
       toast({

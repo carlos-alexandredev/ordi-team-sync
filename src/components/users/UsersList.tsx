@@ -125,6 +125,7 @@ export function UsersList() {
   const getRoleBadge = (role: string) => {
     const roleConfig = {
       admin: { label: "Admin", className: "bg-red-100 text-red-800 border-red-300" },
+      admin_cliente: { label: "Admin Cliente", className: "bg-orange-100 text-orange-800 border-orange-300" },
       tecnico: { label: "Técnico", className: "bg-blue-100 text-blue-800 border-blue-300" },
       cliente_final: { label: "Cliente Final", className: "bg-green-100 text-green-800 border-green-300" }
     };
@@ -174,6 +175,7 @@ export function UsersList() {
           <SelectContent>
             <SelectItem value="all">Todos os perfis</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="admin_cliente">Admin Cliente</SelectItem>
             <SelectItem value="tecnico">Técnico</SelectItem>
             <SelectItem value="cliente_final">Cliente Final</SelectItem>
           </SelectContent>
