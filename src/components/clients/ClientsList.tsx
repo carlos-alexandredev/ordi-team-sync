@@ -276,12 +276,14 @@ export function ClientsList() {
         </CardContent>
       </Card>
 
-      <ClientFormModal
-        open={isModalOpen}
-        onClose={handleModalClose}
-        client={editingClient}
-        companies={companies}
-      />
+      {isModalOpen && (
+        <ClientFormModal
+          open={isModalOpen}
+          onClose={handleModalClose}
+          client={editingClient}
+          companies={companies}
+        />
+      )}
     </div>
   );
 }

@@ -203,6 +203,13 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
     }
   };
 
+  if (!open) {
+    console.log("Modal is not open, returning null");
+    return null;
+  }
+
+  console.log("About to render modal - open:", open, "client:", client, "companies length:", companies?.length);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
