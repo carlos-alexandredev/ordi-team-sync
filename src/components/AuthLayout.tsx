@@ -137,13 +137,15 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top Bar */}
-          <div className="flex items-center border-b bg-background p-4">
-            <SidebarTrigger className="mr-4" />
-            <TopBar 
-              userProfile={userProfile} 
-              onSignOut={handleSignOut}
-              onToggleSidebar={toggleSidebar}
-            />
+          <div className="flex items-center border-b bg-background">
+            <SidebarTrigger className="ml-2" />
+            <div className="flex-1">
+              <TopBar 
+                userProfile={userProfile} 
+                onSignOut={handleSignOut}
+                onToggleSidebar={toggleSidebar}
+              />
+            </div>
           </div>
           
           {/* Page Content */}
