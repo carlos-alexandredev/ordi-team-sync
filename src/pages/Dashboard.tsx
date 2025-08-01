@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface ServiceOrder {
   id: string;
@@ -29,11 +30,31 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [stats, setStats] = useState<DashboardStats>({ total: 0, open: 0, in_progress: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchOrders();
+    const loadData = async () => {
+      await Promise.all([fetchOrders(), fetchUserProfile()]);
+    };
+    loadData();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+        setUserProfile(profile);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar perfil:", error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -104,13 +125,31 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral das ordens de serviço</p>
+          <h1 className="text-3xl font-bold">Sistema Ordi</h1>
+          <p className="text-muted-foreground">
+            Bem-vindo, {userProfile?.name || "Usuário"}
+          </p>
+          {userProfile?.role && (
+            <p className="text-sm text-muted-foreground">
+              Perfil: {userProfile.role === 'admin' ? 'Administrador' : 
+                      userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
+            </p>
+          )}
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Ordem
-        </Button>
+        <div className="flex gap-2">
+          {userProfile?.role === 'admin' && (
+            <Link to="/users">
+              <Button variant="outline">
+                <Users className="h-4 w-4 mr-2" />
+                Usuários
+              </Button>
+            </Link>
+          )}
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Ordem
+          </Button>
+        </div>
       </div>
 
       {/* Estatísticas */}

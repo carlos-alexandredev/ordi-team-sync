@@ -44,6 +44,48 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          fantasy_name: string | null
+          id: string
+          name: string
+          phone: string | null
+          responsible_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          fantasy_name?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          responsible_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          fantasy_name?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          responsible_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_comments: {
         Row: {
           attachments: Json | null
@@ -124,6 +166,7 @@ export type Database = {
         Row: {
           active: boolean | null
           avatar_url: string | null
+          company_id: string | null
           created_at: string
           department: string | null
           email: string
@@ -137,6 +180,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
           department?: string | null
           email: string
@@ -150,6 +194,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
           department?: string | null
           email?: string
@@ -160,7 +205,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_orders: {
         Row: {
