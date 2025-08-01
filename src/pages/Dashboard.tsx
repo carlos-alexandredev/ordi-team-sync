@@ -4,12 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings, Shield, Download } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings, Shield, Download, MapPin, Calendar, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { SupervisorPanel } from "@/components/dashboard/SupervisorPanel";
 import { ExportTools } from "@/components/reports/ExportTools";
 import { SLAMonitor } from "@/components/sla/SLAMonitor";
+import { InteractiveMap } from "@/components/map/InteractiveMap";
+import { TechnicianSchedule } from "@/components/schedule/TechnicianSchedule";
+import { ServiceEvaluation } from "@/components/evaluation/ServiceEvaluation";
 
 interface ServiceOrder {
   id: string;
@@ -254,7 +257,7 @@ export default function Dashboard() {
       {/* Dashboard específico por tipo de usuário */}
       {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') ? (
         <Tabs defaultValue="supervision" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="supervision" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               Supervisão
@@ -266,6 +269,18 @@ export default function Dashboard() {
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               Relatórios
+            </TabsTrigger>
+            <TabsTrigger value="map" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Mapa
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Agenda
+            </TabsTrigger>
+            <TabsTrigger value="evaluation" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Avaliações
             </TabsTrigger>
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -283,6 +298,18 @@ export default function Dashboard() {
 
           <TabsContent value="reports">
             <ExportTools />
+          </TabsContent>
+
+          <TabsContent value="map">
+            <InteractiveMap />
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <TechnicianSchedule />
+          </TabsContent>
+
+          <TabsContent value="evaluation">
+            <ServiceEvaluation />
           </TabsContent>
 
           <TabsContent value="overview">
