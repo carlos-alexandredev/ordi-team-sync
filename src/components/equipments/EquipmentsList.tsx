@@ -166,24 +166,24 @@ export const EquipmentsList: React.FC = () => {
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os status</SelectItem>
+              <SelectItem value="all">Todos os status</SelectItem>
               <SelectItem value="ativo">Ativo</SelectItem>
               <SelectItem value="manutenção">Em Manutenção</SelectItem>
               <SelectItem value="inativo">Inativo</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+          <Select value={selectedClientId || "all"} onValueChange={(value) => setSelectedClientId(value === "all" ? "" : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Cliente" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os clientes</SelectItem>
+              <SelectItem value="all">Todos os clientes</SelectItem>
               {clients.map((client) => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}

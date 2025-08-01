@@ -297,12 +297,12 @@ export function SupervisorPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label>Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="pendente">Pendente</SelectItem>
                   <SelectItem value="em_andamento">Em Andamento</SelectItem>
                   <SelectItem value="concluido">Concluído</SelectItem>
@@ -312,12 +312,12 @@ export function SupervisorPanel() {
 
             <div>
               <Label>Cliente</Label>
-              <Select value={clientFilter} onValueChange={setClientFilter}>
+              <Select value={clientFilter || "all"} onValueChange={(value) => setClientFilter(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os clientes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {clients.map(client => (
                     <SelectItem key={client.id} value={client.name}>
                       {client.name}
@@ -329,12 +329,12 @@ export function SupervisorPanel() {
 
             <div>
               <Label>Técnico</Label>
-              <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
+              <Select value={technicianFilter || "all"} onValueChange={(value) => setTechnicianFilter(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os técnicos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {technicians.map(tech => (
                     <SelectItem key={tech.id} value={tech.name}>
                       {tech.name}

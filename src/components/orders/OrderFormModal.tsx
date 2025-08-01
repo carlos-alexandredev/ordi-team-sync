@@ -386,14 +386,17 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Técnico Responsável</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                    value={field.value || "none"}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um técnico (opcional)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Não atribuído</SelectItem>
+                      <SelectItem value="none">Não atribuído</SelectItem>
                       {technicians.map((technician) => (
                         <SelectItem key={technician.id} value={technician.id}>
                           {technician.name} ({technician.role})
