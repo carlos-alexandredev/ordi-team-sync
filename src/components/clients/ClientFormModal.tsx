@@ -250,7 +250,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
               <Label htmlFor="company_id">Empresa</Label>
               <Select 
                 value={formData.company_id || ""} 
-                onValueChange={(value) => setFormData({ ...formData, company_id: value || null })}
+                onValueChange={(value) => setFormData({ ...formData, company_id: value === "" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma empresa" />
