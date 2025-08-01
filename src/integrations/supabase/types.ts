@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      call_attachments: {
+        Row: {
+          call_id: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          uploaded_by: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          uploaded_by: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           client_id: string
@@ -137,6 +170,87 @@ export type Database = {
         }
         Relationships: []
       }
+      equipments: {
+        Row: {
+          client_id: string
+          company_id: string
+          created_at: string
+          id: string
+          installation_date: string | null
+          last_maintenance_date: string | null
+          location: string | null
+          model: string | null
+          name: string
+          observations: string | null
+          serial_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          installation_date?: string | null
+          last_maintenance_date?: string | null
+          location?: string | null
+          model?: string | null
+          name: string
+          observations?: string | null
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          installation_date?: string | null
+          last_maintenance_date?: string | null
+          location?: string | null
+          model?: string | null
+          name?: string
+          observations?: string | null
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      order_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          order_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          order_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          order_id?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       order_comments: {
         Row: {
           attachments: Json | null
@@ -175,6 +289,33 @@ export type Database = {
           },
         ]
       }
+      order_equipments: {
+        Row: {
+          action_type: string
+          created_at: string
+          equipment_id: string
+          id: string
+          observations: string | null
+          order_id: string
+        }
+        Insert: {
+          action_type?: string
+          created_at?: string
+          equipment_id: string
+          id?: string
+          observations?: string | null
+          order_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          equipment_id?: string
+          id?: string
+          observations?: string | null
+          order_id?: string
+        }
+        Relationships: []
+      }
       order_history: {
         Row: {
           comment: string | null
@@ -212,6 +353,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      order_time_logs: {
+        Row: {
+          check_in_location: string | null
+          check_in_time: string | null
+          check_out_location: string | null
+          check_out_time: string | null
+          created_at: string
+          id: string
+          order_id: string
+          technician_id: string
+          total_minutes: number | null
+          updated_at: string
+        }
+        Insert: {
+          check_in_location?: string | null
+          check_in_time?: string | null
+          check_out_location?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          technician_id: string
+          total_minutes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          check_in_location?: string | null
+          check_in_time?: string | null
+          check_out_location?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          technician_id?: string
+          total_minutes?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       orders: {
         Row: {
