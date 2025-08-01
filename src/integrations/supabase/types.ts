@@ -216,7 +216,22 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_equipments_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_equipments_company_id"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_attachments: {
         Row: {
@@ -439,6 +454,7 @@ export type Database = {
           id: string
           priority: Database["public"]["Enums"]["order_priority"]
           scheduled_date: string | null
+          sla_hours: number | null
           status: Database["public"]["Enums"]["order_status"]
           technician_id: string | null
           title: string
@@ -454,6 +470,7 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["order_priority"]
           scheduled_date?: string | null
+          sla_hours?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           technician_id?: string | null
           title: string
@@ -469,6 +486,7 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["order_priority"]
           scheduled_date?: string | null
+          sla_hours?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           technician_id?: string | null
           title?: string
@@ -626,6 +644,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_sla_remaining: {
+        Args: { order_id: string; sla_hours?: number }
+        Returns: unknown
+      }
+      check_sla_alerts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          order_id: string
+          title: string
+          client_name: string
+          technician_name: string
+          sla_status: string
+          remaining_hours: number
+        }[]
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string

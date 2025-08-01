@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthLayout } from "@/components/AuthLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <AuthLayout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header Simplificado */}
       <div className="flex justify-between items-center">
         <div>
@@ -429,6 +431,7 @@ export default function Dashboard() {
           </Card>
         </>
       )}
-    </div>
+      </div>
+    </AuthLayout>
   );
 }
