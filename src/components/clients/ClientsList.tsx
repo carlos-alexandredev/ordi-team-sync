@@ -156,23 +156,39 @@ export function ClientsList() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground">
-            Gerencie os clientes cadastrados no sistema
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/20 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-primary via-primary to-primary-glow rounded-2xl p-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+                Gestão de Clientes
+              </h1>
+              <p className="text-white/90 text-lg max-w-2xl">
+                Gerencie todos os seus clientes de forma eficiente e organizada
+              </p>
+              <div className="flex items-center gap-4 mt-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <span className="text-sm font-medium">{clients.length} Clientes</span>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <span className="text-sm font-medium">{companies.length} Empresas</span>
+                </div>
+              </div>
+            </div>
+            <Button 
+              variant="secondary"
+              size="lg"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white/15 text-white border-white/30 hover:bg-white/25 backdrop-blur-sm shadow-lg w-full sm:w-auto"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Novo Cliente
+            </Button>
+          </div>
         </div>
-        <Button 
-          onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Cliente
-        </Button>
-      </div>
 
       {/* Filters */}
       <Card>
@@ -369,6 +385,7 @@ export function ClientsList() {
           companies={companies}
         />
       )}
+      </div>
     </div>
   );
 }
