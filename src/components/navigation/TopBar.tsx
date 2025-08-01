@@ -18,7 +18,8 @@ import {
   Settings, 
   LogOut, 
   Menu,
-  ChevronDown
+  ChevronDown,
+  X
 } from "lucide-react";
 
 interface TopBarProps {
@@ -29,6 +30,7 @@ interface TopBarProps {
 
 export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const getRoleLabel = (role: string) => {
     switch (role) {
@@ -52,8 +54,8 @@ export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps)
 
   return (
     <header className="h-14 sm:h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-full items-center px-3 sm:px-4 gap-2 sm:gap-4">
-        {/* Mobile menu toggle */}
+      <div className="flex h-full items-center px-3 sm:px-4 gap-2 justify-between">
+        {/* Left side - Mobile menu toggle */}
         <Button
           variant="ghost"
           size="sm"
@@ -63,26 +65,46 @@ export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps)
           <Menu className="h-4 w-4" />
         </Button>
 
-        {/* Search - Hidden on mobile, shown as icon */}
-        <div className="flex-1 max-w-md hidden sm:block">
+        {/* Right side - Search and Profile */}
+        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+          {/* Search */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-9"
-            />
+            {isSearchOpen ? (
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar equipamentos, clientes, fornecedores..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 h-9 w-64 sm:w-80"
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery("");
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSearchOpen(true)}
+                className="h-8 w-8 p-0"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        </div>
 
-        {/* Mobile Search Button */}
-        <Button variant="ghost" size="sm" className="sm:hidden h-8 w-8 p-0">
-          <Search className="h-4 w-4" />
-        </Button>
-
-        {/* Right side */}
-        <div className="flex items-center gap-1 sm:gap-3">
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
             <Bell className="h-4 w-4" />
