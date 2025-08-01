@@ -13,6 +13,9 @@ import { SLAMonitor } from "@/components/sla/SLAMonitor";
 import { InteractiveMap } from "@/components/map/InteractiveMap";
 import { TechnicianSchedule } from "@/components/schedule/TechnicianSchedule";
 import { ServiceEvaluation } from "@/components/evaluation/ServiceEvaluation";
+import { EquipmentHistory } from "@/components/equipment/EquipmentHistory";
+import { RBACManager } from "@/components/rbac/RBACManager";
+import { AdminSettings } from "@/components/admin/AdminSettings";
 
 interface ServiceOrder {
   id: string;
@@ -257,7 +260,7 @@ export default function Dashboard() {
       {/* Dashboard específico por tipo de usuário */}
       {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') ? (
         <Tabs defaultValue="supervision" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="supervision" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               Supervisão
@@ -281,6 +284,18 @@ export default function Dashboard() {
             <TabsTrigger value="evaluation" className="flex items-center gap-2">
               <Star className="h-4 w-4" />
               Avaliações
+            </TabsTrigger>
+            <TabsTrigger value="equipment-history" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Histórico
+            </TabsTrigger>
+            <TabsTrigger value="rbac" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              RBAC
+            </TabsTrigger>
+            <TabsTrigger value="admin-settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Config
             </TabsTrigger>
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -310,6 +325,18 @@ export default function Dashboard() {
 
           <TabsContent value="evaluation">
             <ServiceEvaluation />
+          </TabsContent>
+
+          <TabsContent value="equipment-history">
+            <EquipmentHistory />
+          </TabsContent>
+
+          <TabsContent value="rbac">
+            <RBACManager />
+          </TabsContent>
+
+          <TabsContent value="admin-settings">
+            <AdminSettings />
           </TabsContent>
 
           <TabsContent value="overview">
