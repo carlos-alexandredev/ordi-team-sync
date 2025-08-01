@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -157,12 +157,62 @@ export default function Dashboard() {
                   Clientes
                 </Button>
               </Link>
+              <Link to="/calls">
+                <Button variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Chamados
+                </Button>
+              </Link>
+              <Link to="/orders">
+                <Button variant="outline">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Ordens
+                </Button>
+              </Link>
             </>
           )}
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Ordem
-          </Button>
+          {userProfile?.role === 'admin_cliente' && (
+            <>
+              <Link to="/clients">
+                <Button variant="outline">
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Clientes
+                </Button>
+              </Link>
+              <Link to="/calls">
+                <Button variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Chamados
+                </Button>
+              </Link>
+              <Link to="/orders">
+                <Button variant="outline">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Ordens
+                </Button>
+              </Link>
+            </>
+          )}
+          {userProfile?.role === 'cliente_final' && (
+            <Link to="/calls">
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Meus Chamados
+              </Button>
+            </Link>
+          )}
+          {(userProfile?.role === 'cliente_final') && (
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Chamado
+            </Button>
+          )}
+          {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') && (
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Ordem
+            </Button>
+          )}
         </div>
       </div>
 

@@ -38,6 +38,30 @@ export function NotificationPlaceholder() {
                 Exemplo: Mensagem de boas-vindas e credenciais de login
               </p>
             </div>
+
+            <div className="p-3 border rounded-lg bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Mail className="h-4 w-4 text-orange-600" />
+                <span className="font-medium">Notificação Chamado</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                🔔 Placeholder: E-mail quando chamado é criado
+                <br />
+                Exemplo: "Novo chamado #001 criado"
+              </p>
+            </div>
+
+            <div className="p-3 border rounded-lg bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="h-4 w-4 text-purple-600" />
+                <span className="font-medium">Notificação Ordem</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                📋 Placeholder: WhatsApp quando ordem é gerada
+                <br />
+                Exemplo: "Ordem de serviço OS-001 foi criada"
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
