@@ -31,6 +31,7 @@ interface ClientFormModalProps {
 }
 
 export function ClientFormModal({ open, onClose, client, companies }: ClientFormModalProps) {
+  console.log("ClientFormModal render - open:", open, "client:", client, "companies:", companies);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
