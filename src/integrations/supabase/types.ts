@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      calls: {
+        Row: {
+          client_id: string
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["call_priority"]
+          status: Database["public"]["Enums"]["call_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          company_id: string
+          created_at?: string
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["call_priority"]
+          status?: Database["public"]["Enums"]["call_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["call_priority"]
+          status?: Database["public"]["Enums"]["call_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calls_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           active: boolean | null
@@ -162,6 +213,83 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          call_id: string | null
+          client_id: string
+          company_id: string
+          created_at: string
+          description: string
+          execution_date: string | null
+          id: string
+          priority: Database["public"]["Enums"]["order_priority"]
+          scheduled_date: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          technician_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          call_id?: string | null
+          client_id: string
+          company_id: string
+          created_at?: string
+          description: string
+          execution_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["order_priority"]
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          technician_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          call_id?: string | null
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          description?: string
+          execution_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["order_priority"]
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          technician_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean | null
@@ -287,9 +415,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_company: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      call_priority: "baixa" | "média" | "alta"
+      call_status: "aberto" | "em análise" | "fechado"
+      order_priority: "baixa" | "média" | "alta"
+      order_status: "pendente" | "em execução" | "concluída" | "cancelada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -416,6 +555,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      call_priority: ["baixa", "média", "alta"],
+      call_status: ["aberto", "em análise", "fechado"],
+      order_priority: ["baixa", "média", "alta"],
+      order_status: ["pendente", "em execução", "concluída", "cancelada"],
+    },
   },
 } as const
