@@ -132,10 +132,10 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
+      {/* Header Simplificado */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Sistema Ordi</h1>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
             Bem-vindo, {userProfile?.name || "Usuário"}
           </p>
@@ -145,114 +145,6 @@ export default function Dashboard() {
                       userProfile.role === 'admin_cliente' ? 'Admin Cliente' :
                       userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
             </p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          {userProfile?.role === 'admin' && (
-            <>
-              <Link to="/users">
-                <Button variant="outline">
-                  <Users className="h-4 w-4 mr-2" />
-                  Usuários
-                </Button>
-              </Link>
-              <Link to="/companies">
-                <Button variant="outline">
-                  <Building className="h-4 w-4 mr-2" />
-                  Empresas
-                </Button>
-              </Link>
-              <Link to="/clients">
-                <Button variant="outline">
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Clientes
-                </Button>
-              </Link>
-              <Link to="/calls">
-                <Button variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Chamados
-                </Button>
-              </Link>
-              <Link to="/orders">
-                <Button variant="outline">
-                  <ClipboardList className="h-4 w-4 mr-2" />
-                  Ordens
-                </Button>
-              </Link>
-              <Link to="/equipments">
-                <Button variant="outline">
-                  <Wrench className="h-4 w-4 mr-2" />
-                  Equipamentos
-                </Button>
-              </Link>
-              <Link to="/technician">
-                <Button variant="outline">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Técnicos
-                </Button>
-              </Link>
-              <Link to="/reports">
-                <Button variant="outline">
-                  <BarChart className="h-4 w-4 mr-2" />
-                  Relatórios
-                </Button>
-              </Link>
-            </>
-          )}
-          {userProfile?.role === 'admin_cliente' && (
-            <>
-              <Link to="/clients">
-                <Button variant="outline">
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Clientes
-                </Button>
-              </Link>
-              <Link to="/calls">
-                <Button variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Chamados
-                </Button>
-              </Link>
-              <Link to="/orders">
-                <Button variant="outline">
-                  <ClipboardList className="h-4 w-4 mr-2" />
-                  Ordens
-                </Button>
-              </Link>
-              <Link to="/equipments">
-                <Button variant="outline">
-                  <Wrench className="h-4 w-4 mr-2" />
-                  Equipamentos
-                </Button>
-              </Link>
-              <Link to="/reports">
-                <Button variant="outline">
-                  <BarChart className="h-4 w-4 mr-2" />
-                  Relatórios
-                </Button>
-              </Link>
-            </>
-          )}
-          {userProfile?.role === 'cliente_final' && (
-            <Link to="/calls">
-              <Button variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Meus Chamados
-              </Button>
-            </Link>
-          )}
-          {(userProfile?.role === 'cliente_final') && (
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Chamado
-            </Button>
-          )}
-          {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') && (
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Ordem
-            </Button>
           )}
         </div>
       </div>
