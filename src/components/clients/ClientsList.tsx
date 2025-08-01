@@ -110,8 +110,10 @@ export function ClientsList() {
   };
 
   const handleEdit = (client: Client) => {
+    console.log("handleEdit clicked - client:", client);
     setEditingClient(client);
     setIsModalOpen(true);
+    console.log("Modal should be open now, editingClient:", client);
   };
 
   const handleToggleStatus = async (client: Client) => {
