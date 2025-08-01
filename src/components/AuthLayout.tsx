@@ -121,7 +121,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
