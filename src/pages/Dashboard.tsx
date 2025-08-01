@@ -392,10 +392,12 @@ export default function Dashboard() {
                 {orders.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
-                    <Button className="mt-4">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar primeira ordem
-                    </Button>
+                    <Link to="/orders">
+                      <Button className="mt-4">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar primeira ordem
+                      </Button>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-4">
