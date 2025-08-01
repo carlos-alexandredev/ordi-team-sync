@@ -354,6 +354,41 @@ export type Database = {
           },
         ]
       }
+      order_questionnaire_responses: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          order_id: string
+          responses: Json
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          responses?: Json
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          responses?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_questionnaire_responses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_time_logs: {
         Row: {
           check_in_location: string | null

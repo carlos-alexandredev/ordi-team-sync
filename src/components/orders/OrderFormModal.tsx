@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EquipmentSelector } from "./EquipmentSelector";
 import { TimeTracker } from "./TimeTracker";
+import { ServiceQuestionnaire } from "@/components/questionnaires/ServiceQuestionnaire";
 
 const orderSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -418,6 +419,12 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
                     orderId={order.id} 
                     technicianId={order.technician_id}
                     isReadOnly={form.watch('status') === 'concluída'}
+                  />
+                )}
+                {order.status === 'concluída' && order.technician_id && (
+                  <ServiceQuestionnaire 
+                    orderId={order.id}
+                    onComplete={() => {}}
                   />
                 )}
               </div>
