@@ -58,7 +58,7 @@ export const EquipmentsList: React.FC = () => {
         .select(`
           *,
           client:profiles!equipments_client_id_fkey(name),
-          company:companies!company_id(name)
+          company:companies!equipments_company_id_fkey(name)
         `)
         .order('created_at', { ascending: false });
 
