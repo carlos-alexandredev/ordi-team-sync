@@ -22,7 +22,7 @@ interface Equipment {
   observations: string | null;
   client_id: string;
   company_id: string;
-  client_profile?: {
+  client?: {
     name: string;
   };
   company?: {
