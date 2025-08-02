@@ -205,7 +205,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
               <Label htmlFor="name">Nome *</Label>
               <Input
                 id="name"
-                value={formData.name}
+                value={equipment ? equipment.name : formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ex: Impressora HP LaserJet"
                 required
@@ -216,7 +216,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
               <Label htmlFor="model">Modelo</Label>
               <Input
                 id="model"
-                value={formData.model}
+                value={equipment ? (equipment.model || '') : formData.model}
                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                 placeholder="Ex: LaserJet Pro 400"
               />
@@ -228,7 +228,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
               <Label htmlFor="serial_number">Número de Série</Label>
               <Input
                 id="serial_number"
-                value={formData.serial_number}
+                value={equipment ? (equipment.serial_number || '') : formData.serial_number}
                 onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
                 placeholder="Ex: ABC123456789"
               />
@@ -238,7 +238,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
               <Label htmlFor="location">Local</Label>
               <Input
                 id="location"
-                value={formData.location}
+                value={equipment ? (equipment.location || '') : formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="Ex: Sala de reuniões"
               />
@@ -248,7 +248,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="client_id">Cliente *</Label>
-              <Select value={formData.client_id} onValueChange={(value) => setFormData({ ...formData, client_id: value })}>
+              <Select value={equipment ? equipment.client_id : formData.client_id} onValueChange={(value) => setFormData({ ...formData, client_id: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente" />
                 </SelectTrigger>
@@ -264,7 +264,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
             <div>
               <Label htmlFor="company_id">Empresa *</Label>
-              <Select value={formData.company_id} onValueChange={(value) => setFormData({ ...formData, company_id: value })}>
+              <Select value={equipment ? equipment.company_id : formData.company_id} onValueChange={(value) => setFormData({ ...formData, company_id: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma empresa" />
                 </SelectTrigger>
@@ -282,7 +282,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select value={equipment ? equipment.status : formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -300,13 +300,15 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {installationDate ? format(installationDate, "PPP", { locale: ptBR }) : "Selecione uma data"}
+                    {(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate) ? 
+                      format(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate!, "PPP", { locale: ptBR }) : 
+                      "Selecione uma data"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={installationDate}
+                    selected={equipment?.installation_date ? new Date(equipment.installation_date) : installationDate}
                     onSelect={setInstallationDate}
                     locale={ptBR}
                     initialFocus
@@ -321,13 +323,15 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {maintenanceDate ? format(maintenanceDate, "PPP", { locale: ptBR }) : "Selecione uma data"}
+                    {(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate) ? 
+                      format(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate!, "PPP", { locale: ptBR }) : 
+                      "Selecione uma data"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={maintenanceDate}
+                    selected={equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate}
                     onSelect={setMaintenanceDate}
                     locale={ptBR}
                     initialFocus
@@ -341,7 +345,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
             <Label htmlFor="observations">Observações</Label>
             <Textarea
               id="observations"
-              value={formData.observations}
+              value={equipment ? (equipment.observations || '') : formData.observations}
               onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
               placeholder="Observações sobre o equipamento..."
               rows={3}
