@@ -59,7 +59,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     
     if (equipment) {
       console.log('Equipment recebido no modal:', equipment);
-      setFormData({
+      const newFormData = {
         name: equipment.name,
         model: equipment.model || '',
         serial_number: equipment.serial_number || '',
@@ -68,7 +68,9 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         client_id: equipment.client_id,
         company_id: equipment.company_id,
         observations: equipment.observations || ''
-      });
+      };
+      console.log('Definindo formData:', newFormData);
+      setFormData(newFormData);
       
       if (equipment.installation_date) {
         setInstallationDate(new Date(equipment.installation_date));
@@ -77,6 +79,20 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       if (equipment.last_maintenance_date) {
         setMaintenanceDate(new Date(equipment.last_maintenance_date));
       }
+    } else {
+      // Reset form when no equipment
+      setFormData({
+        name: '',
+        model: '',
+        serial_number: '',
+        location: '',
+        status: 'ativo',
+        client_id: '',
+        company_id: '',
+        observations: ''
+      });
+      setInstallationDate(undefined);
+      setMaintenanceDate(undefined);
     }
   }, [equipment]);
 
