@@ -57,7 +57,7 @@ export const EquipmentsList: React.FC = () => {
         .from('equipments')
         .select(`
           *,
-          client:profiles!client_id(name),
+          client:profiles!equipments_client_id_fkey(name),
           company:companies!company_id(name)
         `)
         .order('created_at', { ascending: false });
