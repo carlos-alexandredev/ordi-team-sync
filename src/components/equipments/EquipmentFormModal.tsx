@@ -56,7 +56,9 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
   useEffect(() => {
     loadClients();
     loadCompanies();
-    
+  }, []);
+
+  useEffect(() => {
     if (equipment) {
       console.log('Equipment recebido no modal:', equipment);
       const newFormData = {
@@ -74,10 +76,14 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       
       if (equipment.installation_date) {
         setInstallationDate(new Date(equipment.installation_date));
+      } else {
+        setInstallationDate(undefined);
       }
       
       if (equipment.last_maintenance_date) {
         setMaintenanceDate(new Date(equipment.last_maintenance_date));
+      } else {
+        setMaintenanceDate(undefined);
       }
     } else {
       // Reset form when no equipment
