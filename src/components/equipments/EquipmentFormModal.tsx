@@ -58,6 +58,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     loadCompanies();
     
     if (equipment) {
+      console.log('Equipment recebido no modal:', equipment);
       setFormData({
         name: equipment.name,
         model: equipment.model || '',

@@ -123,6 +123,7 @@ export const EquipmentsList: React.FC = () => {
   };
 
   const handleEdit = (equipment: Equipment) => {
+    console.log('Equipment enviado para edição:', equipment);
     setEditingEquipment(equipment);
     setShowModal(true);
   };
