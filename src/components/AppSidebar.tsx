@@ -120,8 +120,8 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Botão Nova Ordem para admins */}
-        {(userRole === 'admin' || userRole === 'admin_cliente') && (
+        {/* Botão Nova Ordem apenas para gestores */}
+        {userRole === 'admin_cliente' && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
