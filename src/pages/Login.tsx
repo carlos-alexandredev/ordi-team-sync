@@ -10,12 +10,9 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState("");
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
+  
   const cleanupAuthState = () => {
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
@@ -23,6 +20,7 @@ export default function Login() {
       }
     });
   };
+  
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,10 +33,7 @@ export default function Login() {
       } catch (err) {
         // Continue even if this fails
       }
-      const {
-        data,
-        error
-      } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -60,39 +55,8 @@ export default function Login() {
       setLoading(false);
     }
   };
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      const {
-        error
-      } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            name: name
-          }
-        }
-      });
-      if (error) throw error;
-      toast({
-        title: "Cadastro realizado!",
-        description: "Verifique seu email para confirmar a conta."
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         {/* Logo/Header */}
         <div className="text-center space-y-2">
@@ -109,24 +73,23 @@ export default function Login() {
         <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-center text-xl">
-              {isSignUp ? "Criar Nova Conta" : "Entrar no Sistema"}
+              Entrar no Sistema
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
-              {isSignUp && <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome Completo</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="text" placeholder="Seu nome completo" value={name} onChange={e => setName(e.target.value)} className="pl-10" required={isSignUp} />
-                  </div>
-                </div>}
-              
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+                  <Input 
+                    type="email" 
+                    placeholder="seu@email.com" 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                    className="pl-10" 
+                    required 
+                  />
                 </div>
               </div>
               
@@ -134,20 +97,21 @@ export default function Login() {
                 <label className="text-sm font-medium">Senha</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="pl-10" required />
+                  <Input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password} 
+                    onChange={e => setPassword(e.target.value)} 
+                    className="pl-10" 
+                    required 
+                  />
                 </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Processando..." : isSignUp ? "Criar Conta" : "Entrar"}
+                {loading ? "Processando..." : "Entrar"}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-primary hover:underline">
-                {isSignUp ? "Já tem uma conta? Entre aqui" : "Não tem conta? Cadastre-se"}
-              </button>
-            </div>
           </CardContent>
         </Card>
 
@@ -156,5 +120,6 @@ export default function Login() {
           <p>© 2024 ORDI Team Sync. Todos os direitos reservados.</p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
