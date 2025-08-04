@@ -49,9 +49,18 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
     if (userRole === 'admin') {
       return [
         ...baseItems,
-        { title: "Desk", url: "/desk", icon: Settings },
+        { title: "Configurações", url: "/desk", icon: Settings },
         { title: "Usuários", url: "/users", icon: Users },
         { title: "Empresas", url: "/companies", icon: Building },
+        { title: "Fornecedores", url: "/suppliers", icon: Building },
+        { title: "Relatórios", url: "/reports", icon: BarChart },
+      ];
+    }
+
+    if (userRole === 'gestor') {
+      return [
+        ...baseItems,
+        { title: "Desk", url: "/desk", icon: Settings },
         { title: "Clientes", url: "/clients", icon: UserCheck },
         { title: "Chamados", url: "/calls", icon: FileText },
         { title: "Ordens", url: "/orders", icon: ClipboardList },
@@ -61,29 +70,19 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       ];
     }
 
-    if (userRole === 'admin_cliente') {
-      return [
-        ...baseItems,
-        { title: "Desk", url: "/desk", icon: Settings },
-        { title: "Clientes", url: "/clients", icon: UserCheck },
-        { title: "Chamados", url: "/calls", icon: FileText },
-        { title: "Ordens", url: "/orders", icon: ClipboardList },
-        { title: "Equipamentos", url: "/equipments", icon: Wrench },
-        { title: "Relatórios", url: "/reports", icon: BarChart },
-      ];
-    }
-
     if (userRole === 'tecnico') {
       return [
-        { title: "Técnico", url: "/technician", icon: Settings },
-        { title: "Minhas Tarefas", url: "/calls", icon: FileText },
+        { title: "Painel Técnico", url: "/technician", icon: Settings },
+        { title: "Minhas Ordens", url: "/orders", icon: ClipboardList },
+        { title: "Chamados", url: "/calls", icon: FileText },
       ];
     }
 
-    if (userRole === 'cliente_final') {
+    if (userRole === 'cliente') {
       return [
         { title: "Portal Cliente", url: "/client-portal", icon: Home },
         { title: "Meus Chamados", url: "/calls", icon: FileText },
+        { title: "Minhas Ordens", url: "/orders", icon: ClipboardList },
       ];
     }
 
@@ -120,8 +119,8 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Botão Nova Ordem apenas para gestores */}
-        {userRole === 'admin_cliente' && (
+        {/* Botão Nova Ordem para gestores */}
+        {userRole === 'gestor' && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
