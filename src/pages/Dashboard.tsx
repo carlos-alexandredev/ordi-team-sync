@@ -5,14 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Users, Building, UserCheck, ClipboardList, Wrench, BarChart, Settings, Shield, Download, MapPin, Calendar, Star, ChevronDown, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
@@ -25,7 +18,6 @@ import { ServiceEvaluation } from "@/components/evaluation/ServiceEvaluation";
 import { EquipmentHistory } from "@/components/equipment/EquipmentHistory";
 import { RBACManager } from "@/components/rbac/RBACManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
-
 interface ServiceOrder {
   id: string;
   order_number: string;
@@ -37,144 +29,141 @@ interface ServiceOrder {
   created_at: string;
   due_date?: string;
 }
-
 interface DashboardStats {
   total: number;
   open: number;
   in_progress: number;
   completed: number;
 }
-
 export default function Dashboard() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({ total: 0, open: 0, in_progress: 0, completed: 0 });
+  const [stats, setStats] = useState<DashboardStats>({
+    total: 0,
+    open: 0,
+    in_progress: 0,
+    completed: 0
+  });
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([fetchOrders(), fetchUserProfile()]);
     };
     loadData();
   }, []);
-
   const fetchUserProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        const {
+          data: profile
+        } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
         setUserProfile(profile);
       }
     } catch (error) {
       console.error("Erro ao carregar perfil:", error);
     }
   };
-
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('service_orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
+      const {
+        data,
+        error
+      } = await supabase.from('service_orders').select('*').order('created_at', {
+        ascending: false
+      }).limit(10);
       if (error) throw error;
-
       setOrders(data || []);
-      
+
       // Calcular estatísticas
       const allOrders = data || [];
       setStats({
         total: allOrders.length,
         open: allOrders.filter(o => o.status === 'open').length,
         in_progress: allOrders.filter(o => o.status === 'in_progress').length,
-        completed: allOrders.filter(o => o.status === 'completed').length,
+        completed: allOrders.filter(o => o.status === 'completed').length
       });
     } catch (error: any) {
       toast({
         title: "Erro ao carregar ordens",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'default';
+      case 'urgent':
+        return 'destructive';
+      case 'high':
+        return 'destructive';
+      case 'medium':
+        return 'default';
+      case 'low':
+        return 'secondary';
+      default:
+        return 'default';
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'destructive';
-      case 'in_progress': return 'default';
-      case 'pending': return 'secondary';
-      case 'completed': return 'default';
-      case 'cancelled': return 'destructive';
-      default: return 'default';
+      case 'open':
+        return 'destructive';
+      case 'in_progress':
+        return 'default';
+      case 'pending':
+        return 'secondary';
+      case 'completed':
+        return 'default';
+      case 'cancelled':
+        return 'destructive';
+      default:
+        return 'default';
     }
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
+    return <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-lg">Carregando...</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <AuthLayout>
+  return <AuthLayout>
       <div className="space-y-4 sm:space-y-6">
       {/* Header Simplificado */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Dashboard - Painel Administrativo</h1>
           <p className="text-muted-foreground">
             Bem-vindo, {userProfile?.name || "Usuário"}
           </p>
-          {userProfile?.role && (
-            <p className="text-sm text-muted-foreground">
-              Perfil: {userProfile.role === 'admin' ? 'Administrador' : 
-                      userProfile.role === 'admin_cliente' ? 'Admin Cliente' :
-                      userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
-            </p>
-          )}
+          {userProfile?.role && <p className="text-sm text-muted-foreground">
+              Perfil: {userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'admin_cliente' ? 'Admin Cliente' : userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
+            </p>}
         </div>
       </div>
 
       {/* Dashboard específico por tipo de usuário */}
-      {(userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente') ? (
-        <div className="space-y-4 sm:space-y-6">
+      {userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente' ? <div className="space-y-4 sm:space-y-6">
           {/* Header com menu dropdown */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-xl font-semibold">Painel Administrativo</h2>
+              
               
               {/* Menu Principal */}
               <div className="flex items-center gap-2">
-                <Button
-                  variant={activeTab === "overview" ? "default" : "outline"}
-                  onClick={() => setActiveTab("overview")}
-                  className="flex items-center gap-2"
-                >
+                <Button variant={activeTab === "overview" ? "default" : "outline"} onClick={() => setActiveTab("overview")} className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Visão Geral
                 </Button>
@@ -276,8 +265,7 @@ export default function Dashboard() {
             {activeTab === "rbac" && <RBACManager />}
             {activeTab === "admin-settings" && <AdminSettings />}
             
-            {activeTab === "overview" && (
-              <div className="space-y-6">
+            {activeTab === "overview" && <div className="space-y-6">
             {/* Estatísticas */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <Card>
@@ -327,8 +315,7 @@ export default function Dashboard() {
                 <CardTitle>Ordens Recentes</CardTitle>
               </CardHeader>
               <CardContent>
-                {orders.length === 0 ? (
-                  <div className="text-center py-8">
+                {orders.length === 0 ? <div className="text-center py-8">
                     <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
                     <Link to="/orders">
                       <Button className="mt-4">
@@ -336,11 +323,8 @@ export default function Dashboard() {
                         Criar primeira ordem
                       </Button>
                     </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                  </div> : <div className="space-y-4">
+                    {orders.map(order => <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -359,28 +343,22 @@ export default function Dashboard() {
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span>Categoria: {order.category}</span>
                               <span>Criado em: {formatDate(order.created_at)}</span>
-                              {order.due_date && (
-                                <span>Prazo: {formatDate(order.due_date)}</span>
-                              )}
+                              {order.due_date && <span>Prazo: {formatDate(order.due_date)}</span>}
                             </div>
                           </div>
                           <Button variant="outline" size="sm">
                             Ver Detalhes
                           </Button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </CardContent>
             </Card>
-              </div>
-            )}
+              </div>}
           </div>
-        </div>
-      ) : (
-        // Dashboard para cliente final e técnicos (visão simples)
-        <>
+        </div> :
+      // Dashboard para cliente final e técnicos (visão simples)
+      <>
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
@@ -430,18 +408,14 @@ export default function Dashboard() {
               <CardTitle>Ordens Recentes</CardTitle>
             </CardHeader>
             <CardContent>
-              {orders.length === 0 ? (
-                <div className="text-center py-8">
+              {orders.length === 0 ? <div className="text-center py-8">
                   <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
                   <Button className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
                     Criar primeira ordem
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                </div> : <div className="space-y-4">
+                  {orders.map(order => <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
@@ -460,24 +434,18 @@ export default function Dashboard() {
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>Categoria: {order.category}</span>
                             <span>Criado em: {formatDate(order.created_at)}</span>
-                            {order.due_date && (
-                              <span>Prazo: {formatDate(order.due_date)}</span>
-                            )}
+                            {order.due_date && <span>Prazo: {formatDate(order.due_date)}</span>}
                           </div>
                         </div>
                         <Button variant="outline" size="sm">
                           Ver Detalhes
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </CardContent>
           </Card>
-        </>
-      )}
+        </>}
       </div>
-    </AuthLayout>
-  );
+    </AuthLayout>;
 }
