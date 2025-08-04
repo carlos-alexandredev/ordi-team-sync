@@ -13,6 +13,7 @@ import {
   Plus
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 
 import {
   Sidebar,
@@ -35,6 +36,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
@@ -119,20 +121,18 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Botão Nova Ordem para gestores */}
+        {/* Botão Nova Tarefa para gestores */}
         {userRole === 'gestor' && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton 
-                    asChild
+                    onClick={() => setShowTaskModal(true)}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    <NavLink to="/orders">
-                      <Plus className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Nova Ordem</span>}
-                    </NavLink>
+                    <Plus className="h-4 w-4" />
+                    {state !== "collapsed" && <span>Nova Tarefa</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -156,6 +156,12 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Modal de criação de tarefa */}
+      <TaskFormModal 
+        open={showTaskModal}
+        onOpenChange={setShowTaskModal}
+      />
     </Sidebar>
   );
 }
