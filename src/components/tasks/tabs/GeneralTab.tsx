@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -19,11 +19,11 @@ interface GeneralTabProps {
 
 export function GeneralTab({ form }: GeneralTabProps) {
   const [technicians, setTechnicians] = useState<Array<{ id: string; name: string }>>([]);
-  const [taskTypes, setTaskTypes] = useState<Array<{ id: string; name: string }>>([]);
+  const [questionnaires, setQuestionnaires] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     loadTechnicians();
-    loadTaskTypes();
+    loadQuestionnaires();
   }, []);
 
   const loadTechnicians = async () => {
@@ -36,30 +36,40 @@ export function GeneralTab({ form }: GeneralTabProps) {
     if (data) setTechnicians(data);
   };
 
-  const loadTaskTypes = async () => {
-    // Por enquanto, tipos fixos - posteriormente pode vir de uma tabela
-    setTaskTypes([
-      { id: "manutencao", name: "Manutenção" },
-      { id: "instalacao", name: "Instalação" },
-      { id: "reparo", name: "Reparo" },
-      { id: "vistoria", name: "Vistoria" },
-      { id: "outros", name: "Outros" }
-    ]);
+  const loadQuestionnaires = async () => {
+    // Por enquanto vazio - implementar quando houver tabela de questionários
+    setQuestionnaires([]);
   };
+
+  const taskTypes = [
+    { id: "manutencao", name: "Manutenção" },
+    { id: "instalacao", name: "Instalação" },
+    { id: "reparo", name: "Reparo" },
+    { id: "vistoria", name: "Vistoria" },
+    { id: "limpeza", name: "Limpeza" },
+    { id: "outros", name: "Outros" }
+  ];
+
+  const checkInTypes = [
+    { id: "manual", name: "Padrão do colaborador" },
+    { id: "automático", name: "Automático" },
+    { id: "qr_code", name: "QR Code" }
+  ];
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Colaborador */}
         <FormField
           control={form.control}
           name="assignedTo"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tarefa será executada por</FormLabel>
+              <FormLabel>Tarefa será executada por *</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um técnico" />
+                    <SelectValue placeholder="Colaborador" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -75,26 +85,27 @@ export function GeneralTab({ form }: GeneralTabProps) {
           )}
         />
 
+        {/* Data */}
         <FormField
           control={form.control}
           name="scheduledDate"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data e hora</FormLabel>
+            <FormItem>
+              <FormLabel>Data *</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      variant="outline"
+                      variant={"outline"}
                       className={cn(
                         "w-full pl-3 text-left font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "dd/MM/yyyy HH:mm")
+                        format(field.value, "dd/MM/yyyy")
                       ) : (
-                        <span>Selecione data e hora</span>
+                        <span>Não informar</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -105,8 +116,10 @@ export function GeneralTab({ form }: GeneralTabProps) {
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
@@ -115,16 +128,39 @@ export function GeneralTab({ form }: GeneralTabProps) {
           )}
         />
 
+        {/* Horas */}
+        <FormField
+          control={form.control}
+          name="scheduledTime"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horas</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input 
+                    type="time"
+                    {...field}
+                    className="pl-10"
+                  />
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Tipo de tarefa */}
         <FormField
           control={form.control}
           name="taskType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipo de tarefa</FormLabel>
+              <FormLabel>Tipo de tarefa *</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -140,16 +176,17 @@ export function GeneralTab({ form }: GeneralTabProps) {
           )}
         />
 
+        {/* Tempo de duração */}
         <FormField
           control={form.control}
           name="duration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tempo de duração (minutos)</FormLabel>
+              <FormLabel>Tempo de duração (minutos) *</FormLabel>
               <FormControl>
                 <Input 
-                  type="number" 
-                  placeholder="120" 
+                  type="number"
+                  placeholder="Ex: 120"
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
                 />
@@ -159,6 +196,33 @@ export function GeneralTab({ form }: GeneralTabProps) {
           )}
         />
 
+        {/* Questionário */}
+        <FormField
+          control={form.control}
+          name="questionnaire"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Questionário</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {questionnaires.map((questionnaire) => (
+                    <SelectItem key={questionnaire.id} value={questionnaire.id}>
+                      {questionnaire.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Prioridade */}
         <FormField
           control={form.control}
           name="priority"
@@ -168,7 +232,7 @@ export function GeneralTab({ form }: GeneralTabProps) {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a prioridade" />
+                    <SelectValue placeholder="Alta" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -181,7 +245,29 @@ export function GeneralTab({ form }: GeneralTabProps) {
             </FormItem>
           )}
         />
+      </div>
 
+      {/* Descrição da tarefa */}
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Descrição da tarefa *</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="Descreva a tarefa a ser executada..."
+                className="min-h-[100px]"
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Tipo de check-in */}
         <FormField
           control={form.control}
           name="checkInType"
@@ -191,54 +277,41 @@ export function GeneralTab({ form }: GeneralTabProps) {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder="Padrão do colaborador" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="manual">Manual</SelectItem>
-                  <SelectItem value="automático">Automático</SelectItem>
-                  <SelectItem value="qr_code">QR Code</SelectItem>
+                  {checkInTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
 
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Descrição da tarefa *</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Descreva detalhadamente a tarefa a ser executada..."
-                rows={4}
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Palavra chave */}
         <FormField
           control={form.control}
           name="keyword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Palavra-chave</FormLabel>
+              <FormLabel>Palavra chave</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: urgente, cliente_vip..." {...field} />
+                <Input 
+                  placeholder="Pesquisa de palavras-chave"
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* Código externo */}
         <FormField
           control={form.control}
           name="externalCode"
@@ -246,7 +319,10 @@ export function GeneralTab({ form }: GeneralTabProps) {
             <FormItem>
               <FormLabel>Código externo</FormLabel>
               <FormControl>
-                <Input placeholder="Código de referência externa" {...field} />
+                <Input 
+                  placeholder="Código externo"
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -254,6 +330,7 @@ export function GeneralTab({ form }: GeneralTabProps) {
         />
       </div>
 
+      {/* Usar pesquisa de satisfação */}
       <div className="space-y-4">
         <FormField
           control={form.control}
@@ -267,9 +344,7 @@ export function GeneralTab({ form }: GeneralTabProps) {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Usar pesquisa de satisfação
-                </FormLabel>
+                <FormLabel>Usar pesquisa de satisfação</FormLabel>
               </div>
             </FormItem>
           )}
@@ -281,11 +356,11 @@ export function GeneralTab({ form }: GeneralTabProps) {
             name="surveyRecipientEmail"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>E-mail do destinatário da pesquisa</FormLabel>
+                <FormLabel>Email do destinatário da pesquisa</FormLabel>
                 <FormControl>
                   <Input 
-                    type="email" 
-                    placeholder="cliente@email.com" 
+                    type="email"
+                    placeholder="email@exemplo.com"
                     {...field} 
                   />
                 </FormControl>

@@ -121,15 +121,20 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Botão Nova Tarefa para gestores */}
-        {userRole === 'gestor' && (
+        {/* Botão Nova Tarefa para gestores e admin_cliente */}
+        {(userRole === 'gestor' || userRole === 'admin_cliente' || userRole === 'admin') && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton 
-                    onClick={() => setShowTaskModal(true)}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log("Clicou no botão Nova Tarefa");
+                      setShowTaskModal(true);
+                    }}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                     {state !== "collapsed" && <span>Nova Tarefa</span>}
