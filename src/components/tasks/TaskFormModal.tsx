@@ -52,11 +52,11 @@ const taskSchema = z.object({
   
   // Aba Repetição
   isRecurring: z.boolean().default(false),
-  frequency: z.enum(["daily", "weekly", "monthly"]).optional(),
+  frequency: z.enum(["diária", "semanal", "mensal"]).optional(),
   weekDays: z.array(z.number()).default([]),
-  endType: z.enum(["date", "count"]).optional(),
   endDate: z.date().optional(),
   repeatCount: z.number().optional(),
+  endType: z.enum(["data", "repeticoes"]).optional(),
   
   // Aba Valores
   products: z.array(z.object({
@@ -130,15 +130,16 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
       const subtotal = productsTotal + servicesTotal + additionalCostsTotal;
       const finalTotal = subtotal - data.globalDiscount;
 
-      // Inserir tarefa principal
-      const { data: task, error: taskError } = await supabase
+      // Criar tarefa principal
+      const { data: task, error } = await supabase
         .from("tasks")
         .insert({
           assigned_to: data.assignedTo,
+          company_id: profile.company_id,
           scheduled_date: data.scheduledDate.toISOString(),
           task_type: data.taskType,
           duration_minutes: data.duration,
-          questionnaire_id: data.questionnaire,
+          questionnaire_id: data.questionnaire || null,
           priority: data.priority,
           description: data.description,
           check_in_type: data.checkInType,
@@ -154,35 +155,100 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
           is_recurring: data.isRecurring,
           frequency: data.frequency,
           week_days: data.weekDays,
-          end_type: data.endType,
           end_date: data.endDate?.toISOString(),
           repeat_count: data.repeatCount,
+          end_type: data.endType,
           products_total: productsTotal,
           services_total: servicesTotal,
           additional_costs_total: additionalCostsTotal,
           global_discount: data.globalDiscount,
-          final_total: finalTotal,
-          company_id: profile.company_id
+          final_total: finalTotal
         })
         .select()
         .single();
 
-      if (taskError) throw taskError;
+      if (error) throw error;
+
+      // Inserir produtos
+      if (data.products.length > 0) {
+        const { error: productsError } = await supabase
+          .from("task_products")
+          .insert(
+            data.products.map(product => ({
+              task_id: task.id,
+              name: product.name,
+              quantity: product.quantity,
+              unit_price: product.unitPrice,
+              discount: product.discount,
+              total: product.total
+            }))
+          );
+
+        if (productsError) throw productsError;
+      }
+
+      // Inserir serviços
+      if (data.services.length > 0) {
+        const { error: servicesError } = await supabase
+          .from("task_services")
+          .insert(
+            data.services.map(service => ({
+              task_id: task.id,
+              name: service.name,
+              quantity: service.quantity,
+              unit_price: service.unitPrice,
+              discount: service.discount,
+              total: service.total
+            }))
+          );
+
+        if (servicesError) throw servicesError;
+      }
+
+      // Inserir custos adicionais
+      if (data.additionalCosts.length > 0) {
+        const { error: costsError } = await supabase
+          .from("task_additional_costs")
+          .insert(
+            data.additionalCosts.map(cost => ({
+              task_id: task.id,
+              description: cost.description,
+              value: cost.value
+            }))
+          );
+
+        if (costsError) throw costsError;
+      }
+
+      // Vincular equipamentos
+      if (data.equipments.length > 0) {
+        const { error: equipmentsError } = await supabase
+          .from("task_equipments")
+          .insert(
+            data.equipments.map(equipmentId => ({
+              task_id: task.id,
+              equipment_id: equipmentId
+            }))
+          );
+
+        if (equipmentsError) throw equipmentsError;
+      }
 
       toast({
-        title: "Tarefa criada com sucesso!",
-        description: "A tarefa foi registrada no sistema."
+        title: "Sucesso!",
+        description: "Tarefa criada com sucesso.",
       });
 
       form.reset();
-      onSuccess?.();
       onOpenChange(false);
+      onSuccess?.();
+
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
       toast({
-        title: "Erro ao criar tarefa",
-        description: "Tente novamente mais tarde.",
-        variant: "destructive"
+        title: "Erro",
+        description: "Erro ao criar tarefa. Tente novamente.",
+        variant: "destructive",
       });
     }
   };
@@ -203,16 +269,22 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
     }
   };
 
+  const handleSaveAndAddAnother = async (data: TaskFormData) => {
+    await onSubmit(data);
+    // Reset form but keep modal open
+    form.reset();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nova Tarefa / Ordem de Serviço</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="general">Geral</TabsTrigger>
                 <TabsTrigger value="location">Localização</TabsTrigger>
@@ -222,31 +294,29 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
                 <TabsTrigger value="values">Valores</TabsTrigger>
               </TabsList>
 
-              <div className="flex-1 overflow-auto">
-                <TabsContent value="general" className="mt-6">
-                  <GeneralTab form={form} />
-                </TabsContent>
+              <TabsContent value="general" className="mt-6">
+                <GeneralTab form={form} />
+              </TabsContent>
 
-                <TabsContent value="location" className="mt-6">
-                  <LocationTab form={form} />
-                </TabsContent>
+              <TabsContent value="location" className="mt-6">
+                <LocationTab form={form} />
+              </TabsContent>
 
-                <TabsContent value="equipments" className="mt-6">
-                  <EquipmentsTab form={form} />
-                </TabsContent>
+              <TabsContent value="equipments" className="mt-6">
+                <EquipmentsTab form={form} />
+              </TabsContent>
 
-                <TabsContent value="attachments" className="mt-6">
-                  <AttachmentsTab form={form} />
-                </TabsContent>
+              <TabsContent value="attachments" className="mt-6">
+                <AttachmentsTab form={form} />
+              </TabsContent>
 
-                <TabsContent value="repetition" className="mt-6">
-                  <RepetitionTab form={form} />
-                </TabsContent>
+              <TabsContent value="repetition" className="mt-6">
+                <RepetitionTab form={form} />
+              </TabsContent>
 
-                <TabsContent value="values" className="mt-6">
-                  <ValuesTab form={form} />
-                </TabsContent>
-              </div>
+              <TabsContent value="values" className="mt-6">
+                <ValuesTab form={form} />
+              </TabsContent>
             </Tabs>
 
             <div className="flex justify-between items-center pt-6 border-t">
@@ -266,10 +336,11 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
                 <Button type="submit">
                   Salvar
                 </Button>
-                <Button type="button" onClick={() => {
-                  form.handleSubmit(onSubmit)();
-                  form.reset();
-                }}>
+                <Button 
+                  type="button" 
+                  variant="default"
+                  onClick={form.handleSubmit(handleSaveAndAddAnother)}
+                >
                   Salvar e Incluir Outra
                 </Button>
               </div>
