@@ -111,6 +111,18 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
 
   const onSubmit = async (data: TaskFormData) => {
     try {
+      // Obter usuário atual e empresa
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Usuário não autenticado");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("user_id", userData.user.id)
+        .single();
+
+      if (!profile?.company_id) throw new Error("Empresa não encontrada");
+
       // Calcular totais
       const productsTotal = data.products.reduce((sum, product) => sum + product.total, 0);
       const servicesTotal = data.services.reduce((sum, service) => sum + service.total, 0);
@@ -149,7 +161,8 @@ export function TaskFormModal({ open, onOpenChange, onSuccess }: TaskFormModalPr
           services_total: servicesTotal,
           additional_costs_total: additionalCostsTotal,
           global_discount: data.globalDiscount,
-          final_total: finalTotal
+          final_total: finalTotal,
+          company_id: profile.company_id
         })
         .select()
         .single();

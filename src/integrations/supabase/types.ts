@@ -653,6 +653,258 @@ export type Database = {
         }
         Relationships: []
       }
+      task_additional_costs: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          task_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          task_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          task_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      task_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          task_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          task_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          task_id?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      task_equipments: {
+        Row: {
+          created_at: string
+          equipment_id: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          equipment_id: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          equipment_id?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
+      task_products: {
+        Row: {
+          created_at: string
+          discount: number | null
+          id: string
+          name: string
+          quantity: number
+          task_id: string
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          discount?: number | null
+          id?: string
+          name: string
+          quantity: number
+          task_id: string
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          discount?: number | null
+          id?: string
+          name?: string
+          quantity?: number
+          task_id?: string
+          total?: number
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      task_services: {
+        Row: {
+          created_at: string
+          discount: number | null
+          id: string
+          name: string
+          quantity: number
+          task_id: string
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          discount?: number | null
+          id?: string
+          name: string
+          quantity: number
+          task_id: string
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          discount?: number | null
+          id?: string
+          name?: string
+          quantity?: number
+          task_id?: string
+          total?: number
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          additional_costs_total: number | null
+          address: string | null
+          assigned_to: string
+          check_in_type: string
+          client_id: string | null
+          company_id: string
+          created_at: string
+          description: string
+          duration_minutes: number
+          end_date: string | null
+          end_type: string | null
+          external_code: string | null
+          final_total: number | null
+          frequency: string | null
+          global_discount: number | null
+          google_maps_url: string | null
+          id: string
+          is_recurring: boolean | null
+          keyword: string | null
+          latitude: number | null
+          longitude: number | null
+          priority: string
+          products_total: number | null
+          questionnaire_id: string | null
+          repeat_count: number | null
+          scheduled_date: string
+          services_total: number | null
+          status: string
+          survey_recipient_email: string | null
+          task_type: string
+          updated_at: string
+          use_satisfaction_survey: boolean | null
+          week_days: number[] | null
+        }
+        Insert: {
+          additional_costs_total?: number | null
+          address?: string | null
+          assigned_to: string
+          check_in_type?: string
+          client_id?: string | null
+          company_id: string
+          created_at?: string
+          description: string
+          duration_minutes: number
+          end_date?: string | null
+          end_type?: string | null
+          external_code?: string | null
+          final_total?: number | null
+          frequency?: string | null
+          global_discount?: number | null
+          google_maps_url?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          keyword?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          priority?: string
+          products_total?: number | null
+          questionnaire_id?: string | null
+          repeat_count?: number | null
+          scheduled_date: string
+          services_total?: number | null
+          status?: string
+          survey_recipient_email?: string | null
+          task_type: string
+          updated_at?: string
+          use_satisfaction_survey?: boolean | null
+          week_days?: number[] | null
+        }
+        Update: {
+          additional_costs_total?: number | null
+          address?: string | null
+          assigned_to?: string
+          check_in_type?: string
+          client_id?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          end_date?: string | null
+          end_type?: string | null
+          external_code?: string | null
+          final_total?: number | null
+          frequency?: string | null
+          global_discount?: number | null
+          google_maps_url?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          keyword?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          priority?: string
+          products_total?: number | null
+          questionnaire_id?: string | null
+          repeat_count?: number | null
+          scheduled_date?: string
+          services_total?: number | null
+          status?: string
+          survey_recipient_email?: string | null
+          task_type?: string
+          updated_at?: string
+          use_satisfaction_survey?: boolean | null
+          week_days?: number[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
