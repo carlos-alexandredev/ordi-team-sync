@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Activity, Database, Shield } from "lucide-react";
+import { Search, Activity, Database, Shield, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -37,41 +37,71 @@ export const SystemLogs = () => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const { toast } = useToast();
+
+  const PAGE_SIZE = 50;
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     loadLogs();
-  }, []);
+  }, [debouncedSearch, dateFilter, eventTypeFilter, currentPage]);
 
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
-      let query = supabase
+      
+      // Count query
+      let countQuery = supabase
+        .from("system_logs")
+        .select("*", { count: "exact", head: true });
+
+      // Data query
+      let dataQuery = supabase
         .from("system_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .range((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE - 1);
 
+      // Apply filters
       if (dateFilter) {
         const startDate = new Date(dateFilter);
         const endDate = new Date(dateFilter);
         endDate.setDate(endDate.getDate() + 1);
         
-        query = query
+        countQuery = countQuery
+          .gte("created_at", startDate.toISOString())
+          .lt("created_at", endDate.toISOString());
+        dataQuery = dataQuery
           .gte("created_at", startDate.toISOString())
           .lt("created_at", endDate.toISOString());
       }
 
       if (eventTypeFilter !== "all") {
-        query = query.eq("event_type", eventTypeFilter);
+        countQuery = countQuery.eq("event_type", eventTypeFilter);
+        dataQuery = dataQuery.eq("event_type", eventTypeFilter);
       }
 
-      const { data, error } = await query;
+      const [{ count }, { data, error }] = await Promise.all([
+        countQuery,
+        dataQuery
+      ]);
 
       if (error) throw error;
+      
       setLogs((data as SystemLog[]) || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error("Erro ao carregar logs:", error);
       toast({
@@ -82,17 +112,25 @@ export const SystemLogs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, dateFilter, eventTypeFilter, toast]);
 
-  const filteredLogs = logs.filter((log) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
+  const filteredLogs = useMemo(() => {
+    if (!debouncedSearch) return logs;
+    
+    const searchLower = debouncedSearch.toLowerCase();
+    return logs.filter((log) =>
       log.action.toLowerCase().includes(searchLower) ||
       log.user_email?.toLowerCase().includes(searchLower) ||
       log.table_name?.toLowerCase().includes(searchLower) ||
-      log.ip_address?.includes(searchTerm)
+      log.ip_address?.includes(debouncedSearch)
     );
-  });
+  }, [logs, debouncedSearch]);
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
@@ -184,7 +222,13 @@ export const SystemLogs = () => {
               </select>
             </div>
             <div className="flex items-end">
-              <Button onClick={loadLogs} className="w-full">
+              <Button 
+                onClick={() => {
+                  setCurrentPage(1);
+                  loadLogs();
+                }} 
+                className="w-full"
+              >
                 Filtrar
               </Button>
             </div>
@@ -195,9 +239,14 @@ export const SystemLogs = () => {
       {/* Logs */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Atividades Recentes ({filteredLogs.length})
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Atividades Recentes ({filteredLogs.length} de {totalCount})
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              Página {currentPage} de {totalPages}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -266,6 +315,47 @@ export const SystemLogs = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-2"
+              >
+                Próxima
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </CardContent>
