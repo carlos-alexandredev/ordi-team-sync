@@ -1,6 +1,6 @@
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { SystemLogs } from "@/components/logs/SystemLogs";
+import { SystemLogs } from "@/components/SystemLogs";
 
 const Logs = () => {
   return (
