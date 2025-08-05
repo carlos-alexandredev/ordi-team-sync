@@ -5,12 +5,14 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/navigation/TopBar";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuthLogger } from "@/hooks/useAuthLogger";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
+  useAuthLogger();
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
