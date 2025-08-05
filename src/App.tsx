@@ -32,6 +32,7 @@ import FormasPagamento from "./pages/FormasPagamento";
 import TiposTarefas from "./pages/TiposTarefas";
 import Questionarios from "./pages/Questionarios";
 import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
+import AdminSettings from "./pages/AdminSettings";
 import ClientsAdvanced from "./pages/ClientsAdvanced";
 import SuppliersAdvanced from "./pages/SuppliersAdvanced";
 
@@ -72,6 +73,7 @@ function AppContent() {
         <Route path="/tipos-tarefas" element={<TiposTarefas />} />
         <Route path="/questionarios" element={<Questionarios />} />
         <Route path="/pesquisa-satisfacao" element={<PesquisaSatisfacao />} />
+        <Route path="/admin-settings" element={<AdminSettings />} />
         
         {/* Páginas avançadas alternativas para teste */}
         <Route path="/clients-advanced" element={<ClientsAdvanced />} />
