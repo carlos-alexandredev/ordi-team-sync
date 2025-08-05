@@ -9,10 +9,10 @@ export function usePageLoading() {
     // Start loading when route changes
     setIsLoading(true);
     
-    // Simulate minimum loading time for better UX
+    // Reduced loading time for better performance
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);

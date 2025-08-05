@@ -11,8 +11,8 @@ export function PageLoading({ isLoading }: PageLoadingProps) {
     if (isLoading) {
       setShow(true);
     } else {
-      // Delay hiding to ensure smooth transition
-      const timer = setTimeout(() => setShow(false), 200);
+      // Faster transition for better performance
+      const timer = setTimeout(() => setShow(false), 100);
       return () => clearTimeout(timer);
     }
   }, [isLoading]);

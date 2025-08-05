@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ const PesquisaSatisfacao = () => {
     }
   ]);
 
-  const addQuestion = () => {
+  const addQuestion = useCallback(() => {
     const newQuestion: Question = {
       id: Date.now().toString(),
       title: `Pergunta ${questions.length + 1}`,
@@ -40,25 +40,26 @@ const PesquisaSatisfacao = () => {
       multipleChoice: false,
       options: []
     };
-    setQuestions([...questions, newQuestion]);
-  };
+    setQuestions(prev => [...prev, newQuestion]);
+  }, [questions.length]);
 
-  const removeQuestion = (id: string) => {
-    setQuestions(questions.filter(q => q.id !== id));
-  };
+  const removeQuestion = useCallback((id: string) => {
+    setQuestions(prev => prev.filter(q => q.id !== id));
+  }, []);
 
-  const updateQuestion = (id: string, field: keyof Question, value: any) => {
-    setQuestions(questions.map(q => 
+  const updateQuestion = useCallback((id: string, field: keyof Question, value: any) => {
+    setQuestions(prev => prev.map(q => 
       q.id === id ? { ...q, [field]: value } : q
     ));
-  };
+  }, []);
 
-  const addOption = (questionId: string) => {
-    updateQuestion(questionId, 'options', [
-      ...questions.find(q => q.id === questionId)?.options || [],
-      ''
-    ]);
-  };
+  const addOption = useCallback((questionId: string) => {
+    setQuestions(prev => prev.map(q => 
+      q.id === questionId 
+        ? { ...q, options: [...q.options, ''] }
+        : q
+    ));
+  }, []);
 
   return (
     <AuthLayout>
