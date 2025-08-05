@@ -15,6 +15,7 @@ import Calls from "./pages/Calls";
 import Orders from "./pages/Orders";
 import Equipments from "./pages/Equipments";
 import Technician from "./pages/Technician";
+import TechnicianSchedule from "./pages/TechnicianSchedule";
 import Reports from "./pages/Reports";
 import ClientPortal from "./pages/ClientPortal";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
@@ -44,6 +45,7 @@ function AppContent() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/equipments" element={<Equipments />} />
         <Route path="/technician" element={<Technician />} />
+        <Route path="/technician-schedule" element={<TechnicianSchedule />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/client-portal" element={<ClientPortal />} />
         <Route path="/supervisor" element={<SupervisorDashboard />} />
