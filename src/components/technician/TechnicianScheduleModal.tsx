@@ -146,27 +146,27 @@ export function TechnicianScheduleModal({ open, onOpenChange, order, onOrderUpda
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-4">
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader className="space-y-3">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <DialogTitle className="text-xl font-semibold pr-8">
+                <DialogTitle className="text-lg font-semibold pr-8 leading-tight">
                   {order.title}
                 </DialogTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge className={getStatusColor(order.status)} variant="secondary">
                     <div className="flex items-center gap-1">
                       {getStatusIcon(order.status)}
-                      {getStatusLabel(order.status)}
+                      <span className="text-xs">{getStatusLabel(order.status)}</span>
                     </div>
                   </Badge>
                   <Badge className={getPriorityColor(order.priority)}>
-                    {getPriorityLabel(order.priority)}
+                    <span className="text-xs">{order.priority.toUpperCase()}</span>
                   </Badge>
                   {isOverdue && (
-                    <Badge variant="destructive" className="animate-pulse">
+                    <Badge variant="destructive">
                       <AlertTriangle className="h-3 w-3 mr-1" />
-                      Atrasada
+                      <span className="text-xs">Atrasada</span>
                     </Badge>
                   )}
                 </div>
@@ -174,125 +174,72 @@ export function TechnicianScheduleModal({ open, onOpenChange, order, onOrderUpda
             </div>
           </DialogHeader>
 
-          <div className="space-y-6">
-            {/* Informações de Data e Hora */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Agendamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Data:</span>
-                  <span>{format(new Date(order.scheduled_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+          <div className="space-y-4">
+            {/* Data e Hora - Compacta */}
+            <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg">
+              <div className="text-sm">
+                <div className="flex items-center gap-1 text-muted-foreground mb-1">
+                  <Calendar className="h-3 w-3" />
+                  <span className="text-xs font-medium">Data</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Horário:</span>
-                  <span>{format(new Date(order.scheduled_date), "HH:mm", { locale: ptBR })}h</span>
+                <p className="font-medium">{format(new Date(order.scheduled_date), "dd/MM/yyyy", { locale: ptBR })}</p>
+              </div>
+              <div className="text-sm">
+                <div className="flex items-center gap-1 text-muted-foreground mb-1">
+                  <Clock className="h-3 w-3" />
+                  <span className="text-xs font-medium">Horário</span>
                 </div>
-              </CardContent>
-            </Card>
+                <p className="font-medium">{format(new Date(order.scheduled_date), "HH:mm", { locale: ptBR })}h</p>
+              </div>
+            </div>
 
-            {/* Informações do Cliente */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">Nome:</span>
-                  <span>{order.client_name}</span>
+            {/* Cliente e Técnico - Compacta */}
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center gap-3 p-2 border rounded">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Cliente</p>
+                  <p className="font-medium text-sm">{order.client_name}</p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <span>contato@cliente.com</span>
+              </div>
+              <div className="flex items-center gap-3 p-2 border rounded">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Técnico</p>
+                  <p className="font-medium text-sm">{order.technician_name}</p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  <span>(11) 99999-9999</span>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Informações do Técnico */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Técnico Responsável
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">Nome:</span>
-                  <span>{order.technician_name}</span>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Descrição - Compacta */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Descrição</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 p-3 rounded">
+                {order.description}
+              </p>
+            </div>
 
-            {/* Descrição da Tarefa */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">
-                  Descrição da Tarefa
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {order.description}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Informações Adicionais */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">
-                  Informações Adicionais
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-muted-foreground">Código da Tarefa:</span>
-                    <p className="font-mono">{order.id.slice(0, 8).toUpperCase()}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-muted-foreground">Duração Estimada:</span>
-                    <p>2h30min</p>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <span className="font-medium text-muted-foreground text-sm">Endereço:</span>
-                  <p className="text-sm">Rua das Flores, 123 - Centro, São Paulo - SP</p>
-                </div>
-                
-                <div>
-                  <span className="font-medium text-muted-foreground text-sm">Orientações:</span>
-                  <p className="text-sm">Entrar pela portaria principal e solicitar acesso ao responsável pela segurança.</p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Informações Extras - Compacta */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="text-center p-2 bg-muted/20 rounded">
+                <p className="text-muted-foreground">Código</p>
+                <p className="font-mono font-medium">{order.id.slice(0, 8).toUpperCase()}</p>
+              </div>
+              <div className="text-center p-2 bg-muted/20 rounded">
+                <p className="text-muted-foreground">Duração</p>
+                <p className="font-medium">2h30min</p>
+              </div>
+            </div>
           </div>
 
           {/* Botões de Ação */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end gap-2 pt-3 border-t">
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
               Fechar
             </Button>
-            <Button onClick={handleEdit} className="flex items-center gap-2">
-              <Edit className="h-4 w-4" />
-              Editar Tarefa
+            <Button size="sm" onClick={handleEdit} className="flex items-center gap-1">
+              <Edit className="h-3 w-3" />
+              Editar
             </Button>
           </div>
         </DialogContent>
