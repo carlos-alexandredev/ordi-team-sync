@@ -147,6 +147,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
           
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* Menus originais baseados em permissões */}
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
