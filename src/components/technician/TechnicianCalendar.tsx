@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, User, Filter, Plus } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, isToday, getDay, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { OrderFormModal } from "@/components/orders/OrderFormModal";
+import { TechnicianScheduleModal } from "./TechnicianScheduleModal";
 import { cn } from "@/lib/utils";
 
 interface ScheduleOrder {
@@ -467,25 +467,12 @@ export function TechnicianCalendar() {
       </Card>
 
       {/* Modal de Detalhes da Ordem */}
-      {selectedOrder && (
-        <OrderFormModal
-          open={showOrderModal}
-          onOpenChange={setShowOrderModal}
-          onSuccess={handleOrderSuccess}
-          order={{
-            id: selectedOrder.id,
-            title: selectedOrder.title,
-            description: selectedOrder.description,
-            priority: selectedOrder.priority,
-            status: selectedOrder.status === 'atrasada' ? 'pendente' : 
-                   selectedOrder.status === 'pendente_finalizacao' ? 'concluída' : 
-                   selectedOrder.status as "pendente" | "em execução" | "concluída" | "cancelada",
-            client_id: selectedOrder.client_id,
-            technician_id: selectedOrder.technician_id,
-            scheduled_date: selectedOrder.scheduled_date
-          }}
-        />
-      )}
+      <TechnicianScheduleModal
+        open={showOrderModal}
+        onOpenChange={setShowOrderModal}
+        order={selectedOrder}
+        onOrderUpdate={handleOrderSuccess}
+      />
     </div>
   );
 }
