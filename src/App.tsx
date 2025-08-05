@@ -32,6 +32,8 @@ import FormasPagamento from "./pages/FormasPagamento";
 import TiposTarefas from "./pages/TiposTarefas";
 import Questionarios from "./pages/Questionarios";
 import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
+import ClientsAdvanced from "./pages/ClientsAdvanced";
+import SuppliersAdvanced from "./pages/SuppliersAdvanced";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,10 @@ function AppContent() {
         <Route path="/tipos-tarefas" element={<TiposTarefas />} />
         <Route path="/questionarios" element={<Questionarios />} />
         <Route path="/pesquisa-satisfacao" element={<PesquisaSatisfacao />} />
+        
+        {/* Páginas avançadas alternativas para teste */}
+        <Route path="/clients-advanced" element={<ClientsAdvanced />} />
+        <Route path="/suppliers-advanced" element={<SuppliersAdvanced />} />
         
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
