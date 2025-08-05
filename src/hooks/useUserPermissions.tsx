@@ -24,7 +24,7 @@ export const useUserPermissions = () => {
 
       if (error) throw error;
 
-      const allowedModules = data?.filter((module: UserModule) => module.is_allowed) || [];
+      const allowedModules = data || [];
       setModules(allowedModules);
     } catch (error) {
       console.error("Erro ao carregar módulos do usuário:", error);

@@ -66,11 +66,13 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const getMenuItems = () => {
     if (loading) return [];
 
-    const menuItems = modules.map((module) => ({
-      title: module.module_title,
-      url: module.module_url,
-      icon: getIcon(module.module_icon),
-    }));
+    const menuItems = modules
+      .filter(module => module.is_allowed) // Filtrar apenas módulos permitidos
+      .map((module) => ({
+        title: module.module_title,
+        url: module.module_url,
+        icon: getIcon(module.module_icon),
+      }));
 
     // Admin master sempre tem acesso ao gerenciamento de permissões
     if (userRole === 'admin_master') {
