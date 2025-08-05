@@ -169,18 +169,34 @@ export function UserPermissionsManager() {
     setSaving(true);
     try {
       const customPermissions = permissions.filter((perm) => perm.has_custom_permission);
+      console.log("Saving permissions for user:", selectedUser.id);
+      console.log("Custom permissions:", customPermissions);
+
+      // Buscar o profile_id do usuário logado
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      console.log("Current user profile:", currentUserProfile);
 
       for (const perm of customPermissions) {
+        console.log("Processing permission:", perm);
+        
         const { error } = await supabase
           .from("user_permissions")
           .upsert({
             user_id: selectedUser.id,
             module_id: perm.module_id,
             can_access: perm.can_access,
-            granted_by: (await supabase.auth.getUser()).data.user?.id,
+            granted_by: currentUserProfile?.id,
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error upserting permission:", error);
+          throw error;
+        }
       }
 
       toast({
@@ -194,7 +210,7 @@ export function UserPermissionsManager() {
       console.error("Erro ao salvar permissões:", error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar permissões",
+        description: `Erro ao salvar permissões: ${error.message}`,
         variant: "destructive",
       });
     } finally {
