@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 
 interface SidebarProps {
   userRole: string;
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 export function Sidebar({ userRole, collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const getMenuItems = () => {
     const baseItems = [
@@ -117,7 +119,16 @@ export function Sidebar({ userRole, collapsed, onToggle }: SidebarProps) {
                 </>
               )}
             </Button>
-            <Button variant="outline" className="w-full" size={collapsed ? "sm" : "default"}>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              size={collapsed ? "sm" : "default"}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowTaskModal(true);
+              }}
+            >
               {collapsed ? <PlusCircle className="h-4 w-4" /> : (
                 <>
                   <PlusCircle className="h-4 w-4 mr-2" />
@@ -162,6 +173,15 @@ export function Sidebar({ userRole, collapsed, onToggle }: SidebarProps) {
           </div>
         </div>
       )}
+
+      {/* Modal Nova Ordem */}
+      <TaskFormModal
+        open={showTaskModal}
+        onOpenChange={setShowTaskModal}
+        onSuccess={() => {
+          setShowTaskModal(false);
+        }}
+      />
     </div>
   );
 }

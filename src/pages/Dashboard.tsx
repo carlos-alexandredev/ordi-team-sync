@@ -18,6 +18,7 @@ import { ServiceEvaluation } from "@/components/evaluation/ServiceEvaluation";
 import { EquipmentHistory } from "@/components/equipment/EquipmentHistory";
 import { RBACManager } from "@/components/rbac/RBACManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 interface ServiceOrder {
   id: string;
   order_number: string;
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const {
     toast
   } = useToast();
@@ -317,12 +319,13 @@ export default function Dashboard() {
               <CardContent>
                 {orders.length === 0 ? <div className="text-center py-8">
                     <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
-                    <Link to="/orders">
-                      <Button className="mt-4">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar primeira ordem
-                      </Button>
-                    </Link>
+                     <Button 
+                       className="mt-4"
+                       onClick={() => setShowTaskModal(true)}
+                     >
+                       <Plus className="h-4 w-4 mr-2" />
+                       Criar primeira ordem
+                     </Button>
                   </div> : <div className="space-y-4">
                     {orders.map(order => <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                         <div className="flex items-start justify-between">
@@ -410,7 +413,10 @@ export default function Dashboard() {
             <CardContent>
               {orders.length === 0 ? <div className="text-center py-8">
                   <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
-                  <Button className="mt-4">
+                  <Button 
+                    className="mt-4"
+                    onClick={() => setShowTaskModal(true)}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Criar primeira ordem
                   </Button>
@@ -447,5 +453,15 @@ export default function Dashboard() {
           </Card>
         </>}
       </div>
+
+      {/* Modal Nova Ordem */}
+      <TaskFormModal
+        open={showTaskModal}
+        onOpenChange={setShowTaskModal}
+        onSuccess={() => {
+          setShowTaskModal(false);
+          fetchOrders(); // Recarregar as ordens após criar uma nova
+        }}
+      />
     </AuthLayout>;
 }
