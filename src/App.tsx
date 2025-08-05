@@ -19,6 +19,7 @@ import Reports from "./pages/Reports";
 import ClientPortal from "./pages/ClientPortal";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import Desk from "./pages/Desk";
+import UserPermissions from "./pages/UserPermissions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ function AppContent() {
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/user-permissions" element={<UserPermissions />} />
         <Route path="/companies" element={<Companies />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/suppliers" element={<Suppliers />} />

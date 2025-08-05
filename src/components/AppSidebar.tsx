@@ -10,10 +10,12 @@ import {
   Settings, 
   LogOut,
   Home,
-  Plus
+  Plus,
+  Shield
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { TaskFormModal } from "@/components/tasks/TaskFormModal";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 
 import {
   Sidebar,
@@ -37,73 +39,49 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const { modules, loading } = useUserPermissions();
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = (isActive: boolean) =>
     isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted/50";
 
-  // Definir itens do menu baseado no role
+  // Mapear ícones
+  const getIcon = (iconName: string) => {
+    const iconMap: Record<string, any> = {
+      Home,
+      Settings,
+      Users,
+      Building,
+      UserCheck,
+      FileText,
+      ClipboardList,
+      Wrench,
+      BarChart,
+      Shield,
+    };
+    return iconMap[iconName] || Settings;
+  };
+
+  // Construir itens do menu baseado nas permissões do usuário
   const getMenuItems = () => {
-    const baseItems = [
-      { title: "Dashboard", url: "/dashboard", icon: Home }
-    ];
+    if (loading) return [];
 
+    const menuItems = modules.map((module) => ({
+      title: module.module_title,
+      url: module.module_url,
+      icon: getIcon(module.module_icon),
+    }));
+
+    // Admin master sempre tem acesso ao gerenciamento de permissões
     if (userRole === 'admin_master') {
-      return [
-        ...baseItems,
-        { title: "Desk", url: "/desk", icon: Settings },
-        { title: "Usuários", url: "/users", icon: Users },
-        { title: "Empresas", url: "/companies", icon: Building },
-        { title: "Clientes", url: "/clients", icon: UserCheck },
-        { title: "Chamados", url: "/calls", icon: FileText },
-        { title: "Ordens", url: "/orders", icon: ClipboardList },
-        { title: "Equipamentos", url: "/equipments", icon: Wrench },
-        { title: "Técnicos", url: "/technician", icon: Settings },
-        { title: "Fornecedores", url: "/suppliers", icon: Building },
-        { title: "Relatórios", url: "/reports", icon: BarChart },
-      ];
+      menuItems.push({
+        title: "Permissões",
+        url: "/user-permissions",
+        icon: Shield,
+      });
     }
 
-    if (userRole === 'admin') {
-      return [
-        ...baseItems,
-        { title: "Configurações", url: "/desk", icon: Settings },
-        { title: "Empresas", url: "/companies", icon: Building },
-        { title: "Fornecedores", url: "/suppliers", icon: Building },
-        { title: "Relatórios", url: "/reports", icon: BarChart },
-      ];
-    }
-
-    if (userRole === 'gestor' || userRole === 'admin_cliente') {
-      return [
-        ...baseItems,
-        { title: "Desk", url: "/desk", icon: Settings },
-        { title: "Clientes", url: "/clients", icon: UserCheck },
-        { title: "Chamados", url: "/calls", icon: FileText },
-        { title: "Ordens", url: "/orders", icon: ClipboardList },
-        { title: "Equipamentos", url: "/equipments", icon: Wrench },
-        { title: "Técnicos", url: "/technician", icon: Settings },
-        { title: "Relatórios", url: "/reports", icon: BarChart },
-      ];
-    }
-
-    if (userRole === 'tecnico') {
-      return [
-        { title: "Painel Técnico", url: "/technician", icon: Settings },
-        { title: "Minhas Ordens", url: "/orders", icon: ClipboardList },
-        { title: "Chamados", url: "/calls", icon: FileText },
-      ];
-    }
-
-    if (userRole === 'cliente') {
-      return [
-        { title: "Portal Cliente", url: "/client-portal", icon: Home },
-        { title: "Meus Chamados", url: "/calls", icon: FileText },
-        { title: "Minhas Ordens", url: "/orders", icon: ClipboardList },
-      ];
-    }
-
-    return baseItems;
+    return menuItems;
   };
 
   const menuItems = getMenuItems();

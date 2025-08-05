@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: string[];
+  allowedRoles?: string[];
   fallback?: React.ReactNode;
 }
 
-export function ProtectedRoute({ children, allowedRoles, fallback }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowedRoles = [], fallback }: ProtectedRouteProps) {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
   const { toast } = useToast();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -23,17 +26,41 @@ export function ProtectedRoute({ children, allowedRoles, fallback }: ProtectedRo
             .select("*")
             .eq("user_id", user.id)
             .single();
+          
           setUserProfile(profile);
+          
+          // Se allowedRoles está vazio, qualquer usuário autenticado tem acesso
+          if (allowedRoles.length === 0) {
+            setHasAccess(true);
+            return;
+          }
+          
+          // Verificar se o role está nas roles permitidas
+          if (allowedRoles.includes(profile?.role)) {
+            setHasAccess(true);
+            return;
+          }
+          
+          // Para outros usuários, verificar permissões dinâmicas
+          const currentPath = location.pathname;
+          const { data: modules } = await supabase.rpc("get_user_allowed_modules");
+          
+          const hasModuleAccess = modules?.some((module: any) => 
+            module.module_url === currentPath && module.is_allowed
+          );
+          
+          setHasAccess(hasModuleAccess || false);
         }
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
+        setHasAccess(false);
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserProfile();
-  }, []);
+  }, [allowedRoles, location.pathname]);
 
   if (loading) {
     return (
@@ -43,7 +70,7 @@ export function ProtectedRoute({ children, allowedRoles, fallback }: ProtectedRo
     );
   }
 
-  if (!userProfile || !allowedRoles.includes(userProfile.role)) {
+  if (!userProfile || !hasAccess) {
     if (fallback) {
       return <>{fallback}</>;
     }
