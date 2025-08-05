@@ -150,14 +150,14 @@ export default function Dashboard() {
           <p className="text-muted-foreground">
             Bem-vindo, {userProfile?.name || "Usuário"}
           </p>
-          {userProfile?.role && <p className="text-sm text-muted-foreground">
-              Perfil: {userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'admin_cliente' ? 'Admin Cliente' : userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
-            </p>}
+           {userProfile?.role && <p className="text-sm text-muted-foreground">
+               Perfil: {userProfile.role === 'admin_master' ? 'Admin Master' : userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'admin_cliente' ? 'Admin Cliente' : userProfile.role === 'gestor' ? 'Gestor' : userProfile.role === 'tecnico' ? 'Técnico' : 'Cliente Final'}
+             </p>}
         </div>
       </div>
 
       {/* Dashboard específico por tipo de usuário */}
-      {userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente' ? <div className="space-y-4 sm:space-y-6">
+      {userProfile?.role === 'admin_master' || userProfile?.role === 'admin' || userProfile?.role === 'admin_cliente' || userProfile?.role === 'gestor' ? <div className="space-y-4 sm:space-y-6">
           {/* Header com menu dropdown */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">

@@ -207,8 +207,10 @@ export function UserFormModal({ isOpen, onClose, onSuccess, editingUser, compani
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="admin_master">Admin Master</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="admin_cliente">Admin Cliente</SelectItem>
+                <SelectItem value="gestor">Gestor</SelectItem>
                 <SelectItem value="tecnico">Técnico</SelectItem>
                 <SelectItem value="cliente_final">Cliente Final</SelectItem>
               </SelectContent>

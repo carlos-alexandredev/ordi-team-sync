@@ -48,18 +48,33 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       { title: "Dashboard", url: "/dashboard", icon: Home }
     ];
 
-    if (userRole === 'admin') {
+    if (userRole === 'admin_master') {
       return [
         ...baseItems,
         { title: "Configurações", url: "/desk", icon: Settings },
         { title: "Usuários", url: "/users", icon: Users },
+        { title: "Empresas", url: "/companies", icon: Building },
+        { title: "Clientes", url: "/clients", icon: UserCheck },
+        { title: "Chamados", url: "/calls", icon: FileText },
+        { title: "Ordens", url: "/orders", icon: ClipboardList },
+        { title: "Equipamentos", url: "/equipments", icon: Wrench },
+        { title: "Técnicos", url: "/technician", icon: Settings },
+        { title: "Fornecedores", url: "/suppliers", icon: Building },
+        { title: "Relatórios", url: "/reports", icon: BarChart },
+      ];
+    }
+
+    if (userRole === 'admin') {
+      return [
+        ...baseItems,
+        { title: "Configurações", url: "/desk", icon: Settings },
         { title: "Empresas", url: "/companies", icon: Building },
         { title: "Fornecedores", url: "/suppliers", icon: Building },
         { title: "Relatórios", url: "/reports", icon: BarChart },
       ];
     }
 
-    if (userRole === 'gestor') {
+    if (userRole === 'gestor' || userRole === 'admin_cliente') {
       return [
         ...baseItems,
         { title: "Desk", url: "/desk", icon: Settings },
@@ -122,7 +137,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
         </SidebarGroup>
 
         {/* Botão Nova Tarefa para gestores e admin_cliente */}
-        {(userRole === 'gestor' || userRole === 'admin_cliente' || userRole === 'admin') && (
+        {(userRole === 'admin_master' || userRole === 'gestor' || userRole === 'admin_cliente' || userRole === 'admin') && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
