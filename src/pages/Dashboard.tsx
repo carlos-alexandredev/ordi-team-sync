@@ -248,6 +248,12 @@ export default function Dashboard() {
                       <Settings className="mr-2 h-4 w-4" />
                       Configurações Admin
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin-settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Configurações do Sistema
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

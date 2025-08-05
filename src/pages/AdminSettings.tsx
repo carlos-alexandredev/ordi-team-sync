@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useAppSettings } from '@/stores/useAppSettings';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AuthLayout } from '@/components/AuthLayout';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -20,7 +21,8 @@ const AdminSettings = () => {
 
   return (
     <ProtectedRoute allowedRoles={["admin_master"]}>
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <AuthLayout>
+        <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Configurações do Sistema
@@ -68,7 +70,8 @@ const AdminSettings = () => {
             </p>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </AuthLayout>
     </ProtectedRoute>
   );
 };
