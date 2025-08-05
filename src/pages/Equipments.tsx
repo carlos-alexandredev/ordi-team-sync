@@ -5,7 +5,7 @@ import { EquipmentsList } from "@/components/equipments/EquipmentsList";
 const Equipments = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente", "tecnico", "cliente_final"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente", "tecnico", "cliente_final"]}>
         <EquipmentsList />
       </ProtectedRoute>
     </AuthLayout>

@@ -5,7 +5,7 @@ import { ClientsList } from "@/components/clients/ClientsList";
 const Clients = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente"]}>
         <ClientsList />
       </ProtectedRoute>
     </AuthLayout>

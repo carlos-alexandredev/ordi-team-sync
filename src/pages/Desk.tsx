@@ -5,7 +5,7 @@ import { SupervisorPanel } from "@/components/dashboard/SupervisorPanel";
 const Desk = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente"]}>
         <SupervisorPanel />
       </ProtectedRoute>
     </AuthLayout>

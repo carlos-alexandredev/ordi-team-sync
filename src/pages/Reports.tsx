@@ -5,7 +5,7 @@ import { ReportsAnalytics } from "@/components/reports/ReportsAnalytics";
 const Reports = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente"]}>
         <ReportsAnalytics />
       </ProtectedRoute>
     </AuthLayout>

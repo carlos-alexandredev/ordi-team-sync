@@ -5,7 +5,7 @@ import { SuppliersList } from "@/components/suppliers/SuppliersList";
 const Suppliers = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente"]}>
         <SuppliersList />
       </ProtectedRoute>
     </AuthLayout>

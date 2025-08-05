@@ -925,6 +925,10 @@ export type Database = {
           remaining_hours: number
         }[]
       }
+      ensure_admin_master_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string

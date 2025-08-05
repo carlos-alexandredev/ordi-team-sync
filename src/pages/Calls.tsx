@@ -5,7 +5,7 @@ import { CallsList } from "@/components/calls/CallsList";
 const Calls = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente", "cliente_final"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente", "cliente_final"]}>
         <CallsList />
       </ProtectedRoute>
     </AuthLayout>
