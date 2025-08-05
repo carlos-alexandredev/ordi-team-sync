@@ -23,6 +23,15 @@ import Desk from "./pages/Desk";
 import UserPermissions from "./pages/UserPermissions";
 import Logs from "./pages/Logs";
 import NotFound from "./pages/NotFound";
+import Equipes from "./pages/Equipes";
+import Colaboradores from "./pages/Colaboradores";
+import GruposClientes from "./pages/GruposClientes";
+import Produtos from "./pages/Produtos";
+import Servicos from "./pages/Servicos";
+import FormasPagamento from "./pages/FormasPagamento";
+import TiposTarefas from "./pages/TiposTarefas";
+import Questionarios from "./pages/Questionarios";
+import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +59,18 @@ function AppContent() {
         <Route path="/client-portal" element={<ClientPortal />} />
         <Route path="/supervisor" element={<SupervisorDashboard />} />
         <Route path="/desk" element={<Desk />} />
+        
+        {/* Módulo Cadastros */}
+        <Route path="/equipes" element={<Equipes />} />
+        <Route path="/colaboradores" element={<Colaboradores />} />
+        <Route path="/grupos-clientes" element={<GruposClientes />} />
+        <Route path="/produtos" element={<Produtos />} />
+        <Route path="/servicos" element={<Servicos />} />
+        <Route path="/formas-pagamento" element={<FormasPagamento />} />
+        <Route path="/tipos-tarefas" element={<TiposTarefas />} />
+        <Route path="/questionarios" element={<Questionarios />} />
+        <Route path="/pesquisa-satisfacao" element={<PesquisaSatisfacao />} />
+        
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

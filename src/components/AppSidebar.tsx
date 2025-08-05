@@ -11,7 +11,10 @@ import {
   LogOut,
   Home,
   Plus,
-  Shield
+  Shield,
+  Database,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { TaskFormModal } from "@/components/tasks/TaskFormModal";
@@ -26,6 +29,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -39,6 +45,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const { modules, loading } = useUserPermissions();
 
   const isActive = (path: string) => currentPath === path;
@@ -89,6 +96,47 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const menuItems = getMenuItems();
   const isExpanded = menuItems.some((item) => isActive(item.url));
 
+  // Itens do módulo Cadastros
+  const cadastrosItems = [
+    {
+      category: "Colaboradores",
+      items: [
+        { title: "Equipes", url: "/equipes", icon: Users },
+        { title: "Colaboradores", url: "/colaboradores", icon: UserCheck },
+      ]
+    },
+    {
+      category: "Clientes e Fornecedores", 
+      items: [
+        { title: "Clientes", url: "/clients", icon: Users },
+        { title: "Grupos de Clientes", url: "/grupos-clientes", icon: Building },
+        { title: "Fornecedores", url: "/suppliers", icon: Building },
+      ]
+    },
+    {
+      category: "Inventário e Serviços",
+      items: [
+        { title: "Equipamentos", url: "/equipments", icon: Wrench },
+        { title: "Produtos", url: "/produtos", icon: FileText },
+        { title: "Serviços", url: "/servicos", icon: Settings },
+        { title: "Formas de Pagamento", url: "/formas-pagamento", icon: FileText },
+      ]
+    },
+    {
+      category: "Tarefas",
+      items: [
+        { title: "Tipos de Tarefas", url: "/tipos-tarefas", icon: ClipboardList },
+        { title: "Questionários", url: "/questionarios", icon: FileText },
+        { title: "Pesquisa de Satisfação", url: "/pesquisa-satisfacao", icon: BarChart },
+      ]
+    }
+  ];
+
+  // Verificar se algum item de cadastros está ativo
+  const isCadastrosActive = cadastrosItems.some(category => 
+    category.items.some(item => isActive(item.url))
+  );
+
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarContent>
@@ -112,6 +160,51 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              
+              {/* Módulo Cadastros */}
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => setCadastrosOpen(!cadastrosOpen)}
+                  className={`${isCadastrosActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'} cursor-pointer`}
+                >
+                  <Database className="h-4 w-4" />
+                  {state !== "collapsed" && (
+                    <>
+                      <span>Cadastros</span>
+                      {cadastrosOpen ? (
+                        <ChevronDown className="ml-auto h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      )}
+                    </>
+                  )}
+                </SidebarMenuButton>
+                
+                {cadastrosOpen && state !== "collapsed" && (
+                  <SidebarMenuSub>
+                    {cadastrosItems.map((category) => (
+                      <div key={category.category}>
+                        <div className="px-3 py-1 text-xs font-medium text-muted-foreground">
+                          {category.category}
+                        </div>
+                        {category.items.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton 
+                              asChild
+                              className={getNavCls(isActive(item.url))}
+                            >
+                              <NavLink to={item.url} end>
+                                <item.icon className="h-3 w-3" />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </div>
+                    ))}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
