@@ -51,7 +51,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
     if (userRole === 'admin_master') {
       return [
         ...baseItems,
-        { title: "Configurações", url: "/desk", icon: Settings },
+        { title: "Desk", url: "/desk", icon: Settings },
         { title: "Usuários", url: "/users", icon: Users },
         { title: "Empresas", url: "/companies", icon: Building },
         { title: "Clientes", url: "/clients", icon: UserCheck },
