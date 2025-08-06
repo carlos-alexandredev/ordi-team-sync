@@ -38,6 +38,7 @@ export function UsersList() {
 
   const fetchUsers = async () => {
     try {
+      console.log("UsersList: Iniciando busca de usuários...");
       let query = supabase
         .from("profiles")
         .select(`
@@ -61,14 +62,17 @@ export function UsersList() {
         query = query.eq("company_id", filterCompany);
       }
 
+      console.log("UsersList: Executando query...");
       const { data, error } = await query;
+      console.log("UsersList: Resultado da query:", { data, error });
 
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
+      console.error("UsersList: Erro ao carregar usuários:", error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar usuários",
+        description: `Erro ao carregar usuários: ${error.message}`,
         variant: "destructive",
       });
     }
