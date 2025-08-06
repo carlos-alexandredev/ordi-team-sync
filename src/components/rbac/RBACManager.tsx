@@ -189,8 +189,8 @@ export function RBACManager() {
     setEditingRole(null);
   };
 
-  const getRoleBadge = (role: string, roles: any) => {
-    const roleObj = roles?.find((r: any) => r.name === role);
+  const getRoleBadge = (role: string) => {
+    const roleObj = roles.find((r: Role) => r.name === role);
     const roleConfig = {
       admin_master: { label: "Admin Master", className: "bg-purple-100 text-purple-800 border-purple-300" },
       admin: { label: "Admin", className: "bg-red-100 text-red-800 border-red-300" },
@@ -271,7 +271,7 @@ export function RBACManager() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        {getRoleBadge(user.role, (user as any).roles)}
+                        {getRoleBadge(user.role)}
                       </TableCell>
                       <TableCell>
                         <Switch
