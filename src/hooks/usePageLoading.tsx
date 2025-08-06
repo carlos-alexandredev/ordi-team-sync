@@ -3,27 +3,28 @@ import { useLocation } from 'react-router-dom';
 import { useAppSettings } from '@/stores/useAppSettings';
 
 export function usePageLoading() {
-  const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
   const pageLoadingEnabled = useAppSettings((state) => state.pageLoadingEnabled);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Se o loading estiver desabilitado, nunca ativa
+    // DEBUG: Adicione um console.log para verificar o estado
+    console.log('PageLoading - Enabled:', pageLoadingEnabled, 'Path:', location.pathname);
+    
+    // Se estiver desabilitado, não faz nada
     if (!pageLoadingEnabled) {
       setIsLoading(false);
       return;
     }
 
-    // Apenas mostra loading se estiver habilitado
+    // Apenas executa se estiver habilitado
     setIsLoading(true);
-    
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 150);
-
+    const timer = setTimeout(() => setIsLoading(false), 150);
     return () => clearTimeout(timer);
   }, [location.pathname, pageLoadingEnabled]);
 
-  // Força retorno false se estiver desabilitado
-  return !pageLoadingEnabled ? false : isLoading;
+  // SEMPRE retorna false se estiver desabilitado
+  if (!pageLoadingEnabled) return false;
+  
+  return isLoading;
 }
