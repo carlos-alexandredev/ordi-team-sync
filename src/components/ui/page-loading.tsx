@@ -15,8 +15,9 @@ export const PageLoading = memo(function PageLoading({ isLoading }: PageLoadingP
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
-
-  if (!show) return null;
+  
+  // Se não está carregando, não renderiza nada
+  if (!isLoading || !show) return null;
 
   return (
     <div 
