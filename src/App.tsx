@@ -34,6 +34,7 @@ import TiposTarefas from "./pages/TiposTarefas";
 import Questionarios from "./pages/Questionarios";
 import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
 import AdminSettings from "./pages/AdminSettings";
+import Cadastros from "./pages/Cadastros";
 import ClientsAdvanced from "./pages/ClientsAdvanced";
 import SuppliersAdvanced from "./pages/SuppliersAdvanced";
 import UsersOnline from "./pages/UsersOnline";
@@ -75,6 +76,7 @@ function AppContent() {
         <Route path="/desk" element={<Desk />} />
         
         {/* Módulo Cadastros */}
+        <Route path="/cadastros" element={<Cadastros />} />
         <Route path="/equipes" element={<Equipes />} />
         <Route path="/colaboradores" element={<Colaboradores />} />
         <Route path="/grupos-clientes" element={<GruposClientes />} />

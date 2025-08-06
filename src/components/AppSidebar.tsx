@@ -101,16 +101,16 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
     {
       category: "Colaboradores",
       items: [
+        { title: "Colaboradores", url: "/users", icon: Users },
         { title: "Equipes", url: "/equipes", icon: Users },
-        { title: "Colaboradores", url: "/colaboradores", icon: UserCheck },
       ]
     },
     {
       category: "Clientes e Fornecedores", 
       items: [
         { title: "Clientes", url: "/clients", icon: Users },
+        { title: "Fornecedores", url: "/companies", icon: Building },
         { title: "Grupos de Clientes", url: "/grupos-clientes", icon: Building },
-        { title: "Fornecedores", url: "/suppliers", icon: Building },
       ]
     },
     {
