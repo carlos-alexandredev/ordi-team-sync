@@ -19,40 +19,53 @@ export function ProtectedRoute({ children, allowedRoles = [], fallback }: Protec
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        console.log("ProtectedRoute: Iniciando verificação de perfil...");
         const { data: { user } } = await supabase.auth.getUser();
+        console.log("ProtectedRoute: Usuário:", user?.id);
+        
         if (user) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("user_id", user.id)
             .single();
           
+          console.log("ProtectedRoute: Profile:", profile, "Error:", profileError);
           setUserProfile(profile);
           
           // Se allowedRoles está vazio, qualquer usuário autenticado tem acesso
           if (allowedRoles.length === 0) {
+            console.log("ProtectedRoute: Sem restrições de role");
             setHasAccess(true);
             return;
           }
           
           // Verificar se o role está nas roles permitidas
+          console.log("ProtectedRoute: Verificando role:", profile?.role, "contra:", allowedRoles);
           if (allowedRoles.includes(profile?.role)) {
+            console.log("ProtectedRoute: Acesso permitido por role");
             setHasAccess(true);
             return;
           }
           
           // Para outros usuários, verificar permissões dinâmicas
           const currentPath = location.pathname;
+          console.log("ProtectedRoute: Verificando permissões dinâmicas para:", currentPath);
           const { data: modules } = await supabase.rpc("get_user_allowed_modules");
+          console.log("ProtectedRoute: Módulos do usuário:", modules);
           
           const hasModuleAccess = modules?.some((module: any) => 
             module.module_url === currentPath && module.is_allowed
           );
           
+          console.log("ProtectedRoute: Tem acesso ao módulo:", hasModuleAccess);
           setHasAccess(hasModuleAccess || false);
+        } else {
+          console.log("ProtectedRoute: Usuário não autenticado");
+          setHasAccess(false);
         }
       } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
+        console.error("ProtectedRoute: Erro ao carregar perfil:", error);
         setHasAccess(false);
       } finally {
         setLoading(false);
