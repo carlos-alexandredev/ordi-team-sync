@@ -52,8 +52,8 @@ function AppContent() {
 
   return (
     <>
-      {/* Só renderiza o PageLoading se estiver habilitado */}
-      {pageLoadingEnabled && <PageLoading isLoading={isLoading} />}
+      {/* NUNCA renderiza o PageLoading se estiver desabilitado */}
+      {pageLoadingEnabled && isLoading && <PageLoading isLoading={true} />}
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />} />

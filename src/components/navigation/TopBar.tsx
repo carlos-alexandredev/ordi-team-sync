@@ -54,16 +54,6 @@ export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps)
   return (
     <header className="h-14 sm:h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-full items-center px-3 sm:px-4 gap-2 justify-between">
-        {/* Left side - Mobile menu toggle */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleSidebar}
-          className="md:hidden h-8 w-8 p-0"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-
         {/* Right side - Search and Profile */}
         <div className="flex items-center gap-2 sm:gap-3 ml-auto">
           {/* Search */}

@@ -140,7 +140,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top Bar */}
           <div className="flex items-center border-b bg-background">
-            <SidebarTrigger className="ml-2" />
+            
             <div className="flex-1">
               <TopBar 
                 userProfile={userProfile} 
