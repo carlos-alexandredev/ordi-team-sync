@@ -55,7 +55,10 @@ export function RBACManager() {
 
   const loadData = async () => {
     try {
+      console.log('Iniciando carregamento dos dados RBAC...');
+      
       // Carregar usuários
+      console.log('Carregando usuários...');
       const { data: usersData, error: usersError } = await supabase
         .from("profiles")
         .select(`
@@ -71,32 +74,49 @@ export function RBACManager() {
           )
         `);
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error('Erro ao carregar usuários:', usersError);
+        throw usersError;
+      }
 
       // Carregar roles
+      console.log('Carregando roles...');
       const { data: rolesData, error: rolesError } = await supabase
         .from("roles")
         .select("*")
         .order("display_name");
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('Erro ao carregar roles:', rolesError);
+        throw rolesError;
+      }
 
       // Carregar permissões
+      console.log('Carregando permissões...');
       const { data: permissionsData, error: permissionsError } = await supabase
         .from("permissions")
         .select("*")
         .order("display_name");
 
-      if (permissionsError) throw permissionsError;
+      if (permissionsError) {
+        console.error('Erro ao carregar permissões:', permissionsError);
+        throw permissionsError;
+      }
+
+      console.log('Dados carregados com sucesso:', {
+        usuarios: usersData?.length,
+        roles: rolesData?.length,
+        permissoes: permissionsData?.length
+      });
 
       setUsers(usersData || []);
       setRoles(rolesData || []);
       setPermissions(permissionsData || []);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Erro ao carregar dados RBAC:", error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar dados",
+        description: "Erro ao carregar dados do sistema",
         variant: "destructive",
       });
     } finally {

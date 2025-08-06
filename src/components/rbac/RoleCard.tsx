@@ -42,18 +42,27 @@ export function RoleCard({ role, onEdit, onDelete, onRefresh }: RoleCardProps) {
 
   const loadRoleData = async () => {
     try {
+      console.log('Carregando dados para role:', role.name);
+      
       // Buscar permissões da role
       const { data: permissionsData, error: permissionsError } = await supabase
         .rpc('get_role_permissions', { role_name: role.name });
 
-      if (permissionsError) throw permissionsError;
+      if (permissionsError) {
+        console.error('Erro ao carregar permissões:', permissionsError);
+        throw permissionsError;
+      }
 
       // Buscar contagem de usuários
       const { data: countData, error: countError } = await supabase
         .rpc('count_users_by_role', { role_name: role.name });
 
-      if (countError) throw countError;
+      if (countError) {
+        console.error('Erro ao carregar contagem de usuários:', countError);
+        throw countError;
+      }
 
+      console.log('Dados carregados:', { permissionsData, countData });
       setPermissions(permissionsData || []);
       setUserCount(countData || 0);
     } catch (error) {

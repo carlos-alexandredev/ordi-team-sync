@@ -99,8 +99,12 @@ export function RoleFormModal({ isOpen, onClose, onSuccess, editingRole }: RoleF
     setLoading(true);
 
     try {
+      console.log('Iniciando salvamento da role:', { editingRole, name, displayName });
+      
       if (editingRole) {
         // Atualizar role existente
+        console.log('Atualizando role existente:', editingRole.id);
+        
         const { error: roleError } = await supabase
           .from('roles')
           .update({
@@ -111,15 +115,26 @@ export function RoleFormModal({ isOpen, onClose, onSuccess, editingRole }: RoleF
           })
           .eq('id', editingRole.id);
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error('Erro ao atualizar role:', roleError);
+          throw roleError;
+        }
 
-        // Atualizar permissões
-        await supabase
+        // Atualizar permissões - primeiro remove todas
+        console.log('Removendo permissões antigas...');
+        const { error: deleteError } = await supabase
           .from('role_permissions')
           .delete()
           .eq('role_id', editingRole.id);
 
+        if (deleteError) {
+          console.error('Erro ao remover permissões antigas:', deleteError);
+          throw deleteError;
+        }
+
+        // Inserir novas permissões
         if (selectedPermissions.length > 0) {
+          console.log('Inserindo novas permissões:', selectedPermissions);
           const rolePermissionsData = selectedPermissions.map(permissionId => ({
             role_id: editingRole.id,
             permission_id: permissionId,
@@ -129,10 +144,15 @@ export function RoleFormModal({ isOpen, onClose, onSuccess, editingRole }: RoleF
             .from('role_permissions')
             .insert(rolePermissionsData);
 
-          if (permissionsError) throw permissionsError;
+          if (permissionsError) {
+            console.error('Erro ao inserir permissões:', permissionsError);
+            throw permissionsError;
+          }
         }
       } else {
         // Criar nova role
+        console.log('Criando nova role...');
+        
         const { data: roleData, error: roleError } = await supabase
           .from('roles')
           .insert({
@@ -145,10 +165,16 @@ export function RoleFormModal({ isOpen, onClose, onSuccess, editingRole }: RoleF
           .select()
           .single();
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error('Erro ao criar role:', roleError);
+          throw roleError;
+        }
+
+        console.log('Role criada:', roleData);
 
         // Inserir permissões
         if (selectedPermissions.length > 0) {
+          console.log('Inserindo permissões para nova role:', selectedPermissions);
           const rolePermissionsData = selectedPermissions.map(permissionId => ({
             role_id: roleData.id,
             permission_id: permissionId,
@@ -158,7 +184,10 @@ export function RoleFormModal({ isOpen, onClose, onSuccess, editingRole }: RoleF
             .from('role_permissions')
             .insert(rolePermissionsData);
 
-          if (permissionsError) throw permissionsError;
+          if (permissionsError) {
+            console.error('Erro ao inserir permissões para nova role:', permissionsError);
+            throw permissionsError;
+          }
         }
       }
 
