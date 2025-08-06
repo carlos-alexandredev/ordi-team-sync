@@ -219,12 +219,15 @@ export function UserFormModal({ isOpen, onClose, onSuccess, editingUser, compani
 
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="company">Empresa</Label>
-            <Select value={formData.company_id || "none"} onValueChange={(value) => setFormData({ ...formData, company_id: value === "none" ? "" : value })}>
+            <Select 
+              value={formData.company_id || ""} 
+              onValueChange={(value) => setFormData({ ...formData, company_id: value || null })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma empresa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhuma empresa</SelectItem>
+                <SelectItem value="">Nenhuma empresa</SelectItem>
                 {companies.map((company) => (
                   <SelectItem key={company.id} value={company.id}>
                     {company.name}
