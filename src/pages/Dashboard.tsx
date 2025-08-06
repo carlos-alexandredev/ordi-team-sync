@@ -19,6 +19,7 @@ import { EquipmentHistory } from "@/components/equipment/EquipmentHistory";
 import { RBACManager } from "@/components/rbac/RBACManager";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { TaskFormModal } from "@/components/tasks/TaskFormModal";
+import { OnlineUsersCard } from "@/components/dashboard/OnlineUsersCard";
 interface ServiceOrder {
   id: string;
   order_number: string;
@@ -249,6 +250,12 @@ export default function Dashboard() {
                       Configurações Admin
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/users-online" className="flex items-center">
+                        <Users className="mr-2 h-4 w-4" />
+                        Usuários Online
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/admin-settings">
                         <Settings className="mr-2 h-4 w-4" />
                         Configurações do Sistema
@@ -275,7 +282,7 @@ export default function Dashboard() {
             
             {activeTab === "overview" && <div className="space-y-6">
             {/* Estatísticas */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-xs sm:text-sm font-medium">Total de Ordens</CardTitle>
@@ -315,6 +322,9 @@ export default function Dashboard() {
                 <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.completed}</div>
               </CardContent>
             </Card>
+
+            {/* Card de Usuários Online */}
+            <OnlineUsersCard />
             </div>
 
             {/* Lista de Ordens Recentes */}

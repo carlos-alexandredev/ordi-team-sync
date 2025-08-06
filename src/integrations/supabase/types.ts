@@ -1038,6 +1038,51 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean
+          last_activity: string
+          last_page: string | null
+          login_time: string
+          logout_time: string | null
+          session_id: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          last_activity?: string
+          last_page?: string | null
+          login_time?: string
+          logout_time?: string | null
+          session_id: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          last_activity?: string
+          last_page?: string | null
+          login_time?: string
+          logout_time?: string | null
+          session_id?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1058,6 +1103,10 @@ export type Database = {
           remaining_hours: number
         }[]
       }
+      count_online_users: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       ensure_admin_master_exists: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1065,6 +1114,21 @@ export type Database = {
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_online_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          user_name: string
+          user_email: string
+          user_role: string
+          login_time: string
+          last_activity: string
+          last_page: string
+          ip_address: unknown
+          session_duration: unknown
+          is_online: boolean
+        }[]
       }
       get_user_allowed_modules: {
         Args: { target_user_id?: string }

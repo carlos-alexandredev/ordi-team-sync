@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useUserTracking } from "@/hooks/useUserTracking";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/navigation/TopBar";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Inicializar tracking do usuário
+  const { endSession } = useUserTracking();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -94,15 +98,24 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
   const handleSignOut = async () => {
     try {
+      // Finalizar sessão de tracking
+      await endSession();
+      
       await supabase.auth.signOut();
-      navigate("/");
+      
+      // Limpeza completa do estado de autenticação
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.includes('user-session')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Força reload da página para garantir limpeza completa
+      window.location.href = '/';
     } catch (error: any) {
       console.error("Erro ao fazer logout:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao fazer logout. Tente novamente.",
-        variant: "destructive",
-      });
+      // Mesmo com erro, força o logout
+      window.location.href = '/';
     }
   };
 

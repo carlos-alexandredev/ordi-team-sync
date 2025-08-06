@@ -36,6 +36,7 @@ import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
 import AdminSettings from "./pages/AdminSettings";
 import ClientsAdvanced from "./pages/ClientsAdvanced";
 import SuppliersAdvanced from "./pages/SuppliersAdvanced";
+import UsersOnline from "./pages/UsersOnline";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +85,7 @@ function AppContent() {
         <Route path="/questionarios" element={<Questionarios />} />
         <Route path="/pesquisa-satisfacao" element={<PesquisaSatisfacao />} />
         <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/users-online" element={<UsersOnline />} />
         
         {/* Páginas avançadas alternativas para teste */}
         <Route path="/clients-advanced" element={<ClientsAdvanced />} />
