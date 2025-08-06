@@ -8,9 +8,6 @@ export function usePageLoading() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // DEBUG: Adicione um console.log para verificar o estado
-    console.log('PageLoading - Enabled:', pageLoadingEnabled, 'Path:', location.pathname);
-    
     // Se estiver desabilitado, não faz nada
     if (!pageLoadingEnabled) {
       setIsLoading(false);

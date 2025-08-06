@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PageLoading } from "@/components/ui/page-loading";
 import { usePageLoading } from "@/hooks/usePageLoading";
+import { useAppSettings } from "@/stores/useAppSettings";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
@@ -47,10 +48,12 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const isLoading = usePageLoading();
+  const pageLoadingEnabled = useAppSettings((state) => state.pageLoadingEnabled);
 
   return (
     <>
-      <PageLoading isLoading={isLoading} />
+      {/* Só renderiza o PageLoading se estiver habilitado */}
+      {pageLoadingEnabled && <PageLoading isLoading={isLoading} />}
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />} />

@@ -8,9 +8,6 @@ export const PageLoading = memo(function PageLoading({ isLoading }: PageLoadingP
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // DEBUG: Console log para verificar se está sendo chamado
-    console.log('PageLoading component - isLoading:', isLoading);
-    
     if (isLoading) {
       setShow(true);
     } else {
@@ -19,11 +16,7 @@ export const PageLoading = memo(function PageLoading({ isLoading }: PageLoadingP
     }
   }, [isLoading]);
 
-  // Se isLoading é false ou show é false, não renderiza nada
-  if (!isLoading || !show) {
-    console.log('PageLoading - Not showing. isLoading:', isLoading, 'show:', show);
-    return null;
-  }
+  if (!isLoading || !show) return null;
 
   return (
     <div 
