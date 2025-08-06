@@ -8,7 +8,7 @@ export function usePageLoading() {
   const pageLoadingEnabled = useAppSettings((state) => state.pageLoadingEnabled);
 
   useEffect(() => {
-    // Se o loading estiver desabilitado, nunca mostra loading
+    // Se o loading estiver desabilitado, nunca ativa
     if (!pageLoadingEnabled) {
       setIsLoading(false);
       return;
@@ -24,6 +24,6 @@ export function usePageLoading() {
     return () => clearTimeout(timer);
   }, [location.pathname, pageLoadingEnabled]);
 
-  // Retorna false se estiver desabilitado, independente do estado interno
-  return pageLoadingEnabled && isLoading;
+  // Força retorno false se estiver desabilitado
+  return !pageLoadingEnabled ? false : isLoading;
 }
