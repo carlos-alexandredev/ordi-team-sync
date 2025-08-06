@@ -43,6 +43,12 @@ export function UsersList() {
   const fetchUsers = async () => {
     try {
       console.log("UsersList: Iniciando busca de usuários...");
+      
+      // First check if we can access the profiles table at all
+      console.log("UsersList: Testando acesso à tabela profiles...");
+      const testQuery = await supabase.from("profiles").select("count");
+      console.log("UsersList: Teste de acesso:", testQuery);
+      
       let query = supabase
         .from("profiles")
         .select(`
@@ -57,21 +63,30 @@ export function UsersList() {
         `);
 
       if (searchName) {
+        console.log("UsersList: Aplicando filtro de nome:", searchName);
         query = query.ilike("name", `%${searchName}%`);
       }
       if (filterRole) {
+        console.log("UsersList: Aplicando filtro de role:", filterRole);
         query = query.eq("role", filterRole);
       }
       if (filterCompany) {
+        console.log("UsersList: Aplicando filtro de empresa:", filterCompany);
         query = query.eq("company_id", filterCompany);
       }
 
       console.log("UsersList: Executando query...");
       const { data, error } = await query;
-      console.log("UsersList: Resultado da query:", { data, error });
+      console.log("UsersList: Resultado da query:", { data, error, count: data?.length });
 
-      if (error) throw error;
+      if (error) {
+        console.error("UsersList: Erro na query:", error);
+        throw error;
+      }
+      
+      console.log("UsersList: Definindo usuários no estado:", data);
       setUsers(data || []);
+      console.log("UsersList: Estado de usuários atualizado");
     } catch (error) {
       console.error("UsersList: Erro ao carregar usuários:", error);
       toast({
