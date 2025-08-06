@@ -5,38 +5,49 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PageLoading } from "@/components/ui/page-loading";
 import { usePageLoading } from "@/hooks/usePageLoading";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Users from "./pages/Users";
-import Companies from "./pages/Companies";
-import Clients from "./pages/Clients";
-import Suppliers from "./pages/Suppliers";
-import Calls from "./pages/Calls";
-import Orders from "./pages/Orders";
-import Equipments from "./pages/Equipments";
-import Technician from "./pages/Technician";
-import TechnicianSchedule from "./pages/TechnicianSchedule";
-import Reports from "./pages/Reports";
-import ClientPortal from "./pages/ClientPortal";
-import SupervisorDashboard from "./pages/SupervisorDashboard";
-import Desk from "./pages/Desk";
-import UserPermissions from "./pages/UserPermissions";
-import Logs from "./pages/Logs";
-import NotFound from "./pages/NotFound";
-import Equipes from "./pages/Equipes";
-import Colaboradores from "./pages/Colaboradores";
-import GruposClientes from "./pages/GruposClientes";
-import Produtos from "./pages/Produtos";
-import Servicos from "./pages/Servicos";
-import FormasPagamento from "./pages/FormasPagamento";
-import TiposTarefas from "./pages/TiposTarefas";
-import Questionarios from "./pages/Questionarios";
-import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
-import AdminSettings from "./pages/AdminSettings";
-import ClientsAdvanced from "./pages/ClientsAdvanced";
-import SuppliersAdvanced from "./pages/SuppliersAdvanced";
+import { LazyWrapper } from "@/components/common/LazyWrapper";
+import { lazy } from "react";
 
-const queryClient = new QueryClient();
+// Lazy load all pages for better performance
+const Index = lazy(() => import("./pages/Index"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Users = lazy(() => import("./pages/Users"));
+const Companies = lazy(() => import("./pages/Companies"));
+const Clients = lazy(() => import("./pages/Clients"));
+const Suppliers = lazy(() => import("./pages/Suppliers"));
+const Calls = lazy(() => import("./pages/Calls"));
+const Orders = lazy(() => import("./pages/Orders"));
+const Equipments = lazy(() => import("./pages/Equipments"));
+const Technician = lazy(() => import("./pages/Technician"));
+const TechnicianSchedule = lazy(() => import("./pages/TechnicianSchedule"));
+const Reports = lazy(() => import("./pages/Reports"));
+const ClientPortal = lazy(() => import("./pages/ClientPortal"));
+const SupervisorDashboard = lazy(() => import("./pages/SupervisorDashboard"));
+const Desk = lazy(() => import("./pages/Desk"));
+const UserPermissions = lazy(() => import("./pages/UserPermissions"));
+const Logs = lazy(() => import("./pages/Logs"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Equipes = lazy(() => import("./pages/Equipes"));
+const Colaboradores = lazy(() => import("./pages/Colaboradores"));
+const GruposClientes = lazy(() => import("./pages/GruposClientes"));
+const Produtos = lazy(() => import("./pages/Produtos"));
+const Servicos = lazy(() => import("./pages/Servicos"));
+const FormasPagamento = lazy(() => import("./pages/FormasPagamento"));
+const TiposTarefas = lazy(() => import("./pages/TiposTarefas"));
+const Questionarios = lazy(() => import("./pages/Questionarios"));
+const PesquisaSatisfacao = lazy(() => import("./pages/PesquisaSatisfacao"));
+const AdminSettings = lazy(() => import("./pages/AdminSettings"));
+const ClientsAdvanced = lazy(() => import("./pages/ClientsAdvanced"));
+const SuppliersAdvanced = lazy(() => import("./pages/SuppliersAdvanced"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 function AppContent() {
   const isLoading = usePageLoading();
@@ -45,42 +56,42 @@ function AppContent() {
     <>
       <PageLoading isLoading={isLoading} />
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/user-permissions" element={<UserPermissions />} />
-        <Route path="/logs" element={<Logs />} />
-        <Route path="/companies" element={<Companies />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/suppliers" element={<Suppliers />} />
-        <Route path="/calls" element={<Calls />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/equipments" element={<Equipments />} />
-        <Route path="/technician" element={<Technician />} />
-        <Route path="/technician-schedule" element={<TechnicianSchedule />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/client-portal" element={<ClientPortal />} />
-        <Route path="/supervisor" element={<SupervisorDashboard />} />
-        <Route path="/desk" element={<Desk />} />
+        <Route path="/" element={<LazyWrapper><Index /></LazyWrapper>} />
+        <Route path="/dashboard" element={<LazyWrapper><Dashboard /></LazyWrapper>} />
+        <Route path="/users" element={<LazyWrapper><Users /></LazyWrapper>} />
+        <Route path="/user-permissions" element={<LazyWrapper><UserPermissions /></LazyWrapper>} />
+        <Route path="/logs" element={<LazyWrapper><Logs /></LazyWrapper>} />
+        <Route path="/companies" element={<LazyWrapper><Companies /></LazyWrapper>} />
+        <Route path="/clients" element={<LazyWrapper><Clients /></LazyWrapper>} />
+        <Route path="/suppliers" element={<LazyWrapper><Suppliers /></LazyWrapper>} />
+        <Route path="/calls" element={<LazyWrapper><Calls /></LazyWrapper>} />
+        <Route path="/orders" element={<LazyWrapper><Orders /></LazyWrapper>} />
+        <Route path="/equipments" element={<LazyWrapper><Equipments /></LazyWrapper>} />
+        <Route path="/technician" element={<LazyWrapper><Technician /></LazyWrapper>} />
+        <Route path="/technician-schedule" element={<LazyWrapper><TechnicianSchedule /></LazyWrapper>} />
+        <Route path="/reports" element={<LazyWrapper><Reports /></LazyWrapper>} />
+        <Route path="/client-portal" element={<LazyWrapper><ClientPortal /></LazyWrapper>} />
+        <Route path="/supervisor" element={<LazyWrapper><SupervisorDashboard /></LazyWrapper>} />
+        <Route path="/desk" element={<LazyWrapper><Desk /></LazyWrapper>} />
         
         {/* Módulo Cadastros */}
-        <Route path="/equipes" element={<Equipes />} />
-        <Route path="/colaboradores" element={<Colaboradores />} />
-        <Route path="/grupos-clientes" element={<GruposClientes />} />
-        <Route path="/produtos" element={<Produtos />} />
-        <Route path="/servicos" element={<Servicos />} />
-        <Route path="/formas-pagamento" element={<FormasPagamento />} />
-        <Route path="/tipos-tarefas" element={<TiposTarefas />} />
-        <Route path="/questionarios" element={<Questionarios />} />
-        <Route path="/pesquisa-satisfacao" element={<PesquisaSatisfacao />} />
-        <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/equipes" element={<LazyWrapper><Equipes /></LazyWrapper>} />
+        <Route path="/colaboradores" element={<LazyWrapper><Colaboradores /></LazyWrapper>} />
+        <Route path="/grupos-clientes" element={<LazyWrapper><GruposClientes /></LazyWrapper>} />
+        <Route path="/produtos" element={<LazyWrapper><Produtos /></LazyWrapper>} />
+        <Route path="/servicos" element={<LazyWrapper><Servicos /></LazyWrapper>} />
+        <Route path="/formas-pagamento" element={<LazyWrapper><FormasPagamento /></LazyWrapper>} />
+        <Route path="/tipos-tarefas" element={<LazyWrapper><TiposTarefas /></LazyWrapper>} />
+        <Route path="/questionarios" element={<LazyWrapper><Questionarios /></LazyWrapper>} />
+        <Route path="/pesquisa-satisfacao" element={<LazyWrapper><PesquisaSatisfacao /></LazyWrapper>} />
+        <Route path="/admin-settings" element={<LazyWrapper><AdminSettings /></LazyWrapper>} />
         
         {/* Páginas avançadas alternativas para teste */}
-        <Route path="/clients-advanced" element={<ClientsAdvanced />} />
-        <Route path="/suppliers-advanced" element={<SuppliersAdvanced />} />
+        <Route path="/clients-advanced" element={<LazyWrapper><ClientsAdvanced /></LazyWrapper>} />
+        <Route path="/suppliers-advanced" element={<LazyWrapper><SuppliersAdvanced /></LazyWrapper>} />
         
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<LazyWrapper><NotFound /></LazyWrapper>} />
       </Routes>
     </>
   );

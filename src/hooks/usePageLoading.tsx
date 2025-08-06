@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppSettings } from '@/stores/useAppSettings';
 
@@ -7,22 +7,27 @@ export function usePageLoading() {
   const location = useLocation();
   const pageLoadingEnabled = useAppSettings((state) => state.pageLoadingEnabled);
 
+  const startLoading = useCallback(() => {
+    if (pageLoadingEnabled) {
+      setIsLoading(true);
+    }
+  }, [pageLoadingEnabled]);
+
+  const stopLoading = useCallback(() => {
+    setIsLoading(false);
+  }, []);
+
   useEffect(() => {
     if (!pageLoadingEnabled) {
       setIsLoading(false);
       return;
     }
 
-    // Start loading when route changes
-    setIsLoading(true);
+    startLoading();
     
-    // Reduced loading time for better performance
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 150);
-
+    const timer = setTimeout(stopLoading, 150);
     return () => clearTimeout(timer);
-  }, [location.pathname, pageLoadingEnabled]);
+  }, [location.pathname, pageLoadingEnabled, startLoading, stopLoading]);
 
   return pageLoadingEnabled ? isLoading : false;
 }
