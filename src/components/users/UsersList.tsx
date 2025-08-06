@@ -231,8 +231,8 @@ export function UsersList() {
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
+              users.map((user, index) => (
+                <TableRow key={`${user.id}-${index}`}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>

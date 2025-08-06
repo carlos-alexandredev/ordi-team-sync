@@ -235,8 +235,8 @@ const UsersOnline = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      onlineUsers.map((user) => (
-                        <TableRow key={user.user_id}>
+                      onlineUsers.map((user, index) => (
+                        <TableRow key={`${user.user_id}-${index}`}>
                           <TableCell>
                             <div className={`w-2 h-2 rounded-full ${
                               user.is_online ? 'bg-green-500' : 'bg-gray-400'
