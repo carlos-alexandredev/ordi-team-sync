@@ -64,18 +64,21 @@ export function UserFormModal({ isOpen, onClose, onSuccess, editingUser, compani
     setLoading(true);
 
     try {
+      console.log("UserFormModal: Iniciando submit", { editingUser, formData });
+      
       if (editingUser) {
         // Atualizar usuário existente
+        console.log("UserFormModal: Atualizando usuário", editingUser.id);
         const { error } = await supabase
           .from("profiles")
           .update({
             name: formData.name,
-            email: formData.email,
             role: formData.role,
             company_id: formData.company_id || null,
           })
           .eq("id", editingUser.id);
 
+        console.log("UserFormModal: Resultado update", { error });
         if (error) throw error;
 
         toast({
