@@ -3,15 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, User, Building } from "lucide-react";
+import { toast } from "sonner";
+import { useAppSettings } from "@/stores/useAppSettings";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { customLoginNotification } = useAppSettings();
   
   const cleanupAuthState = () => {
     Object.keys(localStorage).forEach(key => {
@@ -39,21 +40,14 @@ export default function Login() {
       });
       if (error) throw error;
       if (data.user) {
-        // Get custom notification from settings
-        const settings = JSON.parse(localStorage.getItem('app-settings') || '{}');
-        const customNotification = settings?.state?.customLoginNotification;
-        
-        toast({
-          title: customNotification?.title || "Login realizado com sucesso!",
-          description: customNotification?.description || "Redirecionando..."
+        toast.success(customLoginNotification.title, {
+          description: customLoginNotification.description
         });
         window.location.href = '/dashboard';
       }
     } catch (error: any) {
-      toast({
-        title: "Erro no login",
-        description: error.message,
-        variant: "destructive"
+      toast.error("Erro no login", {
+        description: error.message
       });
     } finally {
       setLoading(false);
