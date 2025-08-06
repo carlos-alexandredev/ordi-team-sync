@@ -537,6 +537,36 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          action: string
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          name: string
+          resource: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          name: string
+          resource: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          name?: string
+          resource?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active: boolean | null
@@ -549,6 +579,7 @@ export type Database = {
           name: string
           phone: string | null
           role: string
+          role_id: string | null
           updated_at: string
           user_id: string
         }
@@ -563,6 +594,7 @@ export type Database = {
           name: string
           phone?: string | null
           role?: string
+          role_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -577,6 +609,7 @@ export type Database = {
           name?: string
           phone?: string | null
           role?: string
+          role_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -588,7 +621,83 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_id: string | null
+          role_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string | null
+          role_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string | null
+          role_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_system_role: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_system_role?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_system_role?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       service_orders: {
         Row: {
@@ -1107,6 +1216,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      count_users_by_role: {
+        Args: { role_name: string }
+        Returns: number
+      }
       ensure_admin_master_exists: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1128,6 +1241,16 @@ export type Database = {
           ip_address: unknown
           session_duration: unknown
           is_online: boolean
+        }[]
+      }
+      get_role_permissions: {
+        Args: { role_name: string }
+        Returns: {
+          permission_name: string
+          display_name: string
+          description: string
+          resource: string
+          action: string
         }[]
       }
       get_user_allowed_modules: {
