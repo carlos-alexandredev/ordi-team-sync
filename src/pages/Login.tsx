@@ -39,9 +39,13 @@ export default function Login() {
       });
       if (error) throw error;
       if (data.user) {
+        // Get custom notification from settings
+        const settings = JSON.parse(localStorage.getItem('app-settings') || '{}');
+        const customNotification = settings?.state?.customLoginNotification;
+        
         toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando..."
+          title: customNotification?.title || "Login realizado com sucesso!",
+          description: customNotification?.description || "Redirecionando..."
         });
         window.location.href = '/dashboard';
       }

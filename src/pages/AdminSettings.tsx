@@ -2,13 +2,26 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { useAppSettings } from '@/stores/useAppSettings';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthLayout } from '@/components/AuthLayout';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
-  const { pageLoadingEnabled, setPageLoadingEnabled } = useAppSettings();
+  const { 
+    pageLoadingEnabled, 
+    setPageLoadingEnabled,
+    customLoginNotification,
+    setCustomLoginNotification 
+  } = useAppSettings();
+
+  const [localNotification, setLocalNotification] = useState({
+    title: customLoginNotification.title,
+    description: customLoginNotification.description
+  });
 
   const handleLoadingToggle = (enabled: boolean) => {
     setPageLoadingEnabled(enabled);
@@ -17,6 +30,11 @@ const AdminSettings = () => {
         ? 'Loading de transição ativado' 
         : 'Loading de transição desativado'
     );
+  };
+
+  const handleSaveNotification = () => {
+    setCustomLoginNotification(localNotification);
+    toast.success('Notificação personalizada salva com sucesso!');
   };
 
   return (
@@ -56,18 +74,38 @@ const AdminSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Placeholder para futuras configurações */}
         <Card>
           <CardHeader>
-            <CardTitle>Sistema</CardTitle>
+            <CardTitle>Notificações</CardTitle>
             <CardDescription>
-              Configurações do sistema e performance
+              Configuração de mensagens e notificações do sistema
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Mais configurações serão adicionadas em breve...
-            </p>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="notification-title">Título da notificação de login</Label>
+                <Input
+                  id="notification-title"
+                  value={localNotification.title}
+                  onChange={(e) => setLocalNotification(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Digite o título da notificação"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notification-description">Descrição da notificação de login</Label>
+                <Textarea
+                  id="notification-description"
+                  value={localNotification.description}
+                  onChange={(e) => setLocalNotification(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Digite a descrição da notificação"
+                  rows={3}
+                />
+              </div>
+              <Button onClick={handleSaveNotification} className="w-full">
+                Salvar Notificação
+              </Button>
+            </div>
           </CardContent>
         </Card>
         </div>
