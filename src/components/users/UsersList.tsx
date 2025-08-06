@@ -26,6 +26,8 @@ interface Company {
 }
 
 export function UsersList() {
+  console.log("UsersList: Componente iniciado");
+  
   const [users, setUsers] = useState<User[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,8 @@ export function UsersList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const { toast } = useToast();
+
+  console.log("UsersList: Estado inicial configurado");
 
   const fetchUsers = async () => {
     try {
@@ -149,7 +153,11 @@ export function UsersList() {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Carregando...</div>;
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-lg">Carregando usuários...</div>
+      </div>
+    );
   }
 
   return (

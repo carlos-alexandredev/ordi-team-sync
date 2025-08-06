@@ -3,6 +3,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UsersList } from "@/components/users/UsersList";
 
 const Users = () => {
+  console.log("Users page: Renderizando página de usuários");
+  
   return (
     <AuthLayout>
       <ProtectedRoute allowedRoles={["admin_master"]}>
