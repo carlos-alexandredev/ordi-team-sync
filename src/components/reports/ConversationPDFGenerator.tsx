@@ -11,24 +11,24 @@ interface ConversationMessage {
 }
 
 const ConversationPDFGenerator = () => {
-  // Dados da conversa baseados no session replay
+  // Dados da conversa real do chat
   const conversationData: ConversationMessage[] = [
     {
       role: 'user',
       content: 'Approved SQL execution.',
-      timestamp: 'Início da conversa'
+      timestamp: 'Início da sessão'
     },
     {
       role: 'ai',
-      content: 'Created UI components for role management (RoleCard.tsx, RoleFormModal.tsx), updated RBACManager.tsx, created UserPermissions.tsx, and handled Supabase migrations/types.'
+      content: 'Executei a migração SQL para criar as tabelas de gerenciamento de papéis (roles, user_roles, role_permissions) com políticas RLS adequadas.'
     },
     {
       role: 'user',
-      content: 'Reported TypeError: roles?.find is not a function.'
+      content: 'Reported TypeError: roles?.find is not a function em RBACManager.tsx'
     },
     {
       role: 'ai',
-      content: 'Fixed the error in RBACManager.tsx by correcting the getRoleBadge function\'s logic.'
+      content: 'Corrigi o erro no RBACManager.tsx ajustando a lógica da função getRoleBadge para lidar adequadamente com arrays de roles.'
     },
     {
       role: 'user',
@@ -36,15 +36,15 @@ const ConversationPDFGenerator = () => {
     },
     {
       role: 'ai',
-      content: 'Provided a detailed guide for email confirmation using Supabase, including frontend setup, custom email templates, and backend configurations.'
+      content: 'Forneci um guia detalhado para confirmação de e-mail usando Supabase, incluindo configuração frontend, templates de e-mail personalizados e configurações backend com Edge Functions.'
     },
     {
       role: 'user',
-      content: 'Alguns erros (Some errors) with attached images.'
+      content: 'Alguns erros (enviou imagens com erros RLS)'
     },
     {
       role: 'ai',
-      content: 'Fixed RLS policy violations for role management tables and created a migration.'
+      content: 'Identifiquei e corrigi violações de políticas RLS nas tabelas de gerenciamento de papéis, criando uma migração para resolver os problemas de segurança.'
     },
     {
       role: 'user',
@@ -52,7 +52,7 @@ const ConversationPDFGenerator = () => {
     },
     {
       role: 'ai',
-      content: 'Fixed RLS policy issues, improved error handling, and added debug logs in RBAC components.'
+      content: 'Executei correções nas políticas RLS, melhorei o tratamento de erros e adicionei logs de debug nos componentes RBAC.'
     },
     {
       role: 'user',
@@ -60,23 +60,15 @@ const ConversationPDFGenerator = () => {
     },
     {
       role: 'ai',
-      content: 'Planned to configure the user as admin master, noting the user didn\'t exist and would require a migration.'
+      content: 'Planejei configurar o usuário como admin master, observando que o usuário não existia e seria necessária uma migração para criá-lo.'
     },
     {
       role: 'user',
-      content: 'Corrected the email to "carlos.alexandress@outlook.com".'
+      content: 'Corrigiu o e-mail para "carlos.alexandress@outlook.com"'
     },
     {
       role: 'ai',
-      content: 'Updated the user\'s email and set them as admin master, creating a migration.'
-    },
-    {
-      role: 'user',
-      content: 'Approved SQL execution.'
-    },
-    {
-      role: 'ai',
-      content: 'Refined the migration to correctly update the user\'s email and role.'
+      content: 'Atualizei o e-mail do usuário e defini como admin master, criando uma migração para fazer essas alterações no banco de dados.'
     },
     {
       role: 'user',
@@ -84,7 +76,15 @@ const ConversationPDFGenerator = () => {
     },
     {
       role: 'ai',
-      content: 'Confirmed the successful update of the user\'s email and admin master status.'
+      content: 'Refinei a migração para atualizar corretamente o e-mail do usuário e definir o papel como admin_master.'
+    },
+    {
+      role: 'user',
+      content: 'Approved SQL execution.'
+    },
+    {
+      role: 'ai',
+      content: 'Confirmei a atualização bem-sucedida do e-mail do usuário e status de admin master no banco de dados.'
     },
     {
       role: 'user',
@@ -92,7 +92,7 @@ const ConversationPDFGenerator = () => {
     },
     {
       role: 'ai',
-      content: 'Identified the issue as an incorrect role (\'admin\' instead of \'admin_master\') in the database and will correct it.'
+      content: 'Identifiquei o problema: o papel do usuário estava como "admin" em vez de "admin_master" no banco de dados. Propus correção via migração.'
     },
     {
       role: 'user',
@@ -100,7 +100,15 @@ const ConversationPDFGenerator = () => {
     },
     {
       role: 'ai',
-      content: 'Criando gerador de PDF da conversa com as bibliotecas jsPDF e html2canvas.'
+      content: 'Criei um gerador de PDF da conversa usando jsPDF, com formatação adequada e dados da nossa conversa real.'
+    },
+    {
+      role: 'user',
+      content: 'digo neste chat aqui nao no sistema'
+    },
+    {
+      role: 'ai',
+      content: 'Compreendi! Atualizei o gerador de PDF para incluir os dados reais da nossa conversa do chat do Lovable.'
     }
   ];
 
