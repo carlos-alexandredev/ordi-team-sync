@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { SupervisorPanel } from "@/components/dashboard/SupervisorPanel";
 import { ExportTools } from "@/components/reports/ExportTools";
+import ConversationPDFGenerator from "@/components/reports/ConversationPDFGenerator";
 import { SLAMonitor } from "@/components/sla/SLAMonitor";
 import { InteractiveMap } from "@/components/map/InteractiveMap";
 import { TechnicianSchedule } from "@/components/schedule/TechnicianSchedule";
@@ -272,7 +273,12 @@ export default function Dashboard() {
 
             {activeTab === "supervision" && <SupervisorPanel />}
             {activeTab === "sla" && <SLAMonitor />}
-            {activeTab === "reports" && <ExportTools />}
+            {activeTab === "reports" && (
+              <div className="space-y-6">
+                <ExportTools />
+                <ConversationPDFGenerator />
+              </div>
+            )}
             {activeTab === "map" && <InteractiveMap />}
             {activeTab === "schedule" && <TechnicianSchedule />}
             {activeTab === "evaluation" && <ServiceEvaluation />}
