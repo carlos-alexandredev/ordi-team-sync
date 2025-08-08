@@ -71,15 +71,30 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
 
   // Construir itens do menu baseado nas permissões do usuário
   const getMenuItems = () => {
-    if (loading) return [];
+    // Sempre retorna itens base independente do loading
+    const baseItems = [
+      { title: "Dashboard", url: "/dashboard", icon: Home },
+      { title: "Chamados", url: "/calls", icon: FileText },
+      { title: "Ordens", url: "/orders", icon: ClipboardList },
+      { title: "Clientes", url: "/clients", icon: UserCheck },
+      { title: "Equipamentos", url: "/equipments", icon: Wrench },
+      { title: "Relatórios", url: "/reports", icon: BarChart }
+    ];
 
-    const menuItems = modules
-      .filter(module => module.is_allowed) // Filtrar apenas módulos permitidos
-      .map((module) => ({
-        title: module.module_title,
-        url: module.module_url,
-        icon: getIcon(module.module_icon),
-      }));
+    const menuItems = [...baseItems];
+
+    // Adiciona módulos dinâmicos quando não está carregando
+    if (!loading && modules.length > 0) {
+      const dynamicItems = modules
+        .filter(module => module.is_allowed)
+        .map((module) => ({
+          title: module.module_title,
+          url: module.module_url,
+          icon: getIcon(module.module_icon),
+        }));
+      
+      menuItems.push(...dynamicItems);
+    }
 
     // Admin master sempre tem acesso ao gerenciamento de permissões
     if (userRole === 'admin_master') {
