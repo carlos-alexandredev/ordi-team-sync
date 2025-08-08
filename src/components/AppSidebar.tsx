@@ -45,7 +45,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [cadastrosOpen, setCadastrosOpen] = useState(currentPath === "/cadastros" || currentPath.startsWith("/cadastros"));
   const { modules, loading } = useUserPermissions();
 
   const isActive = (path: string) => currentPath === path;
@@ -133,7 +133,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   ];
 
   // Verificar se algum item de cadastros está ativo
-  const isCadastrosActive = cadastrosItems.some(category => 
+  const isCadastrosActive = isActive("/cadastros") || cadastrosItems.some(category => 
     category.items.some(item => isActive(item.url))
   );
 
@@ -165,24 +165,30 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
               {/* Módulo Cadastros */}
               <SidebarMenuItem>
                 <SidebarMenuButton 
-                  onClick={() => setCadastrosOpen(!cadastrosOpen)}
-                  className={`${isCadastrosActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'} cursor-pointer`}
+                  asChild
+                  className={getNavCls(isCadastrosActive)}
                 >
-                  <Database className="h-4 w-4" />
-                  {state !== "collapsed" && (
-                    <>
-                      <span>Cadastros</span>
-                      {cadastrosOpen ? (
-                        <ChevronDown className="ml-auto h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      )}
-                    </>
-                  )}
+                  <NavLink 
+                    to="/cadastros" 
+                    onClick={() => setCadastrosOpen(true)}
+                    end
+                  >
+                    <Database className="h-4 w-4" />
+                    {state !== "collapsed" && <span>Cadastros</span>}
+                  </NavLink>
                 </SidebarMenuButton>
                 
                 {cadastrosOpen && state !== "collapsed" && (
                   <SidebarMenuSub>
+                    <div className="flex justify-between items-center px-3 py-1">
+                      <span className="text-xs font-medium text-muted-foreground">Opções de Cadastro</span>
+                      <button 
+                        onClick={() => setCadastrosOpen(false)}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        ✕
+                      </button>
+                    </div>
                     {cadastrosItems.map((category) => (
                       <div key={category.category}>
                         <div className="px-3 py-1 text-xs font-medium text-muted-foreground">
