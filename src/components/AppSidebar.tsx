@@ -71,7 +71,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
 
   // Construir itens do menu baseado nas permissões do usuário
   const getMenuItems = () => {
-    // Sempre retorna itens base independente do loading
+    // Itens base estáticos (sem duplicação de cadastros)
     const baseItems = [
       { title: "Dashboard", url: "/dashboard", icon: Home },
       { title: "Chamados", url: "/calls", icon: FileText },
@@ -81,12 +81,13 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       { title: "Relatórios", url: "/reports", icon: BarChart }
     ];
 
-    const menuItems = [...baseItems];
+    let menuItems = [...baseItems];
 
-    // Adiciona módulos dinâmicos quando não está carregando
+    // Adiciona módulos dinâmicos quando carregou e evita duplicação
     if (!loading && modules.length > 0) {
       const dynamicItems = modules
         .filter(module => module.is_allowed)
+        .filter(module => !baseItems.some(base => base.url === module.module_url)) // Evita duplicação
         .map((module) => ({
           title: module.module_title,
           url: module.module_url,
@@ -102,6 +103,13 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
         title: "Permissões",
         url: "/user-permissions",
         icon: Shield,
+      });
+      
+      // Adicionar módulo de backup para admin_master
+      menuItems.push({
+        title: "Backup",
+        url: "/admin-settings",
+        icon: Database,
       });
     }
 
