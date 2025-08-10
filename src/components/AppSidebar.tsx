@@ -97,19 +97,12 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       menuItems.push(...dynamicItems);
     }
 
-    // Admin master sempre tem acesso ao gerenciamento de permissões
+    // Admin master sempre tem acesso às configurações
     if (userRole === 'admin_master') {
       menuItems.push({
-        title: "Permissões",
-        url: "/user-permissions",
-        icon: Shield,
-      });
-      
-      // Adicionar módulo de backup para admin_master
-      menuItems.push({
-        title: "Backup",
-        url: "/admin-settings",
-        icon: Database,
+        title: "Configurações",
+        url: "/settings",
+        icon: Settings,
       });
     }
 
