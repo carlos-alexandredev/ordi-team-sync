@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PageLoading } from "@/components/ui/page-loading";
 import { usePageLoading } from "@/hooks/usePageLoading";
 import { useAppSettings } from "@/stores/useAppSettings";
+import { useAuthLogger } from "@/hooks/useAuthLogger";
+import { useUserTracking } from "@/hooks/useUserTracking";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
@@ -51,6 +53,10 @@ const queryClient = new QueryClient({
 function AppContent() {
   const isLoading = usePageLoading();
   const pageLoadingEnabled = useAppSettings((state) => state.pageLoadingEnabled);
+  
+  // Initialize auth logging and user tracking
+  useAuthLogger();
+  useUserTracking();
 
   return (
     <>

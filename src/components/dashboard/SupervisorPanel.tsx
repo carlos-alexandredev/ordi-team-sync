@@ -81,7 +81,10 @@ export function SupervisorPanel() {
         `)
         .order("created_at", { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error("Erro ao carregar ordens:", ordersError);
+        return;
+      }
 
       const formattedOrders = ordersData?.map(order => ({
         id: order.id,
