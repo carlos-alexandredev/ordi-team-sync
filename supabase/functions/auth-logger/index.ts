@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
         .from('profiles')
         .select('id, email')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       userProfile = data;
     }
 

@@ -111,16 +111,24 @@ export function SupervisorPanel() {
   const loadFilterData = async () => {
     try {
       // Carregar clientes
-      const { data: clientsData } = await supabase
+      const { data: clientsData, error: clientsError } = await supabase
         .from("profiles")
         .select("id, name")
         .eq("role", "cliente_final");
 
+      if (clientsError) {
+        console.error("Erro ao carregar clientes:", clientsError);
+      }
+
       // Carregar técnicos
-      const { data: techniciansData } = await supabase
+      const { data: techniciansData, error: techniciansError } = await supabase
         .from("profiles")
         .select("id, name")
         .eq("role", "tecnico");
+
+      if (techniciansError) {
+        console.error("Erro ao carregar técnicos:", techniciansError);
+      }
 
       setClients(clientsData || []);
       setTechnicians(techniciansData || []);
