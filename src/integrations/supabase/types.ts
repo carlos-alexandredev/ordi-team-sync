@@ -1238,7 +1238,7 @@ export type Database = {
           login_time: string
           last_activity: string
           last_page: string
-          ip_address: unknown
+          ip_address: string
           session_duration: unknown
           is_online: boolean
         }[]
