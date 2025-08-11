@@ -37,6 +37,7 @@ import Questionarios from "./pages/Questionarios";
 import PesquisaSatisfacao from "./pages/PesquisaSatisfacao";
 import AdminSettings from "./pages/AdminSettings";
 import Settings from "./pages/Settings";
+import Maintenance from "./pages/Maintenance";
 import Cadastros from "./pages/Cadastros";
 import ClientsAdvanced from "./pages/ClientsAdvanced";
 import SuppliersAdvanced from "./pages/SuppliersAdvanced";
@@ -70,6 +71,7 @@ function AppContent() {
         <Route path="/user-permissions" element={<UserPermissions />} />
         <Route path="/logs" element={<Logs />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/companies" element={<Companies />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/suppliers" element={<Suppliers />} />

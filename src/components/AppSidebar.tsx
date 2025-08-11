@@ -97,6 +97,15 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       menuItems.push(...dynamicItems);
     }
 
+    // Módulo de Manutenção para roles específicos
+    if (['admin_master', 'admin', 'admin_cliente', 'supervisor', 'tecnico'].includes(userRole)) {
+      menuItems.push({
+        title: "Manutenção",
+        url: "/maintenance",
+        icon: Wrench,
+      });
+    }
+
     // Admin master sempre tem acesso às configurações
     if (userRole === 'admin_master') {
       menuItems.push({
