@@ -170,6 +170,64 @@ export type Database = {
         }
         Relationships: []
       }
+      condition_readings: {
+        Row: {
+          company_id: string
+          created_by: string | null
+          equipment_id: string
+          id: string
+          metric: string
+          reading_at: string
+          source: string | null
+          unit: string | null
+          value: number
+        }
+        Insert: {
+          company_id: string
+          created_by?: string | null
+          equipment_id: string
+          id?: string
+          metric: string
+          reading_at?: string
+          source?: string | null
+          unit?: string | null
+          value: number
+        }
+        Update: {
+          company_id?: string
+          created_by?: string | null
+          equipment_id?: string
+          id?: string
+          metric?: string
+          reading_at?: string
+          source?: string | null
+          unit?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condition_readings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "condition_readings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "condition_readings_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipments: {
         Row: {
           client_id: string
@@ -243,6 +301,183 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_orders: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          downtime_minutes: number | null
+          equipment_id: string
+          failure_code: string | null
+          finished_at: string | null
+          id: string
+          mttr_minutes: number | null
+          plan_id: string | null
+          priority: Database["public"]["Enums"]["order_priority"]
+          root_cause: string | null
+          scheduled_date: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["work_status"]
+          technician_id: string | null
+          title: string
+          type: Database["public"]["Enums"]["maintenance_type"]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          downtime_minutes?: number | null
+          equipment_id: string
+          failure_code?: string | null
+          finished_at?: string | null
+          id?: string
+          mttr_minutes?: number | null
+          plan_id?: string | null
+          priority?: Database["public"]["Enums"]["order_priority"]
+          root_cause?: string | null
+          scheduled_date?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["work_status"]
+          technician_id?: string | null
+          title: string
+          type: Database["public"]["Enums"]["maintenance_type"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          downtime_minutes?: number | null
+          equipment_id?: string
+          failure_code?: string | null
+          finished_at?: string | null
+          id?: string
+          mttr_minutes?: number | null
+          plan_id?: string | null
+          priority?: Database["public"]["Enums"]["order_priority"]
+          root_cause?: string | null
+          scheduled_date?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["work_status"]
+          technician_id?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["maintenance_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "maintenance_orders_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_orders_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_orders_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_plans: {
+        Row: {
+          checklist_model_id: string | null
+          company_id: string
+          condition_metric: string | null
+          condition_threshold: number | null
+          created_at: string
+          description: string | null
+          equipment_id: string
+          id: string
+          last_executed_at: string | null
+          next_due_at: string | null
+          periodicity_days: number | null
+          status: Database["public"]["Enums"]["plan_status"]
+          title: string
+          type: Database["public"]["Enums"]["maintenance_type"]
+          updated_at: string
+          usage_interval: number | null
+        }
+        Insert: {
+          checklist_model_id?: string | null
+          company_id: string
+          condition_metric?: string | null
+          condition_threshold?: number | null
+          created_at?: string
+          description?: string | null
+          equipment_id: string
+          id?: string
+          last_executed_at?: string | null
+          next_due_at?: string | null
+          periodicity_days?: number | null
+          status?: Database["public"]["Enums"]["plan_status"]
+          title: string
+          type: Database["public"]["Enums"]["maintenance_type"]
+          updated_at?: string
+          usage_interval?: number | null
+        }
+        Update: {
+          checklist_model_id?: string | null
+          company_id?: string
+          condition_metric?: string | null
+          condition_threshold?: number | null
+          created_at?: string
+          description?: string | null
+          equipment_id?: string
+          id?: string
+          last_executed_at?: string | null
+          next_due_at?: string | null
+          periodicity_days?: number | null
+          status?: Database["public"]["Enums"]["plan_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["maintenance_type"]
+          updated_at?: string
+          usage_interval?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_plans_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_plans_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipments"
             referencedColumns: ["id"]
           },
         ]
@@ -1280,8 +1515,22 @@ export type Database = {
     Enums: {
       call_priority: "baixa" | "média" | "alta"
       call_status: "aberto" | "em análise" | "fechado"
+      maintenance_type:
+        | "preventiva"
+        | "preditiva"
+        | "corretiva"
+        | "detectiva"
+        | "tempo"
       order_priority: "baixa" | "média" | "alta"
       order_status: "pendente" | "em execução" | "concluída" | "cancelada"
+      plan_status: "ativo" | "pausado" | "cancelado"
+      work_status:
+        | "planejada"
+        | "aberta"
+        | "em_execucao"
+        | "aguardando_peca"
+        | "concluida"
+        | "cancelada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1411,8 +1660,24 @@ export const Constants = {
     Enums: {
       call_priority: ["baixa", "média", "alta"],
       call_status: ["aberto", "em análise", "fechado"],
+      maintenance_type: [
+        "preventiva",
+        "preditiva",
+        "corretiva",
+        "detectiva",
+        "tempo",
+      ],
       order_priority: ["baixa", "média", "alta"],
       order_status: ["pendente", "em execução", "concluída", "cancelada"],
+      plan_status: ["ativo", "pausado", "cancelado"],
+      work_status: [
+        "planejada",
+        "aberta",
+        "em_execucao",
+        "aguardando_peca",
+        "concluida",
+        "cancelada",
+      ],
     },
   },
 } as const
