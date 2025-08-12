@@ -36,6 +36,7 @@ interface FormData {
   phone: string;
   company_id: string;
   active: boolean;
+  password: string;
 }
 
 export function ClientFormModal({ open, onClose, client, companies }: ClientFormModalProps) {
@@ -47,6 +48,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
     phone: "",
     company_id: "",
     active: true,
+    password: "",
   });
 
   useEffect(() => {
@@ -57,6 +59,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
         phone: client.phone || "",
         company_id: client.company_id || "",
         active: client.active,
+        password: "",
       });
     } else if (open && !client) {
       setFormData({
@@ -65,6 +68,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
         phone: "",
         company_id: "",
         active: true,
+        password: "",
       });
     }
   }, [open, client]);
@@ -93,11 +97,56 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
           description: "As informações do cliente foram atualizadas com sucesso.",
         });
       } else {
-        // Create new client - this would require auth signup
+        // Criar novo cliente via Auth
+        if (formData.password.length < 6) {
+          toast({
+            title: "Erro",
+            description: "A senha deve ter pelo menos 6 caracteres",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { name: formData.name, role: "cliente_final" },
+          },
+        });
+
+        if (authError) {
+          if (authError.message.includes("already registered")) {
+            toast({
+              title: "Erro",
+              description: "Este e-mail já está cadastrado no sistema",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+          throw authError;
+        }
+
+        if (authData.user) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({
+              name: formData.name,
+              phone: formData.phone || null,
+              company_id: formData.company_id || null,
+              active: formData.active,
+            })
+            .eq("user_id", authData.user.id);
+
+          if (profileError) throw profileError;
+        }
+
         toast({
-          title: "Funcionalidade em desenvolvimento",
-          description: "A criação de novos clientes será implementada em breve.",
-          variant: "destructive",
+          title: "Sucesso",
+          description: "Cliente criado com sucesso",
         });
       }
 
@@ -163,6 +212,21 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
           </div>
+
+          {!client && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                minLength={6}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="company">Empresa</Label>
