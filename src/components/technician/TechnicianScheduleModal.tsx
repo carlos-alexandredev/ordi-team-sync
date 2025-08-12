@@ -29,7 +29,7 @@ interface ScheduleOrder {
   client_name: string;
   scheduled_date: string;
   status: "pendente" | "em execução" | "concluída" | "cancelada" | "atrasada" | "pendente_finalizacao";
-  priority: "baixa" | "média" | "alta";
+  priority: "baixa" | "média" | "alta" | "crítica";
   technician_id: string;
   technician_name: string;
   description: string;
@@ -82,6 +82,8 @@ export function TechnicianScheduleModal({ open, onOpenChange, order, onOrderUpda
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
+      case 'crítica':
+        return 'bg-red-700 text-white';
       case 'alta':
         return 'bg-red-500 text-white';
       case 'média':
@@ -160,6 +162,7 @@ export function TechnicianScheduleModal({ open, onOpenChange, order, onOrderUpda
                   <SelectItem value="baixa">Baixa</SelectItem>
                   <SelectItem value="média">Média</SelectItem>
                   <SelectItem value="alta">Alta</SelectItem>
+                  <SelectItem value="crítica">Crítica</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -14,7 +14,7 @@ interface Order {
   id: string;
   title: string;
   description: string;
-  priority: "baixa" | "média" | "alta";
+  priority: "baixa" | "média" | "alta" | "crítica";
   status: "pendente" | "em execução" | "concluída" | "cancelada";
   scheduled_date: string | null;
   execution_date: string | null;

@@ -17,7 +17,7 @@ import { ServiceQuestionnaire } from "@/components/questionnaires/ServiceQuestio
 const orderSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().min(1, "Descrição é obrigatória"),
-  priority: z.enum(["baixa", "média", "alta"]),
+  priority: z.enum(["baixa", "média", "alta", "crítica"]),
   status: z.enum(["pendente", "em execução", "concluída", "cancelada"]),
   client_id: z.string().min(1, "Cliente é obrigatório"),
   technician_id: z.string().optional(),
@@ -30,7 +30,7 @@ interface Order {
   id: string;
   title: string;
   description: string;
-  priority: "baixa" | "média" | "alta";
+  priority: "baixa" | "média" | "alta" | "crítica";
   status: "pendente" | "em execução" | "concluída" | "cancelada";
   client_id: string;
   technician_id?: string;
@@ -334,6 +334,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
                         <SelectItem value="baixa">Baixa</SelectItem>
                         <SelectItem value="média">Média</SelectItem>
                         <SelectItem value="alta">Alta</SelectItem>
+                        <SelectItem value="crítica">Crítica</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -1521,7 +1521,7 @@ export type Database = {
         | "corretiva"
         | "detectiva"
         | "tempo"
-      order_priority: "baixa" | "média" | "alta"
+      order_priority: "baixa" | "média" | "alta" | "crítica"
       order_status: "pendente" | "em execução" | "concluída" | "cancelada"
       plan_status: "ativo" | "pausado" | "cancelado"
       work_status:
@@ -1667,7 +1667,7 @@ export const Constants = {
         "detectiva",
         "tempo",
       ],
-      order_priority: ["baixa", "média", "alta"],
+      order_priority: ["baixa", "média", "alta", "crítica"],
       order_status: ["pendente", "em execução", "concluída", "cancelada"],
       plan_status: ["ativo", "pausado", "cancelado"],
       work_status: [

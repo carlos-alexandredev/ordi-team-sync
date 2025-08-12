@@ -137,7 +137,7 @@ export const MaintenanceOrderFormModal = ({
 
       const { error } = await supabase
         .from("maintenance_orders")
-        .insert([orderData]);
+        .insert(orderData);
 
       if (error) throw error;
 

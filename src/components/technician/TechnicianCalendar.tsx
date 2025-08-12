@@ -16,7 +16,7 @@ interface ScheduleOrder {
   client_name: string;
   scheduled_date: string;
   status: "pendente" | "em execução" | "concluída" | "cancelada" | "atrasada" | "pendente_finalizacao";
-  priority: "baixa" | "média" | "alta";
+  priority: "baixa" | "média" | "alta" | "crítica";
   technician_id: string;
   technician_name: string;
   description: string;
