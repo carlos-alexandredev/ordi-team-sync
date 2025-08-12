@@ -22,6 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { EquipmentFormModal } from "@/components/equipments/EquipmentFormModal";
+
 const Equipments = () => {
   const [equipments] = useState([
     {
@@ -98,6 +100,8 @@ const Equipments = () => {
     }
   ]);
 
+  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
+
   return (
     <AuthLayout>
       <ProtectedRoute allowedRoles={["admin_master", "admin", "admin_cliente", "tecnico", "cliente_final"]}>
@@ -140,7 +144,7 @@ const Equipments = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button className="bg-green-600 hover:bg-green-700">
+              <Button className="bg-green-600 hover:bg-green-700" onClick={() => setIsEquipmentModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar equipamento
               </Button>
@@ -218,6 +222,10 @@ const Equipments = () => {
               <Button variant="outline" size="sm">Próximo</Button>
             </div>
           </div>
+
+          {isEquipmentModalOpen && (
+            <EquipmentFormModal equipment={null} onClose={() => setIsEquipmentModalOpen(false)} />
+          )}
         </div>
       </ProtectedRoute>
     </AuthLayout>

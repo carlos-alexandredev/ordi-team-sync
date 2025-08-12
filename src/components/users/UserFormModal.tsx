@@ -157,7 +157,7 @@ export function UserFormModal({ isOpen, onClose, onSuccess, editingUser, compani
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingUser ? "Editar Usuário" : "Novo Usuário"}

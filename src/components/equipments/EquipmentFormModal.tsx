@@ -192,7 +192,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {equipment ? 'Editar Equipamento' : 'Novo Equipamento'}
