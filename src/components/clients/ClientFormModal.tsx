@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
@@ -41,6 +42,7 @@ interface FormData {
 
 export function ClientFormModal({ open, onClose, client, companies }: ClientFormModalProps) {
   const { toast } = useToast();
+  const { logActivity } = useActivityLogger();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -92,6 +94,22 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
 
         if (error) throw error;
 
+        // Log da atividade
+        await logActivity({
+          action: 'update',
+          table_name: 'profiles',
+          record_id: client.id,
+          details: {
+            type: 'client_update',
+            changes: {
+              name: formData.name,
+              phone: formData.phone,
+              company_id: formData.company_id,
+              active: formData.active
+            }
+          }
+        });
+
         toast({
           title: "Cliente atualizado",
           description: "As informações do cliente foram atualizadas com sucesso.",
@@ -142,6 +160,23 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
             .eq("user_id", authData.user.id);
 
           if (profileError) throw profileError;
+
+          // Log da atividade
+          await logActivity({
+            action: 'create',
+            table_name: 'profiles',
+            record_id: authData.user.id,
+            details: {
+              type: 'client_create',
+              client_data: {
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                company_id: formData.company_id,
+                active: formData.active
+              }
+            }
+          });
         }
 
         toast({
@@ -162,7 +197,7 @@ export function ClientFormModal({ open, onClose, client, companies }: ClientForm
     }
   };
 
-  if (!open) return null;
+  console.log("ClientFormModal render - open:", open, "client:", client);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
