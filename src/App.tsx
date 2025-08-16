@@ -8,6 +8,8 @@ import { usePageLoading } from "@/hooks/usePageLoading";
 import { useAppSettings } from "@/stores/useAppSettings";
 import { useAuthLogger } from "@/hooks/useAuthLogger";
 import { useUserTracking } from "@/hooks/useUserTracking";
+import { NativeContainer } from "@/components/native/NativeContainer";
+import { SplashScreen } from "@/components/native/SplashScreen";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
@@ -61,7 +63,8 @@ function AppContent() {
   useUserTracking();
 
   return (
-    <>
+    <NativeContainer>
+      <SplashScreen />
       {/* NUNCA renderiza o PageLoading se estiver desabilitado */}
       {pageLoadingEnabled && isLoading && <PageLoading isLoading={true} />}
       <Routes>
@@ -106,7 +109,7 @@ function AppContent() {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </>
+    </NativeContainer>
   );
 }
 
