@@ -107,6 +107,10 @@ export function TopBar({ userProfile, onSignOut, onToggleSidebar }: TopBarProps)
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => window.location.href = "/profile"}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Editar Perfil</span>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>Meu Perfil</span>

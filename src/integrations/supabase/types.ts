@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -1439,12 +1439,12 @@ export type Database = {
       check_sla_alerts: {
         Args: Record<PropertyKey, never>
         Returns: {
-          order_id: string
-          title: string
           client_name: string
-          technician_name: string
-          sla_status: string
+          order_id: string
           remaining_hours: number
+          sla_status: string
+          technician_name: string
+          title: string
         }[]
       }
       count_online_users: {
@@ -1466,37 +1466,37 @@ export type Database = {
       get_online_users: {
         Args: Record<PropertyKey, never>
         Returns: {
-          user_id: string
-          user_name: string
-          user_email: string
-          user_role: string
-          login_time: string
+          ip_address: string
+          is_online: boolean
           last_activity: string
           last_page: string
-          ip_address: string
+          login_time: string
           session_duration: unknown
-          is_online: boolean
+          user_email: string
+          user_id: string
+          user_name: string
+          user_role: string
         }[]
       }
       get_role_permissions: {
         Args: { role_name: string }
         Returns: {
-          permission_name: string
-          display_name: string
-          description: string
-          resource: string
           action: string
+          description: string
+          display_name: string
+          permission_name: string
+          resource: string
         }[]
       }
       get_user_allowed_modules: {
         Args: { target_user_id?: string }
         Returns: {
+          has_custom_permission: boolean
+          is_allowed: boolean
+          module_icon: string
           module_name: string
           module_title: string
           module_url: string
-          module_icon: string
-          has_custom_permission: boolean
-          is_allowed: boolean
         }[]
       }
       get_user_company: {
