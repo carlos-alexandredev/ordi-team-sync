@@ -123,12 +123,24 @@ export function UsersList() {
     if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
 
     try {
-      const { error } = await supabase
+      console.log("UsersList: Tentando excluir usuário:", userId);
+      
+      // Verificar se o usuário atual tem permissão
+      const { data: currentUser } = await supabase.auth.getUser();
+      console.log("UsersList: Usuário atual:", currentUser?.user?.id);
+      
+      const { data, error } = await supabase
         .from("profiles")
         .delete()
-        .eq("id", userId);
+        .eq("id", userId)
+        .select();
 
-      if (error) throw error;
+      console.log("UsersList: Resultado da exclusão:", { data, error });
+
+      if (error) {
+        console.error("UsersList: Erro na exclusão:", error);
+        throw error;
+      }
 
       toast({
         title: "Sucesso",
@@ -136,10 +148,11 @@ export function UsersList() {
       });
       
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("UsersList: Erro ao excluir usuário:", error);
       toast({
         title: "Erro",
-        description: "Erro ao excluir usuário",
+        description: `Erro ao excluir usuário: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
