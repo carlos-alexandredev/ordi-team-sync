@@ -120,22 +120,69 @@ export function UsersList() {
   }, [searchName, filterRole, filterCompany]);
 
   const handleDelete = async (userId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
-
     try {
+      console.log("UsersList: Verificando dependências para usuário:", userId);
+      
+      // Verificar se o usuário tem equipamentos associados
+      const { data: equipments, error: equipError } = await supabase
+        .from("equipments")
+        .select("id, name")
+        .eq("client_id", userId);
+
+      if (equipError) {
+        console.error("Erro ao verificar equipamentos:", equipError);
+        throw equipError;
+      }
+
+      // Verificar se o usuário tem ordens associadas
+      const { data: orders, error: ordersError } = await supabase
+        .from("orders")
+        .select("id, title")
+        .eq("client_id", userId);
+
+      if (ordersError) {
+        console.error("Erro ao verificar ordens:", ordersError);
+        throw ordersError;
+      }
+
+      // Verificar se o usuário tem chamados associados
+      const { data: calls, error: callsError } = await supabase
+        .from("calls")
+        .select("id, title")
+        .eq("client_id", userId);
+
+      if (callsError) {
+        console.error("Erro ao verificar chamados:", callsError);
+        throw callsError;
+      }
+
+      const hasEquipments = equipments && equipments.length > 0;
+      const hasOrders = orders && orders.length > 0;
+      const hasCalls = calls && calls.length > 0;
+
+      if (hasEquipments || hasOrders || hasCalls) {
+        let message = "Este usuário não pode ser excluído pois possui:\n";
+        if (hasEquipments) message += `• ${equipments.length} equipamento(s)\n`;
+        if (hasOrders) message += `• ${orders.length} ordem(s) de serviço\n`;
+        if (hasCalls) message += `• ${calls.length} chamado(s)\n`;
+        message += "\nTransfira ou remova essas associações antes de excluir o usuário.";
+        
+        toast({
+          title: "Não é possível excluir",
+          description: message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+
       console.log("UsersList: Tentando excluir usuário:", userId);
       
-      // Verificar se o usuário atual tem permissão
-      const { data: currentUser } = await supabase.auth.getUser();
-      console.log("UsersList: Usuário atual:", currentUser?.user?.id);
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .delete()
-        .eq("id", userId)
-        .select();
-
-      console.log("UsersList: Resultado da exclusão:", { data, error });
+        .eq("id", userId);
 
       if (error) {
         console.error("UsersList: Erro na exclusão:", error);
