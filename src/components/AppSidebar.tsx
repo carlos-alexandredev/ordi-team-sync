@@ -88,6 +88,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       const dynamicItems = modules
         .filter(module => module.is_allowed)
         .filter(module => !baseItems.some(base => base.url === module.module_url)) // Evita duplicação
+        .filter(module => module.module_url !== '/cadastros') // Remove cadastros duplicado
         .map((module) => ({
           title: module.module_title,
           url: module.module_url,
