@@ -7,16 +7,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, FileText, ArrowRight } from "lucide-react";
+import { Plus, Search, FileText, ArrowRight, Eye } from "lucide-react";
 import { CallFormModal } from "./CallFormModal";
+import { CallDetailsModal } from "./CallDetailsModal";
 
 interface Call {
   id: string;
+  friendly_id: number;
   title: string;
   description: string;
   priority: "baixa" | "média" | "alta";
   status: "aberto" | "em análise" | "fechado";
   created_at: string;
+  updated_at: string;
   client_profile: { name: string };
   company: { name: string };
 }
@@ -26,6 +29,7 @@ export function CallsList() {
   const [filteredCalls, setFilteredCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -193,28 +197,37 @@ export function CallsList() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>ID</TableHead>
                   <TableHead>Título</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Empresa</TableHead>
                   <TableHead>Prioridade</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Criado em</TableHead>
-                  {(userRole === "admin" || userRole === "admin_cliente") && (
-                    <TableHead>Ações</TableHead>
-                  )}
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCalls.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={userRole === "cliente_final" ? 6 : 7} className="text-center">
+                    <TableCell colSpan={8} className="text-center">
                       Nenhum chamado encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredCalls.map((call) => (
                     <TableRow key={call.id}>
-                      <TableCell className="font-medium">{call.title}</TableCell>
+                      <TableCell className="font-medium">
+                        #{String(call.friendly_id).padStart(4, '0')}
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => setSelectedCall(call)}
+                          className="text-primary hover:underline font-medium text-left"
+                        >
+                          {call.title}
+                        </button>
+                      </TableCell>
                       <TableCell>{call.client_profile?.name}</TableCell>
                       <TableCell>{call.company?.name}</TableCell>
                       <TableCell>
@@ -230,18 +243,28 @@ export function CallsList() {
                       <TableCell>
                         {new Date(call.created_at).toLocaleDateString("pt-BR")}
                       </TableCell>
-                      {(userRole === "admin" || userRole === "admin_cliente") && (
-                        <TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCreateOrder(call.id)}
+                            onClick={() => setSelectedCall(call)}
                           >
-                            <ArrowRight className="h-4 w-4 mr-1" />
-                            Gerar Ordem
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver
                           </Button>
-                        </TableCell>
-                      )}
+                          {(userRole === "admin" || userRole === "admin_cliente") && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCreateOrder(call.id)}
+                            >
+                              <ArrowRight className="h-4 w-4 mr-1" />
+                              Gerar Ordem
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -258,6 +281,12 @@ export function CallsList() {
           loadCalls();
           setShowCreateModal(false);
         }}
+      />
+
+      <CallDetailsModal
+        call={selectedCall}
+        open={!!selectedCall}
+        onOpenChange={(open) => !open && setSelectedCall(null)}
       />
     </div>
   );

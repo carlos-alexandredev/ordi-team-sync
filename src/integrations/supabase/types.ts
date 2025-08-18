@@ -53,6 +53,7 @@ export type Database = {
           company_id: string
           created_at: string
           description: string
+          friendly_id: number
           id: string
           priority: Database["public"]["Enums"]["call_priority"]
           status: Database["public"]["Enums"]["call_status"]
@@ -64,6 +65,7 @@ export type Database = {
           company_id: string
           created_at?: string
           description: string
+          friendly_id?: number
           id?: string
           priority?: Database["public"]["Enums"]["call_priority"]
           status?: Database["public"]["Enums"]["call_status"]
@@ -75,6 +77,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           description?: string
+          friendly_id?: number
           id?: string
           priority?: Database["public"]["Enums"]["call_priority"]
           status?: Database["public"]["Enums"]["call_status"]
@@ -136,6 +139,7 @@ export type Database = {
           created_at: string
           email: string | null
           fantasy_name: string | null
+          friendly_id: number
           id: string
           name: string
           phone: string | null
@@ -149,6 +153,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           fantasy_name?: string | null
+          friendly_id?: number
           id?: string
           name: string
           phone?: string | null
@@ -162,6 +167,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           fantasy_name?: string | null
+          friendly_id?: number
           id?: string
           name?: string
           phone?: string | null
@@ -233,6 +239,7 @@ export type Database = {
           client_id: string
           company_id: string
           created_at: string
+          friendly_id: number
           id: string
           installation_date: string | null
           last_maintenance_date: string | null
@@ -248,6 +255,7 @@ export type Database = {
           client_id: string
           company_id: string
           created_at?: string
+          friendly_id?: number
           id?: string
           installation_date?: string | null
           last_maintenance_date?: string | null
@@ -263,6 +271,7 @@ export type Database = {
           client_id?: string
           company_id?: string
           created_at?: string
+          friendly_id?: number
           id?: string
           installation_date?: string | null
           last_maintenance_date?: string | null
@@ -700,6 +709,7 @@ export type Database = {
           created_at: string
           description: string
           execution_date: string | null
+          friendly_id: number
           id: string
           priority: Database["public"]["Enums"]["order_priority"]
           scheduled_date: string | null
@@ -716,6 +726,7 @@ export type Database = {
           created_at?: string
           description: string
           execution_date?: string | null
+          friendly_id?: number
           id?: string
           priority?: Database["public"]["Enums"]["order_priority"]
           scheduled_date?: string | null
@@ -732,6 +743,7 @@ export type Database = {
           created_at?: string
           description?: string
           execution_date?: string | null
+          friendly_id?: number
           id?: string
           priority?: Database["public"]["Enums"]["order_priority"]
           scheduled_date?: string | null
@@ -810,6 +822,7 @@ export type Database = {
           created_at: string
           department: string | null
           email: string
+          friendly_id: number
           id: string
           name: string
           phone: string | null
@@ -825,6 +838,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           email: string
+          friendly_id?: number
           id?: string
           name: string
           phone?: string | null
@@ -840,6 +854,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           email?: string
+          friendly_id?: number
           id?: string
           name?: string
           phone?: string | null
