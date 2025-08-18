@@ -45,7 +45,6 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [cadastrosOpen, setCadastrosOpen] = useState(currentPath === "/cadastros" || currentPath.startsWith("/cadastros"));
   const { modules, loading } = useUserPermissions();
 
   const isActive = (path: string) => currentPath === path;
@@ -122,46 +121,8 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   const menuItems = getMenuItems();
   const isExpanded = menuItems.some((item) => isActive(item.url));
 
-  // Itens do módulo Cadastros
-  const cadastrosItems = [
-    {
-      category: "Colaboradores",
-      items: [
-        { title: "Colaboradores", url: "/users", icon: Users },
-        { title: "Equipes", url: "/equipes", icon: Users },
-      ]
-    },
-    {
-      category: "Clientes e Fornecedores", 
-      items: [
-        { title: "Clientes", url: "/clients", icon: Users },
-        { title: "Fornecedores", url: "/companies", icon: Building },
-        { title: "Grupos de Clientes", url: "/grupos-clientes", icon: Building },
-      ]
-    },
-    {
-      category: "Inventário e Serviços",
-      items: [
-        { title: "Equipamentos", url: "/equipments", icon: Wrench },
-        { title: "Produtos", url: "/produtos", icon: FileText },
-        { title: "Serviços", url: "/servicos", icon: Settings },
-        { title: "Formas de Pagamento", url: "/formas-pagamento", icon: FileText },
-      ]
-    },
-    {
-      category: "Tarefas",
-      items: [
-        { title: "Tipos de Tarefas", url: "/tipos-tarefas", icon: ClipboardList },
-        { title: "Questionários", url: "/questionarios", icon: FileText },
-        { title: "Pesquisa de Satisfação", url: "/pesquisa-satisfacao", icon: BarChart },
-      ]
-    }
-  ];
-
-  // Verificar se algum item de cadastros está ativo
-  const isCadastrosActive = isActive("/cadastros") || cadastrosItems.some(category => 
-    category.items.some(item => isActive(item.url))
-  );
+  // Verificar se cadastros está ativo
+  const isCadastrosActive = isActive("/cadastros");
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -188,55 +149,17 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
                 </SidebarMenuItem>
               ))}
               
-              {/* Módulo Cadastros */}
+              {/* Módulo Cadastros - Botão simples */}
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   asChild
                   className={getNavCls(isCadastrosActive)}
                 >
-                  <NavLink 
-                    to="/cadastros" 
-                    onClick={() => setCadastrosOpen(true)}
-                    end
-                  >
+                  <NavLink to="/cadastros" end>
                     <Database className="h-4 w-4" />
                     {state !== "collapsed" && <span>Cadastros</span>}
                   </NavLink>
                 </SidebarMenuButton>
-                
-                {cadastrosOpen && state !== "collapsed" && (
-                  <SidebarMenuSub>
-                    <div className="flex justify-between items-center px-3 py-1">
-                      <span className="text-xs font-medium text-muted-foreground">Opções de Cadastro</span>
-                      <button 
-                        onClick={() => setCadastrosOpen(false)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {cadastrosItems.map((category) => (
-                      <div key={category.category}>
-                        <div className="px-3 py-1 text-xs font-medium text-muted-foreground">
-                          {category.category}
-                        </div>
-                        {category.items.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
-                            <SidebarMenuSubButton 
-                              asChild
-                              className={getNavCls(isActive(item.url))}
-                            >
-                              <NavLink to={item.url} end>
-                                <item.icon className="h-3 w-3" />
-                                <span>{item.title}</span>
-                              </NavLink>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </div>
-                    ))}
-                  </SidebarMenuSub>
-                )}
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
