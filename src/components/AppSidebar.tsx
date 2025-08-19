@@ -71,14 +71,23 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
   // Construir itens do menu baseado nas permissões do usuário
   const getMenuItems = () => {
     // Itens base estáticos (sem duplicação de cadastros)
-    const baseItems = [
-      { title: "Dashboard", url: "/dashboard", icon: Home },
-      { title: "Chamados", url: "/calls", icon: FileText },
-      { title: "Ordens", url: "/orders", icon: ClipboardList },
-      { title: "Clientes", url: "/clients", icon: UserCheck },
-      { title: "Equipamentos", url: "/equipments", icon: Wrench },
-      { title: "Operação", url: "/operacao", icon: Settings }
-    ];
+      const baseItems = [
+        { title: "Dashboard", url: "/dashboard", icon: Home },
+        { title: "Chamados", url: "/calls", icon: FileText },
+        { title: "Ordens", url: "/orders", icon: ClipboardList },
+        { title: "Clientes", url: "/clients", icon: UserCheck },
+        { title: "Equipamentos", url: "/equipments", icon: Wrench },
+        { title: "Operação", url: "/operacao", icon: Settings }
+      ];
+
+      // Admin master sempre tem acesso à gestão de módulos
+      if (userRole === 'admin_master') {
+        baseItems.push({
+          title: "Gestão Módulos",
+          url: "/modules",
+          icon: Database,
+        });
+      }
 
     let menuItems = [...baseItems];
 

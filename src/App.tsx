@@ -26,6 +26,7 @@ import ClientPortal from "./pages/ClientPortal";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import Desk from "./pages/Desk";
 import UserPermissions from "./pages/UserPermissions";
+import ModulesManagement from "./pages/ModulesManagement";
 import Logs from "./pages/Logs";
 import NotFound from "./pages/NotFound";
 import Equipes from "./pages/Equipes";
@@ -74,6 +75,7 @@ function AppContent() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
         <Route path="/user-permissions" element={<UserPermissions />} />
+        <Route path="/modules" element={<ModulesManagement />} />
         <Route path="/logs" element={<Logs />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
