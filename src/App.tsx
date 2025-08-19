@@ -41,6 +41,7 @@ import AdminSettings from "./pages/AdminSettings";
 import Settings from "./pages/Settings";
 import Maintenance from "./pages/Maintenance";
 import Cadastros from "./pages/Cadastros";
+import Operacao from "./pages/Operacao";
 import Profile from "./pages/Profile";
 import ClientsAdvanced from "./pages/ClientsAdvanced";
 import SuppliersAdvanced from "./pages/SuppliersAdvanced";
@@ -77,6 +78,7 @@ function AppContent() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/maintenance" element={<Maintenance />} />
+        <Route path="/operacao" element={<Operacao />} />
         <Route path="/companies" element={<Companies />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/suppliers" element={<Suppliers />} />

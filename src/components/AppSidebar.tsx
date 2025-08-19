@@ -77,7 +77,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       { title: "Ordens", url: "/orders", icon: ClipboardList },
       { title: "Clientes", url: "/clients", icon: UserCheck },
       { title: "Equipamentos", url: "/equipments", icon: Wrench },
-      { title: "Relatórios", url: "/reports", icon: BarChart }
+      { title: "Operação", url: "/operacao", icon: Settings }
     ];
 
     let menuItems = [...baseItems];
@@ -97,14 +97,6 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
       menuItems.push(...dynamicItems);
     }
 
-    // Módulo de Manutenção para roles específicos
-    if (['admin_master', 'admin', 'admin_cliente', 'supervisor', 'tecnico'].includes(userRole)) {
-      menuItems.push({
-        title: "Manutenção",
-        url: "/maintenance",
-        icon: Wrench,
-      });
-    }
 
     // Admin master sempre tem acesso às configurações
     if (userRole === 'admin_master') {
