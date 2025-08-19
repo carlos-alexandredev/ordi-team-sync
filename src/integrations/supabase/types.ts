@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          actor_user_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          event: string
+          id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          event: string
+          id?: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          event?: string
+          id?: string
+        }
+        Relationships: []
+      }
       call_attachments: {
         Row: {
           call_id: string
@@ -490,6 +523,201 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      module_dependencies: {
+        Row: {
+          created_at: string
+          depends_on_module_id: string
+          id: string
+          module_id: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on_module_id: string
+          id?: string
+          module_id: string
+        }
+        Update: {
+          created_at?: string
+          depends_on_module_id?: string
+          id?: string
+          module_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_dependencies_depends_on_module_id_fkey"
+            columns: ["depends_on_module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_dependencies_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_permissions: {
+        Row: {
+          action: string
+          allowed: boolean
+          id: string
+          module_id: string
+          role: string
+        }
+        Insert: {
+          action: string
+          allowed?: boolean
+          id?: string
+          module_id: string
+          role: string
+        }
+        Update: {
+          action?: string
+          allowed?: boolean
+          id?: string
+          module_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_permissions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_settings: {
+        Row: {
+          id: string
+          key: string
+          module_id: string
+          type: string
+          updated_at: string
+          value_boolean: boolean | null
+          value_json: Json | null
+          value_number: number | null
+          value_text: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          module_id: string
+          type: string
+          updated_at?: string
+          value_boolean?: boolean | null
+          value_json?: Json | null
+          value_number?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          module_id?: string
+          type?: string
+          updated_at?: string
+          value_boolean?: boolean | null
+          value_json?: Json | null
+          value_number?: number | null
+          value_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_settings_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_versions: {
+        Row: {
+          changelog: string | null
+          created_at: string
+          id: string
+          is_stable: boolean
+          module_id: string
+          semver: string
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string
+          id?: string
+          is_stable?: boolean
+          module_id: string
+          semver: string
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string
+          id?: string
+          is_stable?: boolean
+          module_id?: string
+          semver?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_versions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string
+          is_core: boolean
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+          visibility: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          is_core?: boolean
+          name: string
+          slug: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          is_core?: boolean
+          name?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility?: string
+        }
+        Relationships: []
       }
       order_attachments: {
         Row: {
@@ -1476,6 +1704,10 @@ export type Database = {
       }
       generate_order_number: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_slug: {
+        Args: { input_name: string }
         Returns: string
       }
       get_online_users: {
