@@ -80,23 +80,17 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
         { title: "Operação", url: "/operacao", icon: Settings }
       ];
 
-      // Admin master sempre tem acesso à gestão de módulos
-      if (userRole === 'admin_master') {
-        baseItems.push({
-          title: "Gestão Módulos",
-          url: "/modules",
-          icon: Database,
-        });
-      }
-
     let menuItems = [...baseItems];
 
     // Adiciona módulos dinâmicos quando carregou e evita duplicação
     if (!loading && modules.length > 0) {
+      const excludedModules = ['/modules', '/technician', '/technician-schedule', '/reports', '/maintenance'];
+      
       const dynamicItems = modules
         .filter(module => module.is_allowed)
         .filter(module => !baseItems.some(base => base.url === module.module_url)) // Evita duplicação
         .filter(module => module.module_url !== '/cadastros') // Remove cadastros duplicado
+        .filter(module => !excludedModules.includes(module.module_url)) // Remove módulos específicos
         .map((module) => ({
           title: module.module_title,
           url: module.module_url,
