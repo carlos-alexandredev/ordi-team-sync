@@ -29,11 +29,11 @@ interface ModuleFormModalProps {
 
 export const ModuleFormModal = ({ open, onOpenChange, module, onSuccess }: ModuleFormModalProps) => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<Module>({
+const [formData, setFormData] = useState<Module>({
     name: "",
     slug: "",
     description: "",
-    category: "",
+    category: undefined,
     status: 'inactive',
     visibility: 'internal',
     is_core: false
@@ -48,7 +48,7 @@ export const ModuleFormModal = ({ open, onOpenChange, module, onSuccess }: Modul
         name: "",
         slug: "",
         description: "",
-        category: "",
+        category: undefined,
         status: 'inactive',
         visibility: 'internal',
         is_core: false
@@ -154,8 +154,8 @@ export const ModuleFormModal = ({ open, onOpenChange, module, onSuccess }: Modul
           <div className="space-y-2">
             <Label htmlFor="category">Categoria</Label>
             <Select
-              value={formData.category || ""}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+              value={formData.category}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value || undefined }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
