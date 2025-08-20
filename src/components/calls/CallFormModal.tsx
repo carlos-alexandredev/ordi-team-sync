@@ -238,13 +238,11 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
               )}
             />
 
-            {clientId && (
-              <EquipmentSelector
-                clientId={clientId}
-                selectedEquipments={selectedEquipments}
-                onSelectionChange={setSelectedEquipments}
-              />
-            )}
+            <EquipmentSelector
+              clientId={clientId}
+              selectedEquipments={selectedEquipments}
+              onSelectionChange={setSelectedEquipments}
+            />
 
             <div className="flex justify-end gap-3">
               <Button

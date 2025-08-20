@@ -106,6 +106,13 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
     }
   }, [order, form]);
 
+  // Clear selected equipment when client changes
+  useEffect(() => {
+    if (!order && selectedClientId) {
+      setSelectedEquipments([]);
+    }
+  }, [selectedClientId, order]);
+
   useEffect(() => {
     const loadProfiles = async () => {
       try {
@@ -454,38 +461,36 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Técnico Responsável</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
-                    value={field.value || "none"}
+                     <Select 
+                    onValueChange={(value) => field.onChange(value === "" ? undefined : value)} 
+                    value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um técnico (opcional)" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">Não atribuído</SelectItem>
-                      {technicians.map((technician) => (
-                        <SelectItem key={technician.id} value={technician.id}>
-                          {technician.name} ({technician.role})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                     <SelectContent>
+                       <SelectItem value="">Não atribuído</SelectItem>
+                       {technicians.map((technician) => (
+                         <SelectItem key={technician.id} value={technician.id}>
+                           {technician.name} ({technician.role})
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {selectedClientId && (
-              <EquipmentSelector 
-                orderId={order?.id}
-                clientId={selectedClientId}
-                selectedEquipments={selectedEquipments}
-                onSelectionChange={setSelectedEquipments}
-                isReadOnly={!!order}
-              />
-            )}
+            <EquipmentSelector 
+              orderId={order?.id}
+              clientId={selectedClientId}
+              selectedEquipments={selectedEquipments}
+              onSelectionChange={setSelectedEquipments}
+              isReadOnly={!!order}
+            />
 
             {order && (
               <div className="space-y-4">
