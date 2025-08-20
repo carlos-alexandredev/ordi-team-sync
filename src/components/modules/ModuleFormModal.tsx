@@ -154,7 +154,7 @@ const [formData, setFormData] = useState<Module>({
           <div className="space-y-2">
             <Label htmlFor="category">Categoria</Label>
             <Select
-              value={formData.category}
+              value={formData.category || undefined}
               onValueChange={(value) => setFormData(prev => ({ ...prev, category: value || undefined }))}
             >
               <SelectTrigger>

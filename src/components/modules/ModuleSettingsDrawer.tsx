@@ -40,7 +40,7 @@ export const ModuleSettingsDrawer = ({ open, onOpenChange, module }: ModuleSetti
   const [newSetting, setNewSetting] = useState({
     key: "",
     type: "string",
-    value: ""
+    value: undefined
   });
   const { toast } = useToast();
 
@@ -119,7 +119,7 @@ export const ModuleSettingsDrawer = ({ open, onOpenChange, module }: ModuleSetti
       loadSettings();
       setShowAddModal(false);
       setEditingSetting(null);
-      setNewSetting({ key: "", type: "string", value: "" });
+      setNewSetting({ key: "", type: "string", value: undefined });
     } catch (error) {
       console.error('Error saving setting:', error);
       toast({
@@ -234,10 +234,10 @@ export const ModuleSettingsDrawer = ({ open, onOpenChange, module }: ModuleSetti
                   <div className="space-y-2">
                     <Label htmlFor="value">Valor *</Label>
                     {newSetting.type === 'boolean' ? (
-                      <Select
-                        value={newSetting.value}
-                        onValueChange={(value) => setNewSetting(prev => ({ ...prev, value }))}
-                      >
+                       <Select
+                         value={newSetting.value || undefined}
+                         onValueChange={(value) => setNewSetting(prev => ({ ...prev, value }))}
+                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -274,7 +274,7 @@ export const ModuleSettingsDrawer = ({ open, onOpenChange, module }: ModuleSetti
                       onClick={() => {
                         setShowAddModal(false);
                         setEditingSetting(null);
-                        setNewSetting({ key: "", type: "string", value: "" });
+                        setNewSetting({ key: "", type: "string", value: undefined });
                       }}
                     >
                       Cancelar

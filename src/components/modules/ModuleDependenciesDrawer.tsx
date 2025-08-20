@@ -36,7 +36,7 @@ export const ModuleDependenciesDrawer = ({ open, onOpenChange, module }: ModuleD
   const [availableModules, setAvailableModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedModuleId, setSelectedModuleId] = useState("");
+  const [selectedModuleId, setSelectedModuleId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export const ModuleDependenciesDrawer = ({ open, onOpenChange, module }: ModuleD
       });
       loadDependencies();
       setShowAddModal(false);
-      setSelectedModuleId("");
+      setSelectedModuleId(undefined);
     } catch (error) {
       console.error('Error adding dependency:', error);
       toast({
