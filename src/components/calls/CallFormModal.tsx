@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EquipmentSelector } from "@/components/orders/EquipmentSelector";
 
 const callSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -19,6 +21,12 @@ const callSchema = z.object({
 
 type CallFormData = z.infer<typeof callSchema>;
 
+interface SelectedEquipment {
+  equipment_id: string;
+  action_type: string;
+  observations: string;
+}
+
 interface CallFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +35,8 @@ interface CallFormModalProps {
 
 export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalProps) {
   const [loading, setLoading] = useState(false);
+  const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
+  const [clientId, setClientId] = useState<string>("");
   const { toast } = useToast();
 
   const form = useForm<CallFormData>({
@@ -37,6 +47,27 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
       priority: "média",
     },
   });
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile) {
+        setClientId(profile.id);
+      }
+    };
+
+    if (open) {
+      loadUserProfile();
+    }
+  }, [open]);
 
   const onSubmit = async (data: CallFormData) => {
     try {
@@ -90,6 +121,25 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
         return;
       }
 
+      // Inserir equipamentos selecionados
+      if (selectedEquipments.length > 0) {
+        const equipmentInserts = selectedEquipments.map(equipment => ({
+          call_id: callData.id,
+          equipment_id: equipment.equipment_id,
+          action_type: equipment.action_type,
+          observations: equipment.observations,
+        }));
+
+        const { error: equipmentError } = await supabase
+          .from("call_equipments")
+          .insert(equipmentInserts);
+
+        if (equipmentError) {
+          console.error("Erro ao vincular equipamentos:", equipmentError);
+          // Não bloquear o fluxo se falhar ao vincular equipamentos
+        }
+      }
+
       // Enviar notificação por e-mail
       try {
         await supabase.functions.invoke('send-notification-email', {
@@ -110,6 +160,7 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
       });
 
       form.reset();
+      setSelectedEquipments([]);
       onSuccess();
     } catch (error) {
       console.error("Erro:", error);
@@ -125,7 +176,7 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo Chamado</DialogTitle>
         </DialogHeader>
@@ -186,6 +237,14 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
                 </FormItem>
               )}
             />
+
+            {clientId && (
+              <EquipmentSelector
+                clientId={clientId}
+                selectedEquipments={selectedEquipments}
+                onSelectionChange={setSelectedEquipments}
+              />
+            )}
 
             <div className="flex justify-end gap-3">
               <Button

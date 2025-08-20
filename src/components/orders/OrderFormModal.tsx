@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +38,13 @@ interface Order {
   scheduled_date?: string;
 }
 
+interface SelectedEquipment {
+  equipment_id: string;
+  action_type: string;
+  observations: string;
+  equipment?: any;
+}
+
 interface OrderFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,6 +62,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Profile[]>([]);
   const [technicians, setTechnicians] = useState<Profile[]>([]);
+  const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
   const { toast } = useToast();
 
   const form = useForm<OrderFormData>({
@@ -69,6 +78,8 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
     },
   });
 
+  const selectedClientId = form.watch("client_id");
+
   useEffect(() => {
     if (order) {
       form.reset({
@@ -80,6 +91,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
         technician_id: order.technician_id || "",
         scheduled_date: order.scheduled_date ? order.scheduled_date.split('T')[0] : "",
       });
+      loadOrderEquipments(order.id);
     } else {
       form.reset({
         title: "",
@@ -90,6 +102,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
         technician_id: "",
         scheduled_date: "",
       });
+      setSelectedEquipments([]);
     }
   }, [order, form]);
 
@@ -121,6 +134,40 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
       loadProfiles();
     }
   }, [open]);
+
+  const loadOrderEquipments = async (orderId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("order_equipments")
+        .select(`
+          equipment_id,
+          action_type,
+          observations,
+          equipments (
+            id,
+            name,
+            model,
+            serial_number,
+            location,
+            status
+          )
+        `)
+        .eq("order_id", orderId);
+
+      if (error) throw error;
+
+      const equipments = data?.map(item => ({
+        equipment_id: item.equipment_id,
+        action_type: item.action_type,
+        observations: item.observations || "",
+        equipment: item.equipments
+      })) || [];
+
+      setSelectedEquipments(equipments);
+    } catch (error) {
+      console.error("Erro ao carregar equipamentos da ordem:", error);
+    }
+  };
 
   const onSubmit = async (data: OrderFormData) => {
     try {
@@ -195,6 +242,25 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
         return;
       }
 
+      // Gerenciar equipamentos selecionados
+      if (!order && selectedEquipments.length > 0) {
+        // Nova ordem - inserir equipamentos
+        const equipmentInserts = selectedEquipments.map(equipment => ({
+          order_id: orderResult.id,
+          equipment_id: equipment.equipment_id,
+          action_type: equipment.action_type,
+          observations: equipment.observations,
+        }));
+
+        const { error: equipmentError } = await supabase
+          .from("order_equipments")
+          .insert(equipmentInserts);
+
+        if (equipmentError) {
+          console.error("Erro ao vincular equipamentos:", equipmentError);
+        }
+      }
+
       // Enviar notificações por e-mail
       try {
         if (!order) {
@@ -234,6 +300,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
       });
 
       form.reset();
+      setSelectedEquipments([]);
       onSuccess();
     } catch (error) {
       console.error("Erro:", error);
@@ -249,7 +316,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {order ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço"}
@@ -410,14 +477,18 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
               )}
             />
 
+            {selectedClientId && (
+              <EquipmentSelector 
+                orderId={order?.id}
+                clientId={selectedClientId}
+                selectedEquipments={selectedEquipments}
+                onSelectionChange={setSelectedEquipments}
+                isReadOnly={!!order}
+              />
+            )}
+
             {order && (
               <div className="space-y-4">
-                <EquipmentSelector 
-                  orderId={order.id}
-                  clientId={order.client_id}
-                  selectedEquipments={[]}
-                  onSelectionChange={() => {}}
-                />
                 {order.technician_id && (
                   <TimeTracker 
                     orderId={order.id} 

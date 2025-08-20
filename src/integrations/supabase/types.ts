@@ -80,6 +80,48 @@ export type Database = {
         }
         Relationships: []
       }
+      call_equipments: {
+        Row: {
+          action_type: string
+          call_id: string
+          created_at: string
+          equipment_id: string
+          id: string
+          observations: string | null
+        }
+        Insert: {
+          action_type?: string
+          call_id: string
+          created_at?: string
+          equipment_id: string
+          id?: string
+          observations?: string | null
+        }
+        Update: {
+          action_type?: string
+          call_id?: string
+          created_at?: string
+          equipment_id?: string
+          id?: string
+          observations?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_equipments_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_equipments_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calls: {
         Row: {
           client_id: string
