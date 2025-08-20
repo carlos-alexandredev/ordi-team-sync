@@ -360,7 +360,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {clients.map((client) => (
+                        {clients.filter(client => client.id && client.id.trim() !== '').map((client) => (
                           <SelectItem key={client.id} value={client.id}>
                             {client.name}
                           </SelectItem>
@@ -472,7 +472,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
                     </FormControl>
                      <SelectContent>
                        <SelectItem value="unassigned">Não atribuído</SelectItem>
-                       {technicians.map((technician) => (
+                       {technicians.filter(technician => technician.id && technician.id.trim() !== '').map((technician) => (
                          <SelectItem key={technician.id} value={technician.id}>
                            {technician.name} ({technician.role})
                          </SelectItem>
