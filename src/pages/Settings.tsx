@@ -7,6 +7,7 @@ import { SystemBackup } from "@/components/backup/SystemBackup";
 import { UserPermissionsManager } from "@/components/permissions/UserPermissionsManager";
 import { SystemLogs } from "@/components/SystemLogs";
 import { ReportsAnalytics } from "@/components/reports/ReportsAnalytics";
+import { AdminClientCreator } from "@/components/admin/AdminClientCreator";
 
 const Settings = () => {
   return (
@@ -23,6 +24,7 @@ const Settings = () => {
           <Tabs defaultValue="settings" className="space-y-4">
             <TabsList>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
+              <TabsTrigger value="clients">Clientes</TabsTrigger>
               <TabsTrigger value="permissions">Permissões</TabsTrigger>
               <TabsTrigger value="backup">Backup</TabsTrigger>
               <TabsTrigger value="logs">Logs do Sistema</TabsTrigger>
@@ -31,6 +33,10 @@ const Settings = () => {
             
             <TabsContent value="settings">
               <AdminSettingsComponent />
+            </TabsContent>
+            
+            <TabsContent value="clients">
+              <AdminClientCreator />
             </TabsContent>
             
             <TabsContent value="permissions">
