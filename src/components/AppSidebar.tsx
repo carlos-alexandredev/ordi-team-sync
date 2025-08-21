@@ -75,8 +75,6 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
         { title: "Dashboard", url: "/dashboard", icon: Home },
         { title: "Chamados", url: "/calls", icon: FileText },
         { title: "Ordens", url: "/orders", icon: ClipboardList },
-        { title: "Clientes", url: "/clients", icon: UserCheck },
-        { title: "Equipamentos", url: "/equipments", icon: Wrench },
         { title: "Operação", url: "/operacao", icon: Settings }
       ];
 
@@ -84,7 +82,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
 
     // Adiciona módulos dinâmicos quando carregou e evita duplicação
     if (!loading && modules.length > 0) {
-      const excludedModules = ['/modules', '/technician', '/technician-schedule', '/reports', '/maintenance'];
+      const excludedModules = ['/modules', '/technician', '/technician-schedule', '/reports', '/maintenance', '/users-online', '/clients', '/logs', '/equipments'];
       
       const dynamicItems = modules
         .filter(module => module.is_allowed)
