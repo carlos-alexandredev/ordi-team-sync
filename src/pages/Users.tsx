@@ -1,3 +1,4 @@
+
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UsersList } from "@/components/users/UsersList";
@@ -7,7 +8,7 @@ const Users = () => {
   
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin_master"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin_cliente"]}>
         <UsersList />
       </ProtectedRoute>
     </AuthLayout>

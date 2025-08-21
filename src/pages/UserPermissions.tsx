@@ -1,3 +1,4 @@
+
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RBACManager } from "@/components/rbac/RBACManager";
@@ -5,7 +6,7 @@ import { RBACManager } from "@/components/rbac/RBACManager";
 const UserPermissions = () => {
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin_master"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "admin_cliente"]}>
         <div className="container mx-auto p-6">
           <RBACManager />
         </div>

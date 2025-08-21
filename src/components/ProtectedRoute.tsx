@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -48,18 +49,24 @@ export function ProtectedRoute({ children, allowedRoles = [], fallback }: Protec
             return;
           }
           
-          // Para outros usuários, verificar permissões dinâmicas
-          const currentPath = location.pathname;
-          console.log("ProtectedRoute: Verificando permissões dinâmicas para:", currentPath);
-          const { data: modules } = await supabase.rpc("get_user_allowed_modules");
-          console.log("ProtectedRoute: Módulos do usuário:", modules);
-          
-          const hasModuleAccess = modules?.some((module: any) => 
-            module.module_url === currentPath && module.is_allowed
-          );
-          
-          console.log("ProtectedRoute: Tem acesso ao módulo:", hasModuleAccess);
-          setHasAccess(hasModuleAccess || false);
+          // Para usuários não admin_master, verificar permissões dinâmicas
+          if (profile?.role !== 'admin_master') {
+            const currentPath = location.pathname;
+            console.log("ProtectedRoute: Verificando permissões dinâmicas para:", currentPath);
+            const { data: modules } = await supabase.rpc("get_user_allowed_modules");
+            console.log("ProtectedRoute: Módulos do usuário:", modules);
+            
+            const hasModuleAccess = modules?.some((module: any) => 
+              module.module_url === currentPath && module.is_allowed
+            );
+            
+            console.log("ProtectedRoute: Tem acesso ao módulo:", hasModuleAccess);
+            setHasAccess(hasModuleAccess || false);
+          } else {
+            // admin_master sempre tem acesso se não foi explicitamente negado acima
+            console.log("ProtectedRoute: Admin master - verificando se deve ter acesso");
+            setHasAccess(false); // Só se não estiver nas allowedRoles
+          }
         } else {
           console.log("ProtectedRoute: Usuário não autenticado");
           setHasAccess(false);
@@ -95,6 +102,11 @@ export function ProtectedRoute({ children, allowedRoles = [], fallback }: Protec
           <p className="text-muted-foreground">
             Você não tem permissão para acessar esta página.
           </p>
+          {userProfile?.role && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Seu nível de acesso: {userProfile.role}
+            </p>
+          )}
         </div>
       </div>
     );

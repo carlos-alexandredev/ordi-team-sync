@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  company_id: string;
 }
 
 interface Module {
@@ -40,9 +42,11 @@ export function UserPermissionsManager() {
   const [permissions, setPermissions] = useState<UserPermission[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
+    loadCurrentUserRole();
     loadUsers();
     loadModules();
   }, []);
@@ -53,11 +57,29 @@ export function UserPermissionsManager() {
     }
   }, [selectedUser]);
 
+  const loadCurrentUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+        
+        setCurrentUserRole(profile?.role || '');
+      }
+    } catch (error) {
+      console.error("Erro ao carregar role do usuário atual:", error);
+    }
+  };
+
   const loadUsers = async () => {
     try {
+      // admin_master vê todos exceto admin_master, admin_cliente vê apenas da empresa
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, name, email, role")
+        .select("id, name, email, role, company_id")
         .neq("role", "admin_master")
         .order("name");
 
@@ -220,18 +242,31 @@ export function UserPermissionsManager() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "admin":
-        return "bg-red-100 text-red-800";
-      case "gestor":
-        return "bg-blue-100 text-blue-800";
       case "admin_cliente":
-        return "bg-purple-100 text-purple-800";
+        return "bg-orange-100 text-orange-800";
+      case "gestor":
+        return "bg-indigo-100 text-indigo-800";
       case "tecnico":
+        return "bg-blue-100 text-blue-800";
+      case "cliente_final":
         return "bg-green-100 text-green-800";
-      case "cliente":
-        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case "admin_cliente":
+        return "Admin Cliente";
+      case "gestor":
+        return "Gestor Cliente";
+      case "tecnico":
+        return "Técnico Cliente";
+      case "cliente_final":
+        return "Cliente Final";
+      default:
+        return role;
     }
   };
 
@@ -240,7 +275,10 @@ export function UserPermissionsManager() {
       <div>
         <h2 className="text-2xl font-bold">Gerenciamento de Permissões</h2>
         <p className="text-muted-foreground">
-          Configure quais módulos cada usuário pode acessar
+          {currentUserRole === 'admin_master' 
+            ? "Configure quais módulos cada usuário pode acessar" 
+            : "Configure quais módulos os usuários da sua empresa podem acessar"
+          }
         </p>
       </div>
 
@@ -249,7 +287,12 @@ export function UserPermissionsManager() {
         <Card>
           <CardHeader>
             <CardTitle>Usuários</CardTitle>
-            <CardDescription>Selecione um usuário para editar permissões</CardDescription>
+            <CardDescription>
+              {currentUserRole === 'admin_master' 
+                ? "Selecione um usuário para editar permissões" 
+                : "Selecione um usuário da sua empresa para editar permissões"
+              }
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -273,7 +316,9 @@ export function UserPermissionsManager() {
                       <p className="text-sm font-medium truncate">{user.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
-                    <Badge className={getRoleBadgeColor(user.role)}>{user.role}</Badge>
+                    <Badge className={getRoleBadgeColor(user.role)}>
+                      {getRoleDisplayName(user.role)}
+                    </Badge>
                   </div>
                 </div>
               ))}

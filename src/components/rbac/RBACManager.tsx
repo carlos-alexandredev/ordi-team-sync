@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface User {
   role: string;
   role_id?: string;
   active: boolean;
+  company_id?: string;
 }
 
 interface Permission {
@@ -47,6 +49,7 @@ export function RBACManager() {
   const [loading, setLoading] = useState(true);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,7 +60,19 @@ export function RBACManager() {
     try {
       console.log('Iniciando carregamento dos dados RBAC...');
       
-      // Carregar usuários
+      // Verificar role do usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+        
+        setCurrentUserRole(profile?.role || '');
+      }
+      
+      // Carregar usuários (admin_master vê todos, admin_cliente vê apenas da empresa)
       console.log('Carregando usuários...');
       const { data: usersData, error: usersError } = await supabase
         .from("profiles")
@@ -68,6 +83,7 @@ export function RBACManager() {
           role, 
           role_id,
           active,
+          company_id,
           roles:role_id (
             name,
             display_name
@@ -213,10 +229,9 @@ export function RBACManager() {
     const roleObj = roles.find((r: Role) => r.name === role);
     const roleConfig = {
       admin_master: { label: "Admin Master", className: "bg-purple-100 text-purple-800 border-purple-300" },
-      admin: { label: "Admin", className: "bg-red-100 text-red-800 border-red-300" },
       admin_cliente: { label: "Admin Cliente", className: "bg-orange-100 text-orange-800 border-orange-300" },
-      gestor: { label: "Gestor", className: "bg-indigo-100 text-indigo-800 border-indigo-300" },
-      tecnico: { label: "Técnico", className: "bg-blue-100 text-blue-800 border-blue-300" },
+      gestor: { label: "Gestor Cliente", className: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+      tecnico: { label: "Técnico Cliente", className: "bg-blue-100 text-blue-800 border-blue-300" },
       cliente_final: { label: "Cliente Final", className: "bg-green-100 text-green-800 border-green-300" }
     };
 
@@ -232,6 +247,16 @@ export function RBACManager() {
     );
   };
 
+  // Filtrar roles disponíveis baseado no role do usuário atual
+  const getAvailableRoles = () => {
+    if (currentUserRole === 'admin_master') {
+      return roles; // Admin master pode definir qualquer role
+    } else if (currentUserRole === 'admin_cliente') {
+      return roles.filter(role => ['cliente_final', 'tecnico', 'gestor'].includes(role.name));
+    }
+    return [];
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -244,10 +269,12 @@ export function RBACManager() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Controle de Acesso Baseado em Roles</h1>
-        <Button onClick={handleCreateRole}>
-          <Plus className="w-4 h-4 mr-2" />
-          Criar Role
-        </Button>
+        {currentUserRole === 'admin_master' && (
+          <Button onClick={handleCreateRole}>
+            <Plus className="w-4 h-4 mr-2" />
+            Criar Role
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="users" className="w-full">
@@ -256,14 +283,18 @@ export function RBACManager() {
             <Users className="w-4 h-4 mr-2" />
             Usuários
           </TabsTrigger>
-          <TabsTrigger value="roles">
-            <Shield className="w-4 h-4 mr-2" />
-            Roles
-          </TabsTrigger>
-          <TabsTrigger value="permissions">
-            <Settings className="w-4 h-4 mr-2" />
-            Permissões
-          </TabsTrigger>
+          {currentUserRole === 'admin_master' && (
+            <>
+              <TabsTrigger value="roles">
+                <Shield className="w-4 h-4 mr-2" />
+                Roles
+              </TabsTrigger>
+              <TabsTrigger value="permissions">
+                <Settings className="w-4 h-4 mr-2" />
+                Permissões
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="users">
@@ -271,7 +302,10 @@ export function RBACManager() {
             <CardHeader>
               <CardTitle>Gerenciamento de Usuários</CardTitle>
               <CardDescription>
-                Gerencie roles e permissões dos usuários
+                {currentUserRole === 'admin_master' 
+                  ? "Gerencie todos os usuários do sistema" 
+                  : "Gerencie usuários da sua empresa"
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -308,7 +342,7 @@ export function RBACManager() {
                             <SelectValue placeholder="Selecionar role" />
                           </SelectTrigger>
                           <SelectContent>
-                            {roles.map((role) => (
+                            {getAvailableRoles().map((role) => (
                               <SelectItem key={role.id} value={role.id}>
                                 {role.display_name}
                               </SelectItem>
@@ -324,79 +358,85 @@ export function RBACManager() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="roles">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.map((role) => (
-              <RoleCard
-                key={role.id}
-                role={role}
-                onEdit={handleEditRole}
-                onDelete={handleDeleteRole}
-                onRefresh={loadData}
-              />
-            ))}
-          </div>
-        </TabsContent>
+        {currentUserRole === 'admin_master' && (
+          <>
+            <TabsContent value="roles">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {roles.map((role) => (
+                  <RoleCard
+                    key={role.id}
+                    role={role}
+                    onEdit={handleEditRole}
+                    onDelete={handleDeleteRole}
+                    onRefresh={loadData}
+                  />
+                ))}
+              </div>
+            </TabsContent>
 
-        <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciamento de Permissões</CardTitle>
-              <CardDescription>
-                Visualize e gerencie permissões do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Permissão</TableHead>
-                    <TableHead>Recurso</TableHead>
-                    <TableHead>Ação</TableHead>
-                    <TableHead>Roles com Acesso</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {permissions.map((permission) => (
-                    <TableRow key={permission.id}>
-                      <TableCell className="font-medium">{permission.display_name}</TableCell>
-                      <TableCell className="capitalize">{permission.resource}</TableCell>
-                      <TableCell className="capitalize">{permission.action}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {roles
-                            .filter(role => {
-                              // Verificar se a role tem essa permissão consultando role_permissions
-                              // Por simplificação, mostramos todas as roles do admin_master
-                              return role.name === 'admin_master';
-                            })
-                            .map(role => (
-                              <Badge
-                                key={role.id}
-                                style={{ backgroundColor: role.color }}
-                                className="text-white text-xs"
-                              >
-                                {role.display_name}
-                              </Badge>
-                            ))
-                          }
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <TabsContent value="permissions">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gerenciamento de Permissões</CardTitle>
+                  <CardDescription>
+                    Visualize e gerencie permissões do sistema
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Permissão</TableHead>
+                        <TableHead>Recurso</TableHead>
+                        <TableHead>Ação</TableHead>
+                        <TableHead>Roles com Acesso</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {permissions.map((permission) => (
+                        <TableRow key={permission.id}>
+                          <TableCell className="font-medium">{permission.display_name}</TableCell>
+                          <TableCell className="capitalize">{permission.resource}</TableCell>
+                          <TableCell className="capitalize">{permission.action}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 flex-wrap">
+                              {roles
+                                .filter(role => {
+                                  // Verificar se a role tem essa permissão consultando role_permissions
+                                  // Por simplificação, mostramos todas as roles do admin_master
+                                  return role.name === 'admin_master';
+                                })
+                                .map(role => (
+                                  <Badge
+                                    key={role.id}
+                                    style={{ backgroundColor: role.color }}
+                                    className="text-white text-xs"
+                                  >
+                                    {role.display_name}
+                                  </Badge>
+                                ))
+                              }
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
 
-      <RoleFormModal
-        isOpen={isRoleModalOpen}
-        onClose={() => setIsRoleModalOpen(false)}
-        onSuccess={handleRoleModalSuccess}
-        editingRole={editingRole}
-      />
+      {currentUserRole === 'admin_master' && (
+        <RoleFormModal
+          isOpen={isRoleModalOpen}
+          onClose={() => setIsRoleModalOpen(false)}
+          onSuccess={handleRoleModalSuccess}
+          editingRole={editingRole}
+        />
+      )}
     </div>
   );
 }
