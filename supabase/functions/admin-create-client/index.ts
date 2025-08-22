@@ -72,12 +72,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user is admin_master
-    const { data: profile, error: profileError } = await supabase
+    // Check if user is admin_master (using service role to bypass RLS)
+    console.log('Checking user role for:', user.id);
+    const { data: profile, error: profileError } = await supabaseServiceRole
       .from('profiles')
       .select('role')
       .eq('user_id', user.id)
       .single();
+
+    console.log('Profile query result:', { profile, profileError });
 
     if (profileError || profile?.role !== 'admin_master') {
       return new Response(
