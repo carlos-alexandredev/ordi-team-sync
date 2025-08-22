@@ -15,6 +15,7 @@ const Settings = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tab = searchParams.get("tab");
+    console.log("Settings page loaded, tab from URL:", tab);
     return tab || "clients"; // Default to clients for admin_master
   });
 
