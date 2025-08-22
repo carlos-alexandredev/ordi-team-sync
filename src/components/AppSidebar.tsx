@@ -103,7 +103,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
     if (userRole === 'admin_master') {
       menuItems.push({
         title: "Configurações",
-        url: "/settings",
+        url: "/settings?tab=clients",
         icon: Settings,
       });
     }

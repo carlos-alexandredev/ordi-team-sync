@@ -1,4 +1,6 @@
 
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +12,24 @@ import { ReportsAnalytics } from "@/components/reports/ReportsAnalytics";
 import { AdminClientCreator } from "@/components/admin/AdminClientCreator";
 
 const Settings = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get("tab");
+    return tab || "clients"; // Default to clients for admin_master
+  });
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams, activeTab]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
+
   return (
     <AuthLayout>
       <ProtectedRoute allowedRoles={["admin_master"]}>
@@ -21,7 +41,7 @@ const Settings = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="settings" className="space-y-4">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
             <TabsList>
               <TabsTrigger value="settings">Configurações</TabsTrigger>
               <TabsTrigger value="clients">Clientes</TabsTrigger>
