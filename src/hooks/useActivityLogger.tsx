@@ -12,10 +12,10 @@ interface LogActivity {
 export const useActivityLogger = () => {
   const logActivity = async ({ action, table_name, record_id, details, error_details }: LogActivity) => {
     try {
-      // Get current user profile
+      // Get current user profile with role
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('id, email')
+        .select('id, email, role')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
