@@ -158,10 +158,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if admin email already exists
-    const { data: existingUser } = await supabaseServiceRole.auth.admin.listUsers();
-    const emailExists = existingUser.users.some(u => u.email === admin.email);
-
-    if (emailExists) {
+    const { data: existingUser } = await supabaseServiceRole.auth.admin.getUserByEmail(admin.email);
+    
+    if (existingUser.user) {
       return new Response(
         JSON.stringify({ error: 'Admin email already registered' }),
         { 
@@ -244,7 +243,9 @@ const handler = async (req: Request): Promise<Response> => {
           role: 'admin_cliente',
           company_id: newCompany.id,
           active: true
-        }]);
+        }], {
+          onConflict: 'user_id'
+        });
 
       if (profileError) {
         // Rollback: delete user and company

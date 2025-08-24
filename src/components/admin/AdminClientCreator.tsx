@@ -136,7 +136,17 @@ export function AdminClientCreator() {
 
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to create client');
+        // Extract more detailed error from the function response
+        let errorMessage = 'Failed to create client';
+        if (error.message) {
+          try {
+            const parsed = JSON.parse(error.message);
+            errorMessage = parsed.error || error.message;
+          } catch {
+            errorMessage = error.message;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       if (data?.error) {
