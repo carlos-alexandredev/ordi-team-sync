@@ -157,10 +157,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if admin email already exists
-    const { data: existingUser } = await supabaseServiceRole.auth.admin.getUserByEmail(admin.email);
+    // Check if admin email already exists using listUsers
+    const { data: usersList } = await supabaseServiceRole.auth.admin.listUsers();
+    const existingUser = usersList?.users?.find(u => u.email === admin.email);
     
-    if (existingUser.user) {
+    if (existingUser) {
       return new Response(
         JSON.stringify({ error: 'Admin email already registered' }),
         { 
