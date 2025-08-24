@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface LogActivity {
@@ -5,10 +6,11 @@ interface LogActivity {
   table_name?: string;
   record_id?: string;
   details?: any;
+  error_details?: any;
 }
 
 export const useActivityLogger = () => {
-  const logActivity = async ({ action, table_name, record_id, details }: LogActivity) => {
+  const logActivity = async ({ action, table_name, record_id, details, error_details }: LogActivity) => {
     try {
       // Get current user profile
       const { data: userProfile } = await supabase
@@ -21,7 +23,7 @@ export const useActivityLogger = () => {
       const { error } = await supabase
         .from('system_logs')
         .insert({
-          event_type: 'activity',
+          event_type: error_details ? 'error' : 'activity',
           action,
           table_name,
           record_id,
@@ -29,6 +31,8 @@ export const useActivityLogger = () => {
           user_email: userProfile?.email,
           details: {
             timestamp: new Date().toISOString(),
+            user_role: userProfile?.role || 'unknown',
+            error_details,
             ...details
           }
         });
@@ -41,5 +45,18 @@ export const useActivityLogger = () => {
     }
   };
 
-  return { logActivity };
+  const logError = async (action: string, error: any, context?: any) => {
+    await logActivity({
+      action: `error_${action}`,
+      error_details: {
+        message: error?.message || String(error),
+        stack: error?.stack,
+        code: error?.code,
+        details: error?.details
+      },
+      details: context
+    });
+  };
+
+  return { logActivity, logError };
 };

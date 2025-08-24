@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 interface Equipment {
   id: string;
@@ -52,6 +53,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
   const [clients, setClients] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const { toast } = useToast();
+  const { logActivity, logError } = useActivityLogger();
 
   useEffect(() => {
     loadClients();
@@ -114,6 +116,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       setClients(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar clientes:', error);
+      await logError('load_clients', error, { context: 'EquipmentFormModal' });
     }
   };
 
@@ -129,6 +132,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       setCompanies(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar empresas:', error);
+      await logError('load_companies', error, { context: 'EquipmentFormModal' });
     }
   };
 
@@ -136,10 +140,20 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     e.preventDefault();
     
     if (!formData.name || !formData.client_id || !formData.company_id) {
+      const validationError = "Nome, cliente e empresa são obrigatórios";
       toast({
         title: "Erro",
-        description: "Nome, cliente e empresa são obrigatórios",
+        description: validationError,
         variant: "destructive"
+      });
+      
+      await logError('equipment_validation', new Error(validationError), {
+        formData,
+        missingFields: {
+          name: !formData.name,
+          client_id: !formData.client_id,
+          company_id: !formData.company_id
+        }
       });
       return;
     }
@@ -161,16 +175,40 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
         if (error) throw error;
 
+        await logActivity({
+          action: 'update',
+          table_name: 'equipments',
+          record_id: equipment.id,
+          details: {
+            equipment_name: formData.name,
+            changes: equipmentData,
+            operation: 'equipment_update'
+          }
+        });
+
         toast({
           title: "Sucesso",
           description: "Equipamento atualizado com sucesso!"
         });
       } else {
-        const { error } = await supabase
+        const { data: newEquipment, error } = await supabase
           .from('equipments')
-          .insert([equipmentData]);
+          .insert([equipmentData])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        await logActivity({
+          action: 'insert',
+          table_name: 'equipments',
+          record_id: newEquipment.id,
+          details: {
+            equipment_name: formData.name,
+            equipment_data: equipmentData,
+            operation: 'equipment_create'
+          }
+        });
 
         toast({
           title: "Sucesso",
@@ -180,10 +218,25 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
       onClose();
     } catch (error: any) {
+      console.error('Erro ao salvar equipamento:', error);
+      
+      const errorMessage = error.message || 'Erro desconhecido ao salvar equipamento';
+      
       toast({
         title: "Erro",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
+      });
+
+      await logError('equipment_save', error, {
+        operation: equipment ? 'update' : 'create',
+        equipment_id: equipment?.id,
+        formData,
+        equipmentData: {
+          ...formData,
+          installation_date: installationDate?.toISOString().split('T')[0] || null,
+          last_maintenance_date: maintenanceDate?.toISOString().split('T')[0] || null
+        }
       });
     } finally {
       setLoading(false);
