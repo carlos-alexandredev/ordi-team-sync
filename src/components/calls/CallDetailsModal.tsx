@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, User, Building, Calendar, Clock, Hash } from "lucide-react";
+import { FileText, User, Building, Calendar, Clock, Hash, Wrench } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 interface Call {
   id: string;
@@ -24,7 +26,61 @@ interface CallDetailsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface CallEquipment {
+  id: string;
+  equipment_id: string;
+  action_type: string;
+  observations: string | null;
+  equipment: {
+    friendly_id: number;
+    name: string;
+    model: string | null;
+    serial_number: string | null;
+    location: string | null;
+  };
+}
+
 export function CallDetailsModal({ call, open, onOpenChange }: CallDetailsModalProps) {
+  const [linkedEquipments, setLinkedEquipments] = useState<CallEquipment[]>([]);
+  const [loadingEquipments, setLoadingEquipments] = useState(false);
+
+  useEffect(() => {
+    if (call && open) {
+      loadLinkedEquipments();
+    }
+  }, [call, open]);
+
+  const loadLinkedEquipments = async () => {
+    if (!call) return;
+    
+    setLoadingEquipments(true);
+    try {
+      const { data, error } = await supabase
+        .from('call_equipments')
+        .select(`
+          id,
+          equipment_id,
+          action_type,
+          observations,
+          equipment:equipments(
+            friendly_id,
+            name,
+            model,
+            serial_number,
+            location
+          )
+        `)
+        .eq('call_id', call.id);
+
+      if (error) throw error;
+      setLinkedEquipments((data as any) || []);
+    } catch (error) {
+      console.error('Erro ao carregar equipamentos do chamado:', error);
+    } finally {
+      setLoadingEquipments(false);
+    }
+  };
+
   if (!call) return null;
 
   const getPriorityColor = (priority: string) => {
@@ -117,6 +173,64 @@ export function CallDetailsModal({ call, open, onOpenChange }: CallDetailsModalP
                     {call.description}
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Linked Equipment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  Equipamentos Vinculados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingEquipments ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-2 text-sm text-muted-foreground">Carregando equipamentos...</p>
+                  </div>
+                ) : linkedEquipments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">Nenhum equipamento vinculado a este chamado.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {linkedEquipments.map((item) => (
+                      <div key={item.id} className="border rounded-lg p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                                #{String(item.equipment.friendly_id).padStart(6, '0')}
+                              </span>
+                              <span className="font-medium">{item.equipment.name}</span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {item.equipment.model && (
+                                <span>Modelo: {item.equipment.model} • </span>
+                              )}
+                              {item.equipment.serial_number && (
+                                <span>Série: {item.equipment.serial_number} • </span>
+                              )}
+                              {item.equipment.location && (
+                                <span>Local: {item.equipment.location}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="ml-2">
+                            {item.action_type}
+                          </Badge>
+                        </div>
+                        {item.observations && (
+                          <div className="mt-2 pt-2 border-t">
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Observações:</strong> {item.observations}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

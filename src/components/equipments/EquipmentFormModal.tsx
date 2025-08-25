@@ -16,6 +16,7 @@ import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 interface Equipment {
   id: string;
+  friendly_id: number;
   name: string;
   model: string | null;
   serial_number: string | null;
@@ -43,22 +44,34 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     serial_number: '',
     location: '',
     status: 'ativo',
-    client_id: '',
-    company_id: '',
     observations: ''
   });
   const [installationDate, setInstallationDate] = useState<Date | undefined>();
   const [maintenanceDate, setMaintenanceDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<any[]>([]);
-  const [companies, setCompanies] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<{id: string, company_id: string} | null>(null);
   const { toast } = useToast();
   const { logActivity, logError } = useActivityLogger();
 
   useEffect(() => {
-    loadClients();
-    loadCompanies();
+    loadUserProfile();
   }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, company_id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error: any) {
+      console.error('Erro ao carregar perfil do usuário:', error);
+      await logError('load_user_profile', error, { context: 'EquipmentFormModal' });
+    }
+  };
 
   useEffect(() => {
     if (equipment) {
@@ -69,8 +82,6 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         serial_number: equipment.serial_number || '',
         location: equipment.location || '',
         status: equipment.status,
-        client_id: equipment.client_id,
-        company_id: equipment.company_id,
         observations: equipment.observations || ''
       };
       console.log('Definindo formData:', newFormData);
@@ -95,8 +106,6 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         serial_number: '',
         location: '',
         status: 'ativo',
-        client_id: '',
-        company_id: '',
         observations: ''
       });
       setInstallationDate(undefined);
@@ -104,43 +113,12 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     }
   }, [equipment]);
 
-  const loadClients = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('role', 'cliente_final')
-        .order('name');
-
-      if (error) throw error;
-      setClients(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar clientes:', error);
-      await logError('load_clients', error, { context: 'EquipmentFormModal' });
-    }
-  };
-
-  const loadCompanies = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name')
-        .eq('active', true)
-        .order('name');
-
-      if (error) throw error;
-      setCompanies(data || []);
-    } catch (error: any) {
-      console.error('Erro ao carregar empresas:', error);
-      await logError('load_companies', error, { context: 'EquipmentFormModal' });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.client_id || !formData.company_id) {
-      const validationError = "Nome, cliente e empresa são obrigatórios";
+    if (!formData.name || !userProfile) {
+      const validationError = "Nome é obrigatório";
       toast({
         title: "Erro",
         description: validationError,
@@ -149,10 +127,10 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       
       await logError('equipment_validation', new Error(validationError), {
         formData,
+        userProfile,
         missingFields: {
           name: !formData.name,
-          client_id: !formData.client_id,
-          company_id: !formData.company_id
+          userProfile: !userProfile
         }
       });
       return;
@@ -163,6 +141,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     try {
       const equipmentData = {
         ...formData,
+        client_id: userProfile.id,
+        company_id: userProfile.company_id,
         installation_date: installationDate?.toISOString().split('T')[0] || null,
         last_maintenance_date: maintenanceDate?.toISOString().split('T')[0] || null
       };
@@ -181,6 +161,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           record_id: equipment.id,
           details: {
             equipment_name: formData.name,
+            client_id: userProfile.id,
+            company_id: userProfile.company_id,
             changes: equipmentData,
             operation: 'equipment_update'
           }
@@ -205,6 +187,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           record_id: newEquipment.id,
           details: {
             equipment_name: formData.name,
+            client_id: userProfile.id,
+            company_id: userProfile.company_id,
             equipment_data: equipmentData,
             operation: 'equipment_create'
           }
@@ -234,6 +218,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         formData,
         equipmentData: {
           ...formData,
+          client_id: userProfile?.id,
+          company_id: userProfile?.company_id,
           installation_date: installationDate?.toISOString().split('T')[0] || null,
           last_maintenance_date: maintenanceDate?.toISOString().split('T')[0] || null
         }
@@ -295,40 +281,6 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="Ex: Sala de reuniões"
               />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="client_id">Cliente *</Label>
-              <Select value={equipment ? equipment.client_id : formData.client_id} onValueChange={(value) => setFormData({ ...formData, client_id: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="company_id">Empresa *</Label>
-              <Select value={equipment ? equipment.company_id : formData.company_id} onValueChange={(value) => setFormData({ ...formData, company_id: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

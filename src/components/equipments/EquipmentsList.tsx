@@ -12,6 +12,7 @@ import { EquipmentFormModal } from './EquipmentFormModal';
 
 interface Equipment {
   id: string;
+  friendly_id: number;
   name: string;
   model: string | null;
   serial_number: string | null;
@@ -40,11 +41,13 @@ export const EquipmentsList: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [clients, setClients] = useState<any[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
+  const [showClientFilter, setShowClientFilter] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     loadEquipments();
-    loadClients();
+    loadUserRole();
   }, []);
 
   useEffect(() => {
@@ -72,6 +75,23 @@ export const EquipmentsList: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserRole = async () => {
+    try {
+      const { data: role, error } = await supabase.rpc('get_user_role');
+      
+      if (error) throw error;
+      setUserRole(role || '');
+      
+      // Only load clients for admin roles
+      if (['admin_master', 'admin', 'admin_cliente'].includes(role || '')) {
+        setShowClientFilter(true);
+        loadClients();
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar role do usuário:', error);
     }
   };
 
@@ -179,19 +199,21 @@ export const EquipmentsList: React.FC = () => {
             </SelectContent>
           </Select>
 
-          <Select value={selectedClientId || "all"} onValueChange={(value) => setSelectedClientId(value === "all" ? "" : value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Cliente" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os clientes</SelectItem>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {showClientFilter && (
+            <Select value={selectedClientId || "all"} onValueChange={(value) => setSelectedClientId(value === "all" ? "" : value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os clientes</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <Button
             variant="outline"
@@ -209,6 +231,7 @@ export const EquipmentsList: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Modelo</TableHead>
                 <TableHead>Nº Série</TableHead>
@@ -222,13 +245,16 @@ export const EquipmentsList: React.FC = () => {
             <TableBody>
               {filteredEquipments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     Nenhum equipamento encontrado
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredEquipments.map((equipment) => (
                   <TableRow key={equipment.id}>
+                    <TableCell className="font-mono text-sm">
+                      {String(equipment.friendly_id).padStart(6, '0')}
+                    </TableCell>
                     <TableCell className="font-medium">{equipment.name}</TableCell>
                     <TableCell>{equipment.model || '-'}</TableCell>
                     <TableCell>{equipment.serial_number || '-'}</TableCell>
