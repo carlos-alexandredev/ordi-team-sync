@@ -82,7 +82,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
 
     // Adiciona módulos dinâmicos quando carregou e evita duplicação
     if (!loading && modules.length > 0) {
-      const excludedModules = ['/modules', '/technician', '/technician-schedule', '/reports', '/maintenance', '/users-online', '/clients', '/logs', '/equipments'];
+      const excludedModules = ['/modules', '/technician', '/technician-schedule', '/reports', '/maintenance', '/users-online', '/clients', '/logs'];
       
       const dynamicItems = modules
         .filter(module => module.is_allowed)
@@ -96,6 +96,15 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
         }));
       
       menuItems.push(...dynamicItems);
+    }
+
+    // Adiciona Equipamentos para técnicos
+    if (userRole === 'tecnico') {
+      menuItems.push({
+        title: "Equipamentos",
+        url: "/equipments",
+        icon: Wrench,
+      });
     }
 
 
@@ -142,18 +151,20 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
                 </SidebarMenuItem>
               ))}
               
-              {/* Módulo Cadastros - Botão simples */}
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild
-                  className={getNavCls(isCadastrosActive)}
-                >
-                  <NavLink to="/cadastros" end>
-                    <Database className="h-4 w-4" />
-                    {state !== "collapsed" && <span>Cadastros</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {/* Módulo Cadastros - Apenas para admins */}
+              {(userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente') && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild
+                    className={getNavCls(isCadastrosActive)}
+                  >
+                    <NavLink to="/cadastros" end>
+                      <Database className="h-4 w-4" />
+                      {state !== "collapsed" && <span>Cadastros</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

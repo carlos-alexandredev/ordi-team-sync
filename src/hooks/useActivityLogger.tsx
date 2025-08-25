@@ -12,30 +12,17 @@ interface LogActivity {
 export const useActivityLogger = () => {
   const logActivity = async ({ action, table_name, record_id, details, error_details }: LogActivity) => {
     try {
-      // Get current user profile with role
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('id, email, role')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      // Log the activity
-      const { error } = await supabase
-        .from('system_logs')
-        .insert({
-          event_type: error_details ? 'error' : 'activity',
-          action,
-          table_name,
-          record_id,
-          user_id: userProfile?.id,
-          user_email: userProfile?.email,
-          details: {
-            timestamp: new Date().toISOString(),
-            user_role: userProfile?.role || 'unknown',
-            error_details,
-            ...details
-          }
-        });
+      // Use the secure RPC function for logging
+      const { error } = await supabase.rpc('log_client_event' as any, {
+        p_action: action,
+        p_table_name: table_name,
+        p_record_id: record_id,
+        p_details: {
+          timestamp: new Date().toISOString(),
+          error_details,
+          ...details
+        }
+      });
 
       if (error) {
         console.error('Error logging activity:', error);
