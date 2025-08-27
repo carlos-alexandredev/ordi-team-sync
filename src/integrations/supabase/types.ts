@@ -389,6 +389,144 @@ export type Database = {
           },
         ]
       }
+      faq_categories: {
+        Row: {
+          color: string | null
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      faq_queries: {
+        Row: {
+          company_id: string
+          created_at: string
+          faq_id: string | null
+          id: string
+          question: string
+          response: string | null
+          response_source: string
+          similarity_score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          faq_id?: string | null
+          id?: string
+          question: string
+          response?: string | null
+          response_source: string
+          similarity_score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          faq_id?: string | null
+          id?: string
+          question?: string
+          response?: string | null
+          response_source?: string
+          similarity_score?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_queries_faq_id_fkey"
+            columns: ["faq_id"]
+            isOneToOne: false
+            referencedRelation: "faqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faq_queries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faqs: {
+        Row: {
+          answer: string
+          category: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          question: string
+          search_vector: unknown | null
+          status: string
+          tags: string[] | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          answer: string
+          category?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          question: string
+          search_vector?: unknown | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          answer?: string
+          category?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          question?: string
+          search_vector?: unknown | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faqs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faqs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_orders: {
         Row: {
           company_id: string
@@ -1808,6 +1946,17 @@ export type Database = {
           p_table_name?: string
         }
         Returns: undefined
+      }
+      search_faqs: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          question: string
+          similarity_score: number
+        }[]
       }
     }
     Enums: {
