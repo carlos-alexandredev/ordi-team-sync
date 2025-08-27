@@ -75,6 +75,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
         { title: "Dashboard", url: "/dashboard", icon: Home },
         { title: "Chamados", url: "/calls", icon: FileText },
         { title: "Ordens", url: "/orders", icon: ClipboardList },
+        { title: "Manutenção", url: "/maintenance", icon: Wrench },
         { title: "Operação", url: "/operacao", icon: Settings }
       ];
 

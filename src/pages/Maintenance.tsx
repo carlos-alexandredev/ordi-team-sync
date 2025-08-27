@@ -1,11 +1,10 @@
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MaintenancePlans } from "@/components/maintenance/MaintenancePlans";
+import { MaintenanceOverview } from "@/components/maintenance/MaintenanceOverview";
 import { MaintenanceOrders } from "@/components/maintenance/MaintenanceOrders";
-import { ConditionReadings } from "@/components/maintenance/ConditionReadings";
-import { MaintenanceCalendar } from "@/components/maintenance/MaintenanceCalendar";
 import { MaintenanceReports } from "@/components/maintenance/MaintenanceReports";
+import { MaintenanceSettings } from "@/components/maintenance/MaintenanceSettings";
 
 const Maintenance = () => {
   return (
@@ -19,33 +18,28 @@ const Maintenance = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="orders" className="space-y-4">
+          <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="orders">Ordens de Manutenção</TabsTrigger>
-              <TabsTrigger value="plans">Planos de Manutenção</TabsTrigger>
-              <TabsTrigger value="readings">Leituras/Condição</TabsTrigger>
-              <TabsTrigger value="calendar">Calendário</TabsTrigger>
-              <TabsTrigger value="reports">Relatórios & KPIs</TabsTrigger>
+              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+              <TabsTrigger value="orders">Ordens de Serviço</TabsTrigger>
+              <TabsTrigger value="reports">Relatórios</TabsTrigger>
+              <TabsTrigger value="settings">Configurações</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="overview">
+              <MaintenanceOverview />
+            </TabsContent>
             
             <TabsContent value="orders">
               <MaintenanceOrders />
             </TabsContent>
             
-            <TabsContent value="plans">
-              <MaintenancePlans />
-            </TabsContent>
-            
-            <TabsContent value="readings">
-              <ConditionReadings />
-            </TabsContent>
-            
-            <TabsContent value="calendar">
-              <MaintenanceCalendar />
-            </TabsContent>
-            
             <TabsContent value="reports">
               <MaintenanceReports />
+            </TabsContent>
+            
+            <TabsContent value="settings">
+              <MaintenanceSettings />
             </TabsContent>
           </Tabs>
         </div>
