@@ -14,7 +14,8 @@ import {
   Shield,
   Database,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  HelpCircle
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { TaskFormModal } from "@/components/tasks/TaskFormModal";
@@ -166,6 +167,22 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+
+              {/* FAQ - Link para gestão (admins) ou consulta (todos) */}
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  asChild
+                  className={getNavCls(isActive("/faq") || isActive("/ajuda"))}
+                >
+                  <NavLink 
+                    to={userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' ? "/faq" : "/ajuda"} 
+                    end
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    {state !== "collapsed" && <span>{userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' ? "FAQ" : "Ajuda"}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
