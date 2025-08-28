@@ -31,7 +31,7 @@ export function FAQFormModal({ isOpen, onClose, faq }: FAQFormModalProps) {
   const [formData, setFormData] = useState({
     question: "",
     answer: "",
-    category: "",
+    category: "none",
     status: "published",
     tags: [] as string[],
   });
@@ -55,7 +55,7 @@ export function FAQFormModal({ isOpen, onClose, faq }: FAQFormModalProps) {
       setFormData({
         question: faq.question,
         answer: faq.answer,
-        category: faq.category || "",
+        category: faq.category || "none",
         status: faq.status,
         tags: faq.tags || [],
       });
@@ -63,7 +63,7 @@ export function FAQFormModal({ isOpen, onClose, faq }: FAQFormModalProps) {
       setFormData({
         question: "",
         answer: "",
-        category: "",
+        category: "none",
         status: "published",
         tags: [],
       });
@@ -106,7 +106,7 @@ export function FAQFormModal({ isOpen, onClose, faq }: FAQFormModalProps) {
       const faqData = {
         question: formData.question,
         answer: formData.answer,
-        category: formData.category || null,
+        category: formData.category === "none" ? null : formData.category || null,
         tags: formData.tags.length > 0 ? formData.tags : null,
         status: formData.status,
         company_id: profile.company_id,
@@ -201,7 +201,7 @@ export function FAQFormModal({ isOpen, onClose, faq }: FAQFormModalProps) {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem categoria</SelectItem>
+                  <SelectItem value="none">Sem categoria</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.name}
