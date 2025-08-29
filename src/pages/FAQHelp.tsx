@@ -1,6 +1,8 @@
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { FAQSearch } from "@/components/faq/FAQSearch";
+import { AIChat } from "@/components/faq/AIChat";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function FAQHelp() {
   return (
@@ -14,7 +16,20 @@ export default function FAQHelp() {
             </p>
           </div>
 
-          <FAQSearch />
+          <Tabs defaultValue="search" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="search">Buscar FAQs</TabsTrigger>
+              <TabsTrigger value="chat">Chat com IA</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="search" className="mt-6">
+              <FAQSearch />
+            </TabsContent>
+            
+            <TabsContent value="chat" className="mt-6">
+              <AIChat />
+            </TabsContent>
+          </Tabs>
         </div>
       </ProtectedRoute>
     </AuthLayout>

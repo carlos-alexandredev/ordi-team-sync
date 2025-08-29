@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
@@ -31,8 +31,23 @@ export default function FAQ() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [userRole, setUserRole] = useState<string>("");
   const { toast } = useToast();
   const { logActivity } = useActivityLogger();
+
+  // Get user role
+  useEffect(() => {
+    const getUserRole = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_user_role');
+        if (error) throw error;
+        setUserRole(data || '');
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+    getUserRole();
+  }, []);
 
   const { data: faqs = [], refetch } = useQuery({
     queryKey: ["faqs", searchTerm, statusFilter, categoryFilter],
@@ -124,9 +139,11 @@ export default function FAQ() {
     refetch();
   };
 
+  const canManageFAQs = userRole && ['admin', 'admin_cliente', 'admin_master', 'gestor'].includes(userRole);
+
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["admin", "admin_cliente", "admin_master"]}>
+      <ProtectedRoute allowedRoles={["admin", "admin_cliente", "admin_master", "cliente_final", "tecnico", "gestor", "supervisor"]}>
         <div className="container mx-auto py-6 space-y-6">
           <div className="flex justify-between items-center">
             <div>
@@ -135,10 +152,12 @@ export default function FAQ() {
                 Gerencie as perguntas e respostas frequentes do sistema
               </p>
             </div>
-            <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova FAQ
-            </Button>
+            {canManageFAQs && (
+              <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nova FAQ
+              </Button>
+            )}
           </div>
 
           <Card>
@@ -233,22 +252,24 @@ export default function FAQ() {
                         {new Date(faq.updated_at).toLocaleDateString("pt-BR")}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(faq)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(faq.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {canManageFAQs && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(faq)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(faq.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
