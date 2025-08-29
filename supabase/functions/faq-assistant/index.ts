@@ -29,7 +29,7 @@ serve(async (req) => {
     let response = '';
     let source = 'ai';
     
-    // Use AI directly for now to test
+    // Chave da OpenAI
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
     console.log('OpenAI key available:', !!openaiKey);
     
@@ -80,7 +80,7 @@ Responda de forma clara, objetiva e profissional em português. Se não souber a
             content: question
           }
         ],
-        max_tokens: 500,
+        max_tokens: 300,
         temperature: 0.7
       }),
     });
@@ -88,8 +88,35 @@ Responda de forma clara, objetiva e profissional em português. Se não souber a
     console.log('OpenAI response status:', aiResponse.status);
 
     if (!aiResponse.ok) {
-      const errorData = await aiResponse.json();
+      const errorData = await aiResponse.json().catch(() => ({}));
       console.error('OpenAI API error:', errorData);
+
+      // Tratamento para quota excedida
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({
+            answer: 'A IA está temporariamente indisponível (limite de uso atingido). Tente novamente mais tarde.',
+            source: 'quota',
+            similarity_score: null,
+            related_faqs: []
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 503 }
+        );
+      }
+
+      // Tratamento para chave inválida
+      if (aiResponse.status === 401) {
+        return new Response(
+          JSON.stringify({
+            answer: 'Chave de API inválida ou não configurada. Verifique OPENAI_API_KEY nas variáveis de ambiente.',
+            source: 'auth_error',
+            similarity_score: null,
+            related_faqs: []
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
       throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
@@ -98,7 +125,7 @@ Responda de forma clara, objetiva e profissional em português. Se não souber a
     
     response = aiData.choices[0].message.content;
 
-    // Try to log activity (non-blocking)
+    // Log de atividade no Supabase (não bloqueante)
     try {
       await supabase.rpc('log_client_event', {
         p_action: 'faq_query',
@@ -110,7 +137,6 @@ Responda de forma clara, objetiva e profissional em português. Se não souber a
       });
     } catch (logError) {
       console.error('Failed to log activity:', logError);
-      // Don't fail the request if logging fails
     }
 
     return new Response(
