@@ -110,6 +110,7 @@ function AppContent() {
         <Route path="/admin-settings" element={<AdminSettings />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/ajuda" element={<FAQHelp />} />
+        <Route path="/faq-help" element={<FAQHelp />} />
         <Route path="/users-online" element={<UsersOnline />} />
         
         {/* Páginas avançadas alternativas para teste */}

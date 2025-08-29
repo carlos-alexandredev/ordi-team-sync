@@ -172,14 +172,14 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   asChild
-                  className={getNavCls(isActive("/faq") || isActive("/ajuda"))}
+                  className={getNavCls(isActive("/faq") || isActive("/faq-help"))}
                 >
                   <NavLink 
-                    to={userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' ? "/faq" : "/ajuda"} 
+                    to={userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' || userRole === 'gestor' ? "/faq" : "/faq-help"} 
                     end
                   >
                     <HelpCircle className="h-4 w-4" />
-                    {state !== "collapsed" && <span>{userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' ? "FAQ" : "Ajuda"}</span>}
+                    {state !== "collapsed" && <span>{userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' || userRole === 'gestor' ? "FAQ" : "Ajuda"}</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
