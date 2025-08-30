@@ -100,7 +100,7 @@ Responda de forma clara, objetiva e profissional em português. Se não souber a
             similarity_score: null,
             related_faqs: []
           }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 503 }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
       }
 
