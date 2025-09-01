@@ -50,6 +50,7 @@ import SuppliersAdvanced from "./pages/SuppliersAdvanced";
 import FAQ from "./pages/FAQ";
 import FAQHelp from "./pages/FAQHelp";
 import UsersOnline from "./pages/UsersOnline";
+import AIAnalyticsPage from "./pages/AIAnalytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +94,7 @@ function AppContent() {
         <Route path="/technician" element={<Technician />} />
         <Route path="/technician-schedule" element={<TechnicianSchedule />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/ai-analytics" element={<AIAnalyticsPage />} />
         <Route path="/client-portal" element={<ClientPortal />} />
         <Route path="/supervisor" element={<SupervisorDashboard />} />
         <Route path="/desk" element={<Desk />} />
