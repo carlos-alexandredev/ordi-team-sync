@@ -418,7 +418,7 @@ export type Database = {
       }
       faq_queries: {
         Row: {
-          company_id: string
+          company_id: string | null
           created_at: string
           faq_id: string | null
           id: string
@@ -429,7 +429,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          company_id: string
+          company_id?: string | null
           created_at?: string
           faq_id?: string | null
           id?: string
@@ -440,7 +440,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          company_id?: string
+          company_id?: string | null
           created_at?: string
           faq_id?: string | null
           id?: string
