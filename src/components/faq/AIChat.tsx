@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,14 @@ export function AIChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -103,8 +111,8 @@ export function AIChat() {
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader className="pb-3">
+    <Card className="h-[calc(100vh-12rem)] max-h-[700px] min-h-[500px] flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
           Assistente de FAQ
@@ -114,9 +122,10 @@ export function AIChat() {
         </p>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col gap-4 p-4">
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4">
+      <CardContent className="flex-1 flex flex-col p-4 min-h-0">
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full pr-4" ref={scrollRef}>
+            <div className="space-y-4 pb-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -200,11 +209,11 @@ export function AIChat() {
               </div>
             )}
           </div>
-        </ScrollArea>
+          </ScrollArea>
+        </div>
         
-        <Separator />
-        
-        <div className="flex gap-2">
+        <div className="flex-shrink-0 pt-4 border-t mt-4">
+          <div className="flex gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -220,6 +229,7 @@ export function AIChat() {
           >
             <Send className="h-4 w-4" />
           </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
