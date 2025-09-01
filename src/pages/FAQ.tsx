@@ -144,7 +144,7 @@ export default function FAQ() {
     refetch();
   };
 
-  const canManageFAQs = userRole && ['admin', 'admin_cliente', 'admin_master', 'gestor'].includes(userRole);
+  const canManageFAQs = userRole && ['admin_cliente', 'admin_master'].includes(userRole);
 
   return (
     <AuthLayout>
@@ -152,9 +152,9 @@ export default function FAQ() {
         <div className="container mx-auto py-6 space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Perguntas Frequentes</h1>
+              <h1 className="text-3xl font-bold text-foreground">ORDI IA</h1>
               <p className="text-muted-foreground mt-1">
-                Gerencie as perguntas e respostas frequentes do sistema
+                Assistente de IA e gerenciamento de perguntas frequentes
               </p>
             </div>
             {canManageFAQs && (
@@ -168,17 +168,21 @@ export default function FAQ() {
             )}
           </div>
 
-          <Tabs defaultValue="management" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="management">Gerenciar FAQs</TabsTrigger>
+          <Tabs defaultValue="chat" className="w-full">
+            <TabsList className={`grid w-full ${canManageFAQs ? 'grid-cols-4' : 'grid-cols-1'}`}>
+              {canManageFAQs && (
+                <TabsTrigger value="management">Gerenciar FAQs</TabsTrigger>
+              )}
               <TabsTrigger value="chat" className="gap-2">
                 <Bot className="h-4 w-4" />
                 Chat IA
               </TabsTrigger>
-              <TabsTrigger value="history" className="gap-2">
-                <MessageCircle className="h-4 w-4" />
-                ORDI IA
-              </TabsTrigger>
+              {canManageFAQs && (
+                <TabsTrigger value="history" className="gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Histórico IA
+                </TabsTrigger>
+              )}
               {canManageFAQs && (
                 <TabsTrigger value="settings" className="gap-2">
                   <Settings className="h-4 w-4" />
@@ -186,140 +190,143 @@ export default function FAQ() {
                 </TabsTrigger>
               )}
             </TabsList>
-            
-            <TabsContent value="management" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Filtros</CardTitle>
-                  <CardDescription>
-                    Use os filtros abaixo para encontrar FAQs específicas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Buscar perguntas..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+            {canManageFAQs && (
+              <TabsContent value="management" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Filtros</CardTitle>
+                    <CardDescription>
+                      Use os filtros abaixo para encontrar FAQs específicas
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Buscar perguntas..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os status</SelectItem>
+                          <SelectItem value="published">Publicada</SelectItem>
+                          <SelectItem value="draft">Rascunho</SelectItem>
+                          <SelectItem value="archived">Arquivada</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas as categorias</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.name}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setStatusFilter("all");
+                          setCategoryFilter("all");
+                        }}
+                        className="gap-2"
+                      >
+                        <Filter className="h-4 w-4" />
+                        Limpar Filtros
+                      </Button>
                     </div>
-                    
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos os status</SelectItem>
-                        <SelectItem value="published">Publicada</SelectItem>
-                        <SelectItem value="draft">Rascunho</SelectItem>
-                        <SelectItem value="archived">Arquivada</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  </CardContent>
+                </Card>
 
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas as categorias</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setStatusFilter("all");
-                        setCategoryFilter("all");
-                      }}
-                      className="gap-2"
-                    >
-                      <Filter className="h-4 w-4" />
-                      Limpar Filtros
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Pergunta</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Atualizado em</TableHead>
-                        <TableHead className="w-[100px]">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {faqs.map((faq) => (
-                        <TableRow key={faq.id}>
-                          <TableCell className="max-w-md">
-                            <div className="font-medium truncate">{faq.question}</div>
-                            <div className="text-sm text-muted-foreground truncate mt-1">
-                              {faq.answer.substring(0, 100)}...
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {faq.category && (
-                              <Badge variant="outline">{faq.category}</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(faq.status)}</TableCell>
-                          <TableCell>
-                            {new Date(faq.updated_at).toLocaleDateString("pt-BR")}
-                          </TableCell>
-                          <TableCell>
-                            {canManageFAQs && (
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(faq)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(faq.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </TableCell>
+                <Card>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Pergunta</TableHead>
+                          <TableHead>Categoria</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Atualizado em</TableHead>
+                          <TableHead className="w-[100px]">Ações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  
-                  {faqs.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhuma FAQ encontrada
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                      </TableHeader>
+                      <TableBody>
+                        {faqs.map((faq) => (
+                          <TableRow key={faq.id}>
+                            <TableCell className="max-w-md">
+                              <div className="font-medium truncate">{faq.question}</div>
+                              <div className="text-sm text-muted-foreground truncate mt-1">
+                                {faq.answer.substring(0, 100)}...
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {faq.category && (
+                                <Badge variant="outline">{faq.category}</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(faq.status)}</TableCell>
+                            <TableCell>
+                              {new Date(faq.updated_at).toLocaleDateString("pt-BR")}
+                            </TableCell>
+                            <TableCell>
+                              {canManageFAQs && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEdit(faq)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(faq.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    
+                    {faqs.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        Nenhuma FAQ encontrada
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
             
             <TabsContent value="chat" className="space-y-6">
               <AIChat />
             </TabsContent>
             
-            <TabsContent value="history" className="space-y-6">
-              <ChatHistory />
-            </TabsContent>
+            {canManageFAQs && (
+              <TabsContent value="history" className="space-y-6">
+                <ChatHistory />
+              </TabsContent>
+            )}
             
             {canManageFAQs && (
               <TabsContent value="settings">
