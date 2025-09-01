@@ -21,7 +21,7 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { question, topK = 3 } = await req.json();
+    const { question, topK = 3, sessionId } = await req.json();
     
     if (!question) {
       console.error('Question is required');
@@ -192,6 +192,19 @@ serve(async (req) => {
     if (bestMatch && bestMatch.similarity_score >= aiSettings.similarity_threshold) {
       console.log(`Using FAQ answer with similarity ${bestMatch.similarity_score}`);
       
+      // Validate session if provided
+      if (sessionId) {
+        const { data: session, error: sessionError } = await userSupabase
+          .from('faq_sessions')
+          .select('id, is_active')
+          .eq('id', sessionId)
+          .single();
+
+        if (sessionError || !session || !session.is_active) {
+          console.error('Invalid session:', sessionError);
+        }
+      }
+
       // Log the query
       try {
         await adminSupabase.from('faq_queries').insert({
@@ -201,7 +214,8 @@ serve(async (req) => {
           similarity_score: bestMatch.similarity_score,
           faq_id: bestMatch.id,
           user_id: profile.id,
-          company_id: profile.company_id
+          company_id: profile.company_id,
+          session_id: sessionId || null
         });
       } catch (logError) {
         console.error('Error logging FAQ query:', logError);
@@ -236,7 +250,8 @@ serve(async (req) => {
           response_source: 'fallback',
           similarity_score: null,
           user_id: profile.id,
-          company_id: profile.company_id
+          company_id: profile.company_id,
+          session_id: sessionId || null
         });
       } catch (logError) {
         console.error('Error logging fallback query:', logError);
@@ -272,7 +287,8 @@ serve(async (req) => {
           response_source: 'fallback',
           similarity_score: null,
           user_id: profile.id,
-          company_id: profile.company_id
+          company_id: profile.company_id,
+          session_id: sessionId || null
         });
       } catch (logError) {
         console.error('Error logging OpenAI unavailable fallback:', logError);
@@ -355,7 +371,8 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
               response_source: 'fallback',
               similarity_score: null,
               user_id: profile.id,
-              company_id: profile.company_id
+              company_id: profile.company_id,
+              session_id: sessionId || null
             });
           } catch (logError) {
             console.error('Error logging quota exceeded fallback:', logError);
@@ -391,7 +408,8 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
           response_source: 'ai',
           similarity_score: null,
           user_id: profile.id,
-          company_id: profile.company_id
+          company_id: profile.company_id,
+          session_id: sessionId || null
         });
       } catch (logError) {
         console.error('Error logging AI query:', logError);
@@ -422,7 +440,8 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
           response_source: 'error',
           similarity_score: null,
           user_id: profile.id,
-          company_id: profile.company_id
+          company_id: profile.company_id,
+          session_id: sessionId || null
         });
       } catch (logError) {
         console.error('Error logging OpenAI error:', logError);

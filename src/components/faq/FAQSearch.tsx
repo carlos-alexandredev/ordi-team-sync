@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useQuery } from "@tanstack/react-query";
+import { useAIChatSession } from "@/hooks/useAIChatSession";
 
 interface FAQResult {
   id: string;
@@ -30,6 +31,7 @@ export function FAQSearch() {
   const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
   const { toast } = useToast();
+  const { getSessionId } = useAIChatSession();
   
   const debouncedQuestion = useDebounce(question, 300);
 
@@ -68,11 +70,17 @@ export function FAQSearch() {
     setAiResponse(null);
 
     try {
+      // Get or create session for this conversation
+      const sessionId = await getSessionId(question.trim());
+
       // Get current session to include Authorization header
       const { data: { session } } = await supabase.auth.getSession();
       
       const { data, error } = await supabase.functions.invoke('faq-assistant', {
-        body: { question: question.trim() },
+        body: { 
+          question: question.trim(),
+          sessionId: sessionId
+        },
         headers: session?.access_token ? {
           Authorization: `Bearer ${session.access_token}`
         } : {}

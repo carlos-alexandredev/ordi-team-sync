@@ -425,6 +425,7 @@ export type Database = {
           question: string
           response: string | null
           response_source: string
+          session_id: string | null
           similarity_score: number | null
           user_id: string | null
         }
@@ -436,6 +437,7 @@ export type Database = {
           question: string
           response?: string | null
           response_source: string
+          session_id?: string | null
           similarity_score?: number | null
           user_id?: string | null
         }
@@ -447,6 +449,7 @@ export type Database = {
           question?: string
           response?: string | null
           response_source?: string
+          session_id?: string | null
           similarity_score?: number | null
           user_id?: string | null
         }
@@ -459,6 +462,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "faq_queries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "faq_sessions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "faq_queries_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -466,6 +476,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      faq_sessions: {
+        Row: {
+          archived_at: string | null
+          company_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_activity: string
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_activity?: string
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_activity?: string
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       faqs: {
         Row: {

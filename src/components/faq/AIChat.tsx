@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAIChatSession } from "@/hooks/useAIChatSession";
 
 interface ChatMessage {
   id: string;
@@ -27,6 +28,7 @@ export function AIChat({ variant = 'default' }: AIChatProps) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { getSessionId } = useAIChatSession();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -46,18 +48,23 @@ export function AIChat({ variant = 'default' }: AIChatProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentQuestion = inputValue.trim();
     setInputValue("");
     setIsLoading(true);
 
     try {
+      // Get or create session for this conversation
+      const sessionId = await getSessionId(currentQuestion);
+
       // Get current session to ensure proper authentication
       const { data: { session } } = await supabase.auth.getSession();
       
       // Call the faq-assistant edge function
       const { data, error } = await supabase.functions.invoke('faq-assistant', {
         body: { 
-          question: userMessage.content,
-          topK: 3
+          question: currentQuestion,
+          topK: 3,
+          sessionId: sessionId
         },
         headers: session?.access_token ? { 
           Authorization: `Bearer ${session.access_token}` 
