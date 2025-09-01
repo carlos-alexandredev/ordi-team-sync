@@ -68,8 +68,14 @@ export function FAQSearch() {
     setAiResponse(null);
 
     try {
+      // Get current session to include Authorization header
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('faq-assistant', {
-        body: { question: question.trim() }
+        body: { question: question.trim() },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`
+        } : {}
       });
 
       if (error) {

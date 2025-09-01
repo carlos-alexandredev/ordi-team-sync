@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
-    const supabase = createClient(
+    // Initialize Supabase clients - admin for system operations, user for RLS-aware operations
+    const adminSupabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
@@ -41,50 +41,85 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('No authorization header found');
-      return new Response(JSON.stringify({
+      const errorResponse = {
         answer: "Erro de autenticação. Por favor, faça login novamente.",
         source: 'error',
         similarity_score: null,
         related_faqs: []
-      }), {
+      };
+      return new Response(JSON.stringify(errorResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    // Create user client with JWT for RLS-aware operations
+    const userSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      }
+    );
+
     // Get user context with the auth header
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    const { data: { user }, error: userError } = await adminSupabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (userError || !user) {
       console.error('User not authenticated:', userError);
-      return new Response(JSON.stringify({
+      const errorResponse = {
         answer: "Erro de autenticação. Por favor, faça login novamente.",
         source: 'error',
         similarity_score: null,
         related_faqs: []
-      }), {
+      };
+      return new Response(JSON.stringify(errorResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     // Get user profile and company
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
       .select('id, company_id, role')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
-      return new Response(JSON.stringify({
+    if (profileError || !profile) {
+      console.error('Error fetching profile:', profileError, 'User ID:', user.id);
+      const errorResponse = {
         answer: "Erro ao buscar perfil do usuário. Tente novamente.",
         source: 'error',
         similarity_score: null,
         related_faqs: []
-      }), {
+      };
+      
+      // Try to log error even without company_id
+      try {
+        await adminSupabase.from('faq_queries').insert({
+          question,
+          response: errorResponse.answer,
+          response_source: 'error',
+          similarity_score: null,
+          user_id: null,
+          company_id: null
+        });
+      } catch (logError) {
+        console.error('Error logging profile fetch error:', logError);
+      }
+
+      return new Response(JSON.stringify(errorResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`User role: ${profile.role}, Company: ${profile.company_id}`);
+    console.log(`User role: ${profile.role}, Company: ${profile.company_id}, Profile ID: ${profile.id}`);
+
+    if (!profile.company_id) {
+      console.error('User has no company_id:', profile);
+    }
 
     // Load AI settings (if available)
     let aiSettings = {
@@ -99,14 +134,14 @@ serve(async (req) => {
     };
 
     try {
-      const { data: moduleData } = await supabase
+      const { data: moduleData } = await adminSupabase
         .from('system_modules')
         .select('id')
         .eq('name', 'faq')
         .single();
 
       if (moduleData) {
-        const { data: settings } = await supabase
+        const { data: settings } = await adminSupabase
           .from('module_settings')
           .select('*')
           .eq('module_id', moduleData.id)
@@ -137,14 +172,15 @@ serve(async (req) => {
 
     console.log('AI Settings:', aiSettings);
 
-    // Search FAQs first
-    const { data: faqResults, error: searchError } = await supabase.rpc('search_faqs', {
+    // Search FAQs first using user client for proper RLS
+    const { data: faqResults, error: searchError } = await userSupabase.rpc('search_faqs', {
       p_query: question,
       p_limit: aiSettings.topK
     });
 
     if (searchError) {
-      console.error('Error searching FAQs:', searchError);
+      console.error('Error searching FAQs with user context:', searchError);
+      console.log('User ID for RLS:', user.id, 'Profile ID:', profile.id);
     }
 
     const faqs = faqResults || [];
@@ -158,7 +194,7 @@ serve(async (req) => {
       
       // Log the query
       try {
-        await supabase.from('faq_queries').insert({
+        await adminSupabase.from('faq_queries').insert({
           question,
           response: bestMatch.answer,
           response_source: 'database',
@@ -187,10 +223,27 @@ serve(async (req) => {
     // If KB only mode is enabled, return fallback
     if (aiSettings.kb_only || !aiSettings.enable_fallback) {
       console.log('KB-only mode or fallback disabled');
+      
+      const fallbackAnswer = faqs.length > 0 
+        ? `Não encontrei uma resposta exata, mas aqui estão algumas perguntas relacionadas que podem ajudar:\n\n${faqs.slice(0, 2).map(faq => `• ${faq.question}`).join('\n')}\n\nPara mais informações, entre em contato com o suporte.`
+        : "Desculpe, não encontrei informações sobre sua pergunta na nossa base de conhecimento. Por favor, entre em contato com o suporte para assistência.";
+      
+      // Log the fallback response
+      try {
+        await adminSupabase.from('faq_queries').insert({
+          question,
+          response: fallbackAnswer,
+          response_source: 'fallback',
+          similarity_score: null,
+          user_id: profile.id,
+          company_id: profile.company_id
+        });
+      } catch (logError) {
+        console.error('Error logging fallback query:', logError);
+      }
+      
       return new Response(JSON.stringify({
-        answer: faqs.length > 0 
-          ? `Não encontrei uma resposta exata, mas aqui estão algumas perguntas relacionadas que podem ajudar:\n\n${faqs.slice(0, 2).map(faq => `• ${faq.question}`).join('\n')}\n\nPara mais informações, entre em contato com o suporte.`
-          : "Desculpe, não encontrei informações sobre sua pergunta na nossa base de conhecimento. Por favor, entre em contato com o suporte para assistência.",
+        answer: fallbackAnswer,
         source: 'fallback',
         similarity_score: null,
         related_faqs: faqs.slice(0, 3).map(faq => ({
@@ -208,8 +261,25 @@ serve(async (req) => {
 
     if (!openAIApiKey) {
       console.log('OpenAI not configured, using fallback');
+      
+      const fallbackAnswer = "Desculpe, não encontrei uma resposta específica para sua pergunta. Nossa IA está temporariamente indisponível. Por favor, entre em contato com o suporte para assistência personalizada.";
+      
+      // Log the fallback response
+      try {
+        await adminSupabase.from('faq_queries').insert({
+          question,
+          response: fallbackAnswer,
+          response_source: 'fallback',
+          similarity_score: null,
+          user_id: profile.id,
+          company_id: profile.company_id
+        });
+      } catch (logError) {
+        console.error('Error logging OpenAI unavailable fallback:', logError);
+      }
+      
       return new Response(JSON.stringify({
-        answer: "Desculpe, não encontrei uma resposta específica para sua pergunta. Nossa IA está temporariamente indisponível. Por favor, entre em contato com o suporte para assistência personalizada.",
+        answer: fallbackAnswer,
         source: 'fallback',
         similarity_score: null,
         related_faqs: faqs.slice(0, 3).map(faq => ({
@@ -274,8 +344,25 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
         // Handle quota exceeded gracefully
         if (response.status === 429 || (errorData.error && errorData.error.code === 'insufficient_quota')) {
           console.log('OpenAI quota exceeded, using fallback');
+          
+          const fallbackAnswer = "Desculpe, estamos enfrentando alta demanda no momento. Por favor, tente novamente em alguns minutos ou entre em contato com o suporte para assistência imediata.";
+          
+          // Log the quota exceeded fallback
+          try {
+            await adminSupabase.from('faq_queries').insert({
+              question,
+              response: fallbackAnswer,
+              response_source: 'fallback',
+              similarity_score: null,
+              user_id: profile.id,
+              company_id: profile.company_id
+            });
+          } catch (logError) {
+            console.error('Error logging quota exceeded fallback:', logError);
+          }
+          
           return new Response(JSON.stringify({
-            answer: "Desculpe, estamos enfrentando alta demanda no momento. Por favor, tente novamente em alguns minutos ou entre em contato com o suporte para assistência imediata.",
+            answer: fallbackAnswer,
             source: 'fallback',
             similarity_score: null,
             related_faqs: faqs.slice(0, 3).map(faq => ({
@@ -298,7 +385,7 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
 
       // Log the AI query
       try {
-        await supabase.from('faq_queries').insert({
+        await adminSupabase.from('faq_queries').insert({
           question,
           response: aiAnswer,
           response_source: 'ai',
@@ -325,8 +412,24 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
     } catch (openAIError) {
       console.error('OpenAI request failed:', openAIError);
       
+      const errorAnswer = "Desculpe, não consegui processar sua pergunta no momento. Por favor, tente novamente ou entre em contato com o suporte.";
+      
+      // Log the OpenAI error
+      try {
+        await adminSupabase.from('faq_queries').insert({
+          question,
+          response: errorAnswer,
+          response_source: 'error',
+          similarity_score: null,
+          user_id: profile.id,
+          company_id: profile.company_id
+        });
+      } catch (logError) {
+        console.error('Error logging OpenAI error:', logError);
+      }
+      
       return new Response(JSON.stringify({
-        answer: "Desculpe, não consegui processar sua pergunta no momento. Por favor, tente novamente ou entre em contato com o suporte.",
+        answer: errorAnswer,
         source: 'error',
         similarity_score: null,
         related_faqs: []
@@ -337,8 +440,30 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
 
   } catch (error: any) {
     console.error('Error in faq-assistant function:', error);
+    
+    const errorAnswer = "Ocorreu um erro interno. Por favor, tente novamente.";
+    
+    // Try to log the general error (may not have user context)
+    try {
+      const adminSupabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
+      await adminSupabase.from('faq_queries').insert({
+        question: req.json ? (await req.json()).question || 'Unknown question' : 'Unknown question',
+        response: errorAnswer,
+        response_source: 'error',
+        similarity_score: null,
+        user_id: null,
+        company_id: null
+      });
+    } catch (logError) {
+      console.error('Error logging general error:', logError);
+    }
+    
     return new Response(JSON.stringify({ 
-      answer: "Ocorreu um erro interno. Por favor, tente novamente.",
+      answer: errorAnswer,
       source: 'error',
       similarity_score: null,
       related_faqs: []
