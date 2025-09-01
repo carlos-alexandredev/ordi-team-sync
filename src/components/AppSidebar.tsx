@@ -168,7 +168,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
                 </SidebarMenuItem>
               )}
 
-              {/* FAQ - Link para gestão (admins) ou consulta (todos) */}
+              {/* ORDI IA - Link para gestão (admins) ou consulta (todos) */}
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   asChild
