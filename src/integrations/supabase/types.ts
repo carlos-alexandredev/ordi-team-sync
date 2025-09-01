@@ -1933,6 +1933,15 @@ export type Database = {
         Args: { input_name: string }
         Returns: string
       }
+      get_analytics_data: {
+        Args: {
+          p_aggregations?: Json
+          p_date_range?: Json
+          p_filters?: Json
+          p_table_name: string
+        }
+        Returns: Json
+      }
       get_online_users: {
         Args: Record<PropertyKey, never>
         Returns: {
