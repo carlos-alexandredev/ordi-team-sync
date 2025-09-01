@@ -18,7 +18,11 @@ interface ChatMessage {
   similarity?: number;
 }
 
-export function AIChat() {
+interface AIChatProps {
+  variant?: 'default' | 'modal';
+}
+
+export function AIChat({ variant = 'default' }: AIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -111,11 +115,11 @@ export function AIChat() {
   };
 
   return (
-    <Card className="h-[calc(100vh-12rem)] max-h-[700px] min-h-[500px] flex flex-col">
+    <Card className={variant === 'modal' ? "h-full flex flex-col" : "h-[calc(100vh-12rem)] max-h-[700px] min-h-[500px] flex flex-col"}>
       <CardHeader className="pb-3 flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
-          Assistente de FAQ
+          Assistente ORDI IA
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Faça perguntas sobre nossos produtos e serviços

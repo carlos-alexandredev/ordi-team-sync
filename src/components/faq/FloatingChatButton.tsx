@@ -27,7 +27,7 @@ export function FloatingChatButton() {
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
-                ORDI IA - Assistente Virtual
+                Assistente ORDI IA
               </div>
               <Button
                 variant="ghost"
@@ -41,7 +41,7 @@ export function FloatingChatButton() {
           </DialogHeader>
           
           <div className="flex-1 min-h-0 overflow-hidden">
-            <AIChat />
+            <AIChat variant="modal" />
           </div>
         </DialogContent>
       </Dialog>
