@@ -62,8 +62,8 @@ export const ChatSessionViewer = ({ sessionId, onBack }: ChatSessionViewerProps)
 
       setSession({
         ...sessionData,
-        user_name: sessionData.profiles?.name || null,
-        user_email: sessionData.profiles?.email || null
+        user_name: (sessionData.profiles as any)?.name || null,
+        user_email: (sessionData.profiles as any)?.email || null
       });
 
       // Load queries for this session

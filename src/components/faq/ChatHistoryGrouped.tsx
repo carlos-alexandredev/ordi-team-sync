@@ -81,8 +81,8 @@ export const ChatHistoryGrouped = () => {
 
           return {
             ...session,
-            user_name: session.profiles?.name || null,
-            user_email: session.profiles?.email || null,
+            user_name: (session.profiles as any)?.name || null,
+            user_email: (session.profiles as any)?.email || null,
             query_count: count || 0
           };
         })
