@@ -24,16 +24,45 @@ serve(async (req) => {
     const { question, topK = 3 } = await req.json();
     
     if (!question) {
-      throw new Error('Question is required');
+      console.error('Question is required');
+      return new Response(JSON.stringify({
+        answer: "Por favor, digite uma pergunta.",
+        source: 'error',
+        similarity_score: null,
+        related_faqs: []
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`Processing question: ${question}`);
 
-    // Get user context
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header found');
+      return new Response(JSON.stringify({
+        answer: "Erro de autenticação. Por favor, faça login novamente.",
+        source: 'error',
+        similarity_score: null,
+        related_faqs: []
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Get user context with the auth header
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (userError || !user) {
       console.error('User not authenticated:', userError);
-      throw new Error('User not authenticated');
+      return new Response(JSON.stringify({
+        answer: "Erro de autenticação. Por favor, faça login novamente.",
+        source: 'error',
+        similarity_score: null,
+        related_faqs: []
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Get user profile and company
@@ -45,7 +74,14 @@ serve(async (req) => {
 
     if (profileError) {
       console.error('Error fetching profile:', profileError);
-      throw new Error('User profile not found');
+      return new Response(JSON.stringify({
+        answer: "Erro ao buscar perfil do usuário. Tente novamente.",
+        source: 'error',
+        similarity_score: null,
+        related_faqs: []
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`User role: ${profile.role}, Company: ${profile.company_id}`);
@@ -302,11 +338,11 @@ Se você não souber a resposta específica, seja honesto e sugira entrar em con
   } catch (error: any) {
     console.error('Error in faq-assistant function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
       answer: "Ocorreu um erro interno. Por favor, tente novamente.",
-      source: 'error'
+      source: 'error',
+      similarity_score: null,
+      related_faqs: []
     }), {
-      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

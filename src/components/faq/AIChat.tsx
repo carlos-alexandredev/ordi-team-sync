@@ -59,18 +59,37 @@ export function AIChat() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error calling FAQ assistant:', error);
-      toast.error('Erro ao buscar resposta. Tente novamente.');
       
-      const errorMessage: ChatMessage = {
+      let errorMessage = 'Desculpe, houve um erro ao processar sua pergunta. Tente novamente.';
+      let toastMessage = 'Erro ao buscar resposta. Tente novamente.';
+      
+      // Handle specific error types
+      if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+        errorMessage = 'Serviço temporariamente indisponível. Tente novamente em alguns segundos.';
+        toastMessage = 'Serviço indisponível temporariamente.';
+      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        errorMessage = 'Problema de conectividade. Verifique sua conexão e tente novamente.';
+        toastMessage = 'Problema de conexão.';
+      } else if (error.message?.includes('autenticação') || error.message?.includes('authentication')) {
+        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+        toastMessage = 'Sessão expirada.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'A consulta está demorando mais que o esperado. Tente uma pergunta mais específica.';
+        toastMessage = 'Tempo limite excedido.';
+      }
+
+      toast.error(toastMessage);
+      
+      const errorMsg: ChatMessage = {
         id: Date.now().toString() + '-error',
         type: 'assistant',
-        content: 'Desculpe, houve um erro ao processar sua pergunta. Tente novamente.',
+        content: errorMessage,
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
