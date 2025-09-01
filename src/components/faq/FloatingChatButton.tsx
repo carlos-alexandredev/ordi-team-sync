@@ -22,8 +22,8 @@ export function FloatingChatButton() {
 
       {/* Chat Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0">
-          <DialogHeader className="p-6 pb-2 border-b">
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-4 border-b shrink-0">
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
@@ -33,17 +33,15 @@ export function FloatingChatButton() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="h-6 w-6"
+                className="h-8 w-8"
               >
                 <X className="h-4 w-4" />
               </Button>
             </DialogTitle>
           </DialogHeader>
           
-          <div className="flex-1 p-6 pt-2">
-            <div className="h-full">
-              <AIChat />
-            </div>
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <AIChat />
           </div>
         </DialogContent>
       </Dialog>
