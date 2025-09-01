@@ -179,7 +179,7 @@ export function AppSidebar({ userRole, onSignOut }: AppSidebarProps) {
                     end
                   >
                     <HelpCircle className="h-4 w-4" />
-                    {state !== "collapsed" && <span>{userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' || userRole === 'gestor' ? "FAQ" : "Ajuda"}</span>}
+                    {state !== "collapsed" && <span>{userRole === 'admin_master' || userRole === 'admin' || userRole === 'admin_cliente' || userRole === 'gestor' ? "ORDI IA" : "Ajuda"}</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

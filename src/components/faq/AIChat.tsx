@@ -50,12 +50,18 @@ export function AIChat({ variant = 'default' }: AIChatProps) {
     setIsLoading(true);
 
     try {
+      // Get current session to ensure proper authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
       // Call the faq-assistant edge function
       const { data, error } = await supabase.functions.invoke('faq-assistant', {
         body: { 
           question: userMessage.content,
           topK: 3
-        }
+        },
+        headers: session?.access_token ? { 
+          Authorization: `Bearer ${session.access_token}` 
+        } : undefined
       });
 
       if (error) throw error;

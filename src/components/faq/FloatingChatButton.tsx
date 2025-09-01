@@ -1,11 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MessageCircle, X } from "lucide-react";
 import { AIChat } from "./AIChat";
+import { supabase } from "@/integrations/supabase/client";
 
 export function FloatingChatButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Don't render if user is not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <>
@@ -22,7 +45,7 @@ export function FloatingChatButton() {
 
       {/* Chat Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[700px] w-[95vw] h-[85vh] max-h-[85vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="p-6 pb-4 border-b shrink-0">
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
