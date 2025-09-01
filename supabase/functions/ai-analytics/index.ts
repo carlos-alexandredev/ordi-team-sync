@@ -13,9 +13,10 @@ interface AnalyticsRequest {
 
 interface QueryStructure {
   table: string;
+  query_type: string;
   filters?: Record<string, any>;
-  aggregations?: Record<string, any>;
-  dateRange?: Record<string, any>;
+  user_context?: string;
+  error?: string;
 }
 
 serve(async (req) => {
@@ -143,9 +144,10 @@ Se a pergunta não puder ser respondida com as tabelas disponíveis, retorne:
       );
     }
 
-    // Execute the secure query using our database function
+    // Execute the secure query using our enhanced database function
     const { data, error } = await supabaseClient.rpc('get_analytics_data', {
       p_table_name: queryStructure.table,
+      p_query_type: queryStructure.query_type || 'count',
       p_filters: queryStructure.filters || {},
       p_aggregations: {},
       p_date_range: {}
@@ -189,12 +191,37 @@ Se a pergunta não puder ser respondida com as tabelas disponíveis, retorne:
     const formatResult = await formatResponse.json();
     const naturalResponse = formatResult.choices[0].message.content;
 
+    // Log the interaction to faq_queries for history
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('id, company_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        await supabaseClient
+          .from('faq_queries')
+          .insert({
+            question: question,
+            response: naturalResponse,
+            response_source: 'ai_analytics',
+            user_id: profile.id,
+            company_id: profile.company_id,
+            session_id: null // Will be linked by AIChat component
+          });
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         answer: naturalResponse,
         data: data,
+        source: 'ai_analytics',
         query_info: {
           table: queryStructure.table,
+          query_type: queryStructure.query_type,
           original_question: question
         }
       }),

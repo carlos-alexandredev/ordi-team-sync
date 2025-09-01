@@ -59,28 +59,86 @@ export function AIChat({ variant = 'default' }: AIChatProps) {
       // Get current session to ensure proper authentication
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Call the faq-assistant edge function
-      const { data, error } = await supabase.functions.invoke('faq-assistant', {
-        body: { 
-          question: currentQuestion,
-          topK: 3,
-          sessionId: sessionId
-        },
-        headers: session?.access_token ? { 
-          Authorization: `Bearer ${session.access_token}` 
-        } : undefined
-      });
+      let assistantMessage: ChatMessage;
 
-      if (error) throw error;
+      // First try ai-analytics for database queries
+      try {
+        const { data: analyticsData, error: analyticsError } = await supabase.functions.invoke('ai-analytics', {
+          body: { question: currentQuestion },
+          headers: session?.access_token ? { 
+            Authorization: `Bearer ${session.access_token}` 
+          } : undefined
+        });
 
-      const assistantMessage: ChatMessage = {
-        id: Date.now().toString() + '-assistant',
-        type: 'assistant',
-        content: data.answer || 'Desculpe, não consegui processar sua pergunta.',
-        timestamp: new Date(),
-        source: data.source,
-        similarity: data.similarity_score,
-      };
+        if (!analyticsError && analyticsData?.answer) {
+          assistantMessage = {
+            id: Date.now().toString() + '-assistant',
+            type: 'assistant',
+            content: analyticsData.answer,
+            timestamp: new Date(),
+            source: 'database',
+          };
+
+          // Update the query with session_id for proper history tracking
+          if (sessionId) {
+            await supabase
+              .from('faq_queries')
+              .update({ session_id: sessionId })
+              .eq('question', currentQuestion)
+              .eq('response_source', 'ai_analytics')
+              .order('created_at', { ascending: false })
+              .limit(1);
+          }
+        } else {
+          // Fall back to FAQ assistant if analytics couldn't handle the query
+          const { data: faqData, error: faqError } = await supabase.functions.invoke('faq-assistant', {
+            body: { 
+              question: currentQuestion,
+              topK: 3,
+              sessionId: sessionId
+            },
+            headers: session?.access_token ? { 
+              Authorization: `Bearer ${session.access_token}` 
+            } : undefined
+          });
+
+          if (faqError) throw faqError;
+
+          assistantMessage = {
+            id: Date.now().toString() + '-assistant',
+            type: 'assistant',
+            content: faqData.answer || 'Desculpe, não consegui processar sua pergunta.',
+            timestamp: new Date(),
+            source: faqData.source,
+            similarity: faqData.similarity_score,
+          };
+        }
+      } catch (analyticsError) {
+        console.log('Analytics failed, falling back to FAQ:', analyticsError);
+        
+        // Fall back to FAQ assistant
+        const { data: faqData, error: faqError } = await supabase.functions.invoke('faq-assistant', {
+          body: { 
+            question: currentQuestion,
+            topK: 3,
+            sessionId: sessionId
+          },
+          headers: session?.access_token ? { 
+            Authorization: `Bearer ${session.access_token}` 
+          } : undefined
+        });
+
+        if (faqError) throw faqError;
+
+        assistantMessage = {
+          id: Date.now().toString() + '-assistant',
+          type: 'assistant',
+          content: faqData.answer || 'Desculpe, não consegui processar sua pergunta.',
+          timestamp: new Date(),
+          source: faqData.source,
+          similarity: faqData.similarity_score,
+        };
+      }
 
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -192,7 +250,8 @@ export function AIChat({ variant = 'default' }: AIChatProps) {
                           variant={message.source === 'database' ? 'default' : 'secondary'}
                           className="text-xs"
                         >
-                          {message.source === 'database' ? 'Base de Conhecimento' : 'IA'}
+                          {message.source === 'database' ? 'Banco de Dados' : 
+                           message.source === 'ai' ? 'IA' : 'Base de Conhecimento'}
                         </Badge>
                         {message.similarity && (
                           <span className="text-xs opacity-75">
