@@ -10,6 +10,7 @@ import { useAuthLogger } from "@/hooks/useAuthLogger";
 import { useUserTracking } from "@/hooks/useUserTracking";
 import { NativeContainer } from "@/components/native/NativeContainer";
 import { SplashScreen } from "@/components/native/SplashScreen";
+import { FloatingChatButton } from "@/components/faq/FloatingChatButton";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
@@ -129,6 +130,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <FloatingChatButton />
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>

@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Filter, Edit, Trash2, Settings } from "lucide-react";
+import { Plus, Search, Filter, Edit, Trash2, Settings, MessageCircle, Bot } from "lucide-react";
 import { FAQFormModal } from "@/components/faq/FAQFormModal";
 import { FAQImportExport } from "@/components/faq/FAQImportExport";
 import { AISettings } from "@/components/faq/AISettings";
+import { AIChat } from "@/components/faq/AIChat";
+import { ChatHistory } from "@/components/faq/ChatHistory";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -167,8 +169,16 @@ export default function FAQ() {
           </div>
 
           <Tabs defaultValue="management" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="management">Gerenciar FAQs</TabsTrigger>
+              <TabsTrigger value="chat" className="gap-2">
+                <Bot className="h-4 w-4" />
+                Chat IA
+              </TabsTrigger>
+              <TabsTrigger value="history" className="gap-2">
+                <MessageCircle className="h-4 w-4" />
+                ORDI IA
+              </TabsTrigger>
               {canManageFAQs && (
                 <TabsTrigger value="settings" className="gap-2">
                   <Settings className="h-4 w-4" />
@@ -301,6 +311,14 @@ export default function FAQ() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="chat" className="space-y-6">
+              <AIChat />
+            </TabsContent>
+            
+            <TabsContent value="history" className="space-y-6">
+              <ChatHistory />
             </TabsContent>
             
             {canManageFAQs && (
