@@ -43,16 +43,24 @@ export function AISettings() {
   const loadSettings = async () => {
     setIsLoading(true);
     try {
+      // First get the module ID
+      const { data: moduleData, error: moduleError } = await supabase
+        .from('system_modules')
+        .select('id')
+        .eq('name', 'faq')
+        .single();
+
+      // If no module found, use default settings
+      if (moduleError || !moduleData) {
+        console.log('FAQ module not found, using default settings');
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('module_settings')
         .select('*')
-        .eq('module_id', (
-          await supabase
-            .from('system_modules')
-            .select('id')
-            .eq('name', 'faq')
-            .single()
-        ).data?.id || '')
+        .eq('module_id', moduleData.id)
         .in('key', ['ai_provider', 'ai_model', 'custom_model', 'assistant_id', 'topK', 'similarity_threshold', 'kb_only', 'enable_fallback']);
 
       if (error && error.code !== 'PGRST116') throw error;
