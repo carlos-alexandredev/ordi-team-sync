@@ -18,6 +18,9 @@ interface Equipment {
   model: string | null;
   serial_number: string | null;
   location: string | null;
+  location_detail: string | null;
+  latitude: number | null;
+  longitude: number | null;
   status: string;
   installation_date: string | null;
   last_maintenance_date: string | null;

@@ -7,12 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarIcon, MapPin, Building2, Satellite } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/hooks/useActivityLogger";
+import { EquipmentLocationTab } from "./EquipmentLocationTab";
+import { EquipmentFloorPlanTab } from "./EquipmentFloorPlanTab";
+import { EquipmentMapTab } from "./EquipmentMapTab";
 
 interface Equipment {
   id: string;
@@ -21,6 +25,9 @@ interface Equipment {
   model: string | null;
   serial_number: string | null;
   location: string | null;
+  location_detail: string | null;
+  latitude: number | null;
+  longitude: number | null;
   status: string;
   installation_date: string | null;
   last_maintenance_date: string | null;
@@ -43,6 +50,9 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     model: '',
     serial_number: '',
     location: '',
+    location_detail: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
     status: 'ativo',
     observations: ''
   });
@@ -81,6 +91,9 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         model: equipment.model || '',
         serial_number: equipment.serial_number || '',
         location: equipment.location || '',
+        location_detail: equipment.location_detail || '',
+        latitude: equipment.latitude,
+        longitude: equipment.longitude,
         status: equipment.status,
         observations: equipment.observations || ''
       };
@@ -105,6 +118,9 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         model: '',
         serial_number: '',
         location: '',
+        location_detail: '',
+        latitude: null,
+        longitude: null,
         status: 'ativo',
         observations: ''
       });
@@ -238,134 +254,170 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Nome *</Label>
-              <Input
-                id="name"
-                value={equipment ? equipment.name : formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: Impressora HP LaserJet"
-                required
-              />
-            </div>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Geral
+            </TabsTrigger>
+            <TabsTrigger value="location" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Localização
+            </TabsTrigger>
+            <TabsTrigger value="floorplan" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Planta
+            </TabsTrigger>
+            <TabsTrigger value="map" className="flex items-center gap-2">
+              <Satellite className="h-4 w-4" />
+              Mapa
+            </TabsTrigger>
+          </TabsList>
 
-            <div>
-              <Label htmlFor="model">Modelo</Label>
-              <Input
-                id="model"
-                value={equipment ? (equipment.model || '') : formData.model}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                placeholder="Ex: LaserJet Pro 400"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="serial_number">Número de Série</Label>
-              <Input
-                id="serial_number"
-                value={equipment ? (equipment.serial_number || '') : formData.serial_number}
-                onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
-                placeholder="Ex: ABC123456789"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="location">Local</Label>
-              <Input
-                id="location"
-                value={equipment ? (equipment.location || '') : formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="Ex: Sala de reuniões"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select value={equipment ? equipment.status : formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="manutenção">Em Manutenção</SelectItem>
-                  <SelectItem value="inativo">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Data de Instalação</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate) ? 
-                      format(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate!, "PPP", { locale: ptBR }) : 
-                      "Selecione uma data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={equipment?.installation_date ? new Date(equipment.installation_date) : installationDate}
-                    onSelect={setInstallationDate}
-                    locale={ptBR}
-                    initialFocus
+          <form onSubmit={handleSubmit}>
+            <TabsContent value="general" className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Nome *</Label>
+                  <Input
+                    id="name"
+                    value={equipment ? equipment.name : formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ex: Impressora HP LaserJet"
+                    required
                   />
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
 
-            <div>
-              <Label>Última Manutenção</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate) ? 
-                      format(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate!, "PPP", { locale: ptBR }) : 
-                      "Selecione uma data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate}
-                    onSelect={setMaintenanceDate}
-                    locale={ptBR}
-                    initialFocus
+                <div>
+                  <Label htmlFor="model">Modelo</Label>
+                  <Input
+                    id="model"
+                    value={equipment ? (equipment.model || '') : formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    placeholder="Ex: LaserJet Pro 400"
                   />
-                </PopoverContent>
-              </Popover>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="serial_number">Número de Série</Label>
+                  <Input
+                    id="serial_number"
+                    value={equipment ? (equipment.serial_number || '') : formData.serial_number}
+                    onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
+                    placeholder="Ex: ABC123456789"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={equipment ? equipment.status : formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="manutenção">Em Manutenção</SelectItem>
+                      <SelectItem value="inativo">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Data de Instalação</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate) ? 
+                          format(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate!, "PPP", { locale: ptBR }) : 
+                          "Selecione uma data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={equipment?.installation_date ? new Date(equipment.installation_date) : installationDate}
+                        onSelect={setInstallationDate}
+                        locale={ptBR}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label>Última Manutenção</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate) ? 
+                          format(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate!, "PPP", { locale: ptBR }) : 
+                          "Selecione uma data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate}
+                        onSelect={setMaintenanceDate}
+                        locale={ptBR}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="observations">Observações</Label>
+                <Textarea
+                  id="observations"
+                  value={equipment ? (equipment.observations || '') : formData.observations}
+                  onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+                  placeholder="Observações sobre o equipamento..."
+                  rows={3}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="location">
+              <EquipmentLocationTab
+                formData={formData}
+                setFormData={setFormData}
+                equipment={equipment}
+              />
+            </TabsContent>
+
+            <TabsContent value="floorplan">
+              <EquipmentFloorPlanTab
+                equipment={equipment}
+                companyId={userProfile?.company_id}
+              />
+            </TabsContent>
+
+            <TabsContent value="map">
+              <EquipmentMapTab
+                formData={formData}
+                setFormData={setFormData}
+                equipment={equipment}
+              />
+            </TabsContent>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Salvando...' : (equipment ? 'Atualizar' : 'Criar')}
+              </Button>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="observations">Observações</Label>
-            <Textarea
-              id="observations"
-              value={equipment ? (equipment.observations || '') : formData.observations}
-              onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
-              placeholder="Observações sobre o equipamento..."
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Salvando...' : (equipment ? 'Atualizar' : 'Criar')}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

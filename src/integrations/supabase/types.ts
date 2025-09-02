@@ -309,6 +309,36 @@ export type Database = {
           },
         ]
       }
+      equipment_floorplan_positions: {
+        Row: {
+          created_at: string
+          equipment_id: string
+          floorplan_id: string
+          id: string
+          updated_at: string
+          x_position: number
+          y_position: number
+        }
+        Insert: {
+          created_at?: string
+          equipment_id: string
+          floorplan_id: string
+          id?: string
+          updated_at?: string
+          x_position: number
+          y_position: number
+        }
+        Update: {
+          created_at?: string
+          equipment_id?: string
+          floorplan_id?: string
+          id?: string
+          updated_at?: string
+          x_position?: number
+          y_position?: number
+        }
+        Relationships: []
+      }
       equipments: {
         Row: {
           client_id: string
@@ -318,7 +348,10 @@ export type Database = {
           id: string
           installation_date: string | null
           last_maintenance_date: string | null
+          latitude: number | null
           location: string | null
+          location_detail: string | null
+          longitude: number | null
           model: string | null
           name: string
           observations: string | null
@@ -334,7 +367,10 @@ export type Database = {
           id?: string
           installation_date?: string | null
           last_maintenance_date?: string | null
+          latitude?: number | null
           location?: string | null
+          location_detail?: string | null
+          longitude?: number | null
           model?: string | null
           name: string
           observations?: string | null
@@ -350,7 +386,10 @@ export type Database = {
           id?: string
           installation_date?: string | null
           last_maintenance_date?: string | null
+          latitude?: number | null
           location?: string | null
+          location_detail?: string | null
+          longitude?: number | null
           model?: string | null
           name?: string
           observations?: string | null
@@ -569,6 +608,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      floorplans: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_height: number
+          image_url: string
+          image_width: number
+          name: string
+          scale_meters_per_pixel: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_height: number
+          image_url: string
+          image_width: number
+          name: string
+          scale_meters_per_pixel?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_height?: number
+          image_url?: string
+          image_width?: number
+          name?: string
+          scale_meters_per_pixel?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       maintenance_orders: {
         Row: {
