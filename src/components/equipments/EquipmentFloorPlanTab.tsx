@@ -41,6 +41,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   const [uploadMode, setUploadMode] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [equipmentPosition, setEquipmentPosition] = useState<{x: number, y: number} | null>(null);
+  const [planName, setPlanName] = useState<string>('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const { toast } = useToast();
@@ -127,9 +128,14 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
     fabricCanvasRef.current = canvas;
 
-    // Load floor plan image
-    try {
-      const image = await FabricImage.fromURL(selectedPlan.image_url);
+      // Load floor plan image
+      try {
+        // Load image using fetch to avoid CORS issues
+        const response = await fetch(selectedPlan.image_url);
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        
+        const image = await FabricImage.fromURL(imageUrl);
       
       // Scale image to fit canvas
       const scaleX = 800 / selectedPlan.image_width;
@@ -155,6 +161,11 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       }
 
       canvas.renderAll();
+      
+      // Clean up blob URL
+      if (imageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(imageUrl);
+      }
     } catch (error) {
       console.error('Erro ao carregar imagem:', error);
       toast({
@@ -348,7 +359,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         console.log('=== STEP 4: Saving to database ===');
         
         const floorplanData = {
-          name: file.name.replace(/\.[^/.]+$/, ""),
+          name: planName.trim() || file.name.replace(/\.[^/.]+$/, ""),
           image_url: publicUrl,  // Use Storage URL for database
           image_width: width,
           image_height: height,
@@ -380,6 +391,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         });
 
         setUploadMode(false);
+        setPlanName('');
         loadFloorPlans();
         
       } catch (processError) {
@@ -406,9 +418,23 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Upload de Planta Baixa</h3>
-          <Button type="button" variant="outline" onClick={() => setUploadMode(false)}>
+          <Button type="button" variant="outline" onClick={() => {
+            setUploadMode(false);
+            setPlanName('');
+          }}>
             Cancelar
           </Button>
+        </div>
+        
+        <div>
+          <Label htmlFor="planName">Nome da Planta</Label>
+          <Input
+            id="planName"
+            value={planName}
+            onChange={(e) => setPlanName(e.target.value)}
+            placeholder="Digite o nome da planta baixa"
+            className="mt-1"
+          />
         </div>
         
         <SimpleFileUpload
