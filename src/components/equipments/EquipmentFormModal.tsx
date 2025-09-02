@@ -425,7 +425,6 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
             <TabsContent value="floorplan">
               <EquipmentFloorPlanTab
                 equipment={equipment}
-                companyId={userProfile?.company_id}
               />
             </TabsContent>
 
