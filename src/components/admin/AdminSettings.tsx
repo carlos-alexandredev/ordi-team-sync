@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Settings, Bell, Mail, Shield, Database, Clock, Palette, Save, RefreshCw } from "lucide-react";
+import { Settings, Bell, Mail, Shield, Database, Clock, Palette, Save, RefreshCw, MapPin } from "lucide-react";
+import { MapSettings } from "./MapSettings";
 import { useToast } from "@/hooks/use-toast";
 
 interface SystemSettings {
@@ -165,7 +166,7 @@ export function AdminSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-6 w-full">
+        <TabsList className="grid grid-cols-7 w-full">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Geral
@@ -185,6 +186,10 @@ export function AdminSettings() {
           <TabsTrigger value="sla" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             SLA
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            Mapa
           </TabsTrigger>
           <TabsTrigger value="appearance" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
@@ -533,6 +538,11 @@ export function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Configurações de Mapa */}
+        <TabsContent value="map">
+          <MapSettings />
         </TabsContent>
 
         {/* Configurações de Aparência */}

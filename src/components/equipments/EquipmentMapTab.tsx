@@ -1,12 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Satellite, Navigation } from "lucide-react";
+import { MapPin, Navigation, AlertCircle } from "lucide-react";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAdminMaster } from "@/hooks/useAdminMaster";
 
 interface Equipment {
+  id?: string;
   latitude?: number | null;
   longitude?: number | null;
 }
@@ -25,7 +30,7 @@ interface EquipmentFormData {
 
 interface EquipmentMapTabProps {
   formData: EquipmentFormData;
-  setFormData: React.Dispatch<React.SetStateAction<EquipmentFormData>>;
+  setFormData: (data: EquipmentFormData) => void;
   equipment?: Equipment | null;
 }
 
@@ -34,166 +39,258 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
   setFormData,
   equipment
 }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [marker, setMarker] = useState<mapboxgl.Marker | null>(null);
+  const [mapboxToken, setMapboxToken] = useState("");
   const [needsToken, setNeedsToken] = useState(false);
+  const [loadingToken, setLoadingToken] = useState(true);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const { isAdminMaster } = useAdminMaster();
 
   useEffect(() => {
-    // Try to get token from environment or check if we need to ask user
-    checkMapboxToken();
+    loadMapboxToken();
   }, []);
 
-  useEffect(() => {
-    if (mapboxToken && mapContainer.current && !map.current) {
-      initializeMap();
+  const loadMapboxToken = async () => {
+    try {
+      const { data } = await supabase.rpc('get_public_setting', { 
+        setting_key: 'mapbox_public_token' 
+      });
+      
+      if (data && data.trim() !== '') {
+        setMapboxToken(data);
+        setNeedsToken(false);
+      } else {
+        setNeedsToken(true);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar token do Mapbox:', error);
+      setNeedsToken(true);
+    } finally {
+      setLoadingToken(false);
     }
-  }, [mapboxToken]);
-
-  const checkMapboxToken = async () => {
-    // For now, we'll ask the user to input the token
-    // In a real implementation, this would come from Supabase secrets
-    setNeedsToken(true);
   };
 
-  const initializeMap = () => {
-    if (!mapContainer.current || !mapboxToken) return;
+  useEffect(() => {
+    if (!mapContainer.current || !mapboxToken || needsToken || loadingToken) return;
 
     mapboxgl.accessToken = mapboxToken;
 
-    const initialLat = equipment?.latitude || formData.latitude || -23.5505;
-    const initialLng = equipment?.longitude || formData.longitude || -46.6333;
-
-    map.current = new mapboxgl.Map({
+    const mapInstance = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-v9',
-      center: [initialLng, initialLat],
-      zoom: 15
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [formData.longitude || -46.6333, formData.latitude || -23.5505],
+      zoom: formData.latitude && formData.longitude ? 15 : 10
     });
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Add marker if coordinates exist
-    if ((equipment?.latitude && equipment?.longitude) || (formData.latitude && formData.longitude)) {
-      addMarker(initialLat, initialLng);
+    if (formData.latitude && formData.longitude) {
+      const newMarker = new mapboxgl.Marker({ draggable: true })
+        .setLngLat([formData.longitude, formData.latitude])
+        .addTo(mapInstance);
+
+      newMarker.on('dragend', () => {
+        const lngLat = newMarker.getLngLat();
+        setFormData({
+          ...formData,
+          latitude: lngLat.lat,
+          longitude: lngLat.lng
+        });
+      });
+
+      setMarker(newMarker);
     }
 
-    // Handle map clicks to place marker
-    map.current.on('click', (e) => {
-      const { lat, lng } = e.lngLat;
-      addMarker(lat, lng);
-      updateCoordinates(lat, lng);
+    mapInstance.on('click', (e) => {
+      const { lng, lat } = e.lngLat;
+
+      if (marker) {
+        marker.setLngLat([lng, lat]);
+      } else {
+        const newMarker = new mapboxgl.Marker({ draggable: true })
+          .setLngLat([lng, lat])
+          .addTo(mapInstance);
+
+        newMarker.on('dragend', () => {
+          const lngLat = newMarker.getLngLat();
+          setFormData({
+            ...formData,
+            latitude: lngLat.lat,
+            longitude: lngLat.lng
+          });
+        });
+
+        setMarker(newMarker);
+      }
+
+      setFormData({
+        ...formData,
+        latitude: lat,
+        longitude: lng
+      });
     });
-  };
 
-  const addMarker = (lat: number, lng: number) => {
-    if (!map.current) return;
+    setMap(mapInstance);
 
-    // Remove existing marker
-    if (marker.current) {
-      marker.current.remove();
-    }
-
-    // Add new marker
-    marker.current = new mapboxgl.Marker({
-      color: '#ef4444',
-      draggable: true
-    })
-      .setLngLat([lng, lat])
-      .addTo(map.current);
-
-    // Handle marker drag
-    marker.current.on('dragend', () => {
-      if (!marker.current) return;
-      const lngLat = marker.current.getLngLat();
-      updateCoordinates(lngLat.lat, lngLat.lng);
-    });
-  };
-
-  const updateCoordinates = (lat: number, lng: number) => {
-    setFormData({
-      ...formData,
-      latitude: Number(lat.toFixed(8)),
-      longitude: Number(lng.toFixed(8))
-    });
-  };
+    return () => {
+      mapInstance.remove();
+    };
+  }, [mapboxToken, needsToken, loadingToken]);
 
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          if (map.current) {
-            map.current.flyTo({
-              center: [lng, lat],
-              zoom: 18
-            });
-            addMarker(lat, lng);
-            updateCoordinates(lat, lng);
-          }
-        },
-        (error) => {
-          console.error('Erro ao obter localização:', error);
-          alert('Erro ao obter localização atual');
-        }
-      );
-    } else {
-      alert('Geolocalização não suportada pelo navegador');
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocalização não suportada",
+        description: "Seu navegador não suporta geolocalização.",
+        variant: "destructive"
+      });
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        setFormData({
+          ...formData,
+          latitude,
+          longitude
+        });
+
+        if (map) {
+          map.flyTo({
+            center: [longitude, latitude],
+            zoom: 15
+          });
+
+          if (marker) {
+            marker.setLngLat([longitude, latitude]);
+          } else {
+            const newMarker = new mapboxgl.Marker({ draggable: true })
+              .setLngLat([longitude, latitude])
+              .addTo(map);
+
+            newMarker.on('dragend', () => {
+              const lngLat = newMarker.getLngLat();
+              setFormData({
+                ...formData,
+                latitude: lngLat.lat,
+                longitude: lngLat.lng
+              });
+            });
+
+            setMarker(newMarker);
+          }
+        }
+
+        toast({
+          title: "Localização obtida",
+          description: "Localização atual definida com sucesso!"
+        });
+      },
+      (error) => {
+        toast({
+          title: "Erro de geolocalização",
+          description: "Não foi possível obter sua localização.",
+          variant: "destructive"
+        });
+      }
+    );
   };
 
   const handleCoordinateChange = (field: 'latitude' | 'longitude', value: string) => {
-    const numValue = value === '' ? null : Number(value);
-    const newFormData = { ...formData, [field]: numValue };
-    setFormData(newFormData);
+    const numValue = value ? parseFloat(value) : null;
+    const updatedFormData = {
+      ...formData,
+      [field]: numValue
+    };
+    
+    setFormData(updatedFormData);
 
-    // Update map center and marker if both coordinates are valid
-    if (newFormData.latitude && newFormData.longitude && map.current) {
-      map.current.flyTo({
-        center: [newFormData.longitude, newFormData.latitude],
+    if (map && updatedFormData.latitude && updatedFormData.longitude) {
+      map.flyTo({
+        center: [updatedFormData.longitude, updatedFormData.latitude],
         zoom: 15
       });
-      addMarker(newFormData.latitude, newFormData.longitude);
+
+      if (marker) {
+        marker.setLngLat([updatedFormData.longitude, updatedFormData.latitude]);
+      } else {
+        const newMarker = new mapboxgl.Marker({ draggable: true })
+          .setLngLat([updatedFormData.longitude, updatedFormData.latitude])
+          .addTo(map);
+
+        newMarker.on('dragend', () => {
+          const lngLat = newMarker.getLngLat();
+          setFormData({
+            ...formData,
+            latitude: lngLat.lat,
+            longitude: lngLat.lng
+          });
+        });
+
+        setMarker(newMarker);
+      }
     }
   };
 
+  if (loadingToken) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Carregando configurações do mapa...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (needsToken) {
     return (
-      <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">Token do Mapbox Necessário</h4>
-          <p className="text-sm text-blue-700 mb-4">
-            Para usar o mapa satelital, você precisa de um token público do Mapbox.
-            Visite <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="underline">mapbox.com</a> 
-            para criar uma conta gratuita e obter seu token.
-          </p>
-          
-          <div className="space-y-2">
-            <Label htmlFor="mapbox-token">Token Público do Mapbox</Label>
-            <Input
-              id="mapbox-token"
-              type="text"
-              placeholder="pk.eyJ1IjoiZXhhbXBsZSI6..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-orange-500" />
+            Configuração de Mapa Necessária
+          </CardTitle>
+          <CardDescription>
+            {isAdminMaster 
+              ? "Configure o token do Mapbox nas configurações administrativas para habilitar mapas interativos."
+              : "O administrador precisa configurar o token do Mapbox para habilitar esta funcionalidade."
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isAdminMaster && (
             <Button 
-              onClick={() => setNeedsToken(false)}
-              disabled={!mapboxToken.startsWith('pk.')}
-              size="sm"
+              variant="outline" 
+              onClick={() => window.open('/settings?tab=map', '_blank')}
             >
-              Continuar
+              Ir para Configurações de Mapa
             </Button>
-          </div>
-        </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
-        <div className="space-y-4">
-          <h4 className="font-medium">Inserir Coordenadas Manualmente</h4>
-          
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Localização GPS
+          </CardTitle>
+          <CardDescription>
+            Defina a localização exata do equipamento usando coordenadas GPS
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="latitude">Latitude</Label>
@@ -201,94 +298,48 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
                 id="latitude"
                 type="number"
                 step="any"
-                placeholder="-23.5505"
-                value={equipment?.latitude || formData.latitude || ''}
+                value={formData.latitude || ''}
                 onChange={(e) => handleCoordinateChange('latitude', e.target.value)}
+                placeholder="Ex: -23.5505"
               />
             </div>
-            
             <div>
               <Label htmlFor="longitude">Longitude</Label>
               <Input
                 id="longitude"
                 type="number"
                 step="any"
-                placeholder="-46.6333"
-                value={equipment?.longitude || formData.longitude || ''}
+                value={formData.longitude || ''}
                 onChange={(e) => handleCoordinateChange('longitude', e.target.value)}
+                placeholder="Ex: -46.6333"
               />
             </div>
           </div>
 
-          <Button onClick={getCurrentLocation} variant="outline" className="w-full">
+          <Button type="button" onClick={getCurrentLocation} variant="outline" className="w-full">
             <Navigation className="h-4 w-4 mr-2" />
             Usar Localização Atual
           </Button>
-        </div>
-      </div>
-    );
-  }
+        </CardContent>
+      </Card>
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Button onClick={getCurrentLocation} variant="outline" size="sm">
-          <Navigation className="h-4 w-4 mr-2" />
-          Localização Atual
-        </Button>
-        
-        <Button onClick={() => setNeedsToken(true)} variant="outline" size="sm">
-          <Satellite className="h-4 w-4 mr-2" />
-          Alterar Token
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="latitude">Latitude</Label>
-          <Input
-            id="latitude"
-            type="number"
-            step="any"
-            placeholder="-23.5505"
-            value={equipment?.latitude || formData.latitude || ''}
-            onChange={(e) => handleCoordinateChange('latitude', e.target.value)}
+      <Card>
+        <CardHeader>
+          <CardTitle>Mapa Interativo</CardTitle>
+          <CardDescription>
+            Clique no mapa para definir a localização ou arraste o marcador
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div
+            ref={mapContainer}
+            className="w-full h-64 rounded-lg border"
           />
-        </div>
-        
-        <div>
-          <Label htmlFor="longitude">Longitude</Label>
-          <Input
-            id="longitude"
-            type="number"
-            step="any"
-            placeholder="-46.6333"
-            value={equipment?.longitude || formData.longitude || ''}
-            onChange={(e) => handleCoordinateChange('longitude', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="border rounded-lg overflow-hidden">
-        <div 
-          ref={mapContainer} 
-          className="w-full h-96"
-          style={{ minHeight: '400px' }}
-        />
-      </div>
-
-      <div className="bg-muted/50 p-4 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <MapPin className="h-4 w-4" />
-          <span className="font-medium">Como usar:</span>
-        </div>
-        <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Clique no mapa para posicionar o equipamento</li>
-          <li>• Arraste o marcador vermelho para ajustar a posição</li>
-          <li>• Use "Localização Atual" para GPS automático</li>
-          <li>• Insira coordenadas manualmente se necessário</li>
-        </ul>
-      </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            💡 Dica: Clique em qualquer lugar do mapa para posicionar o equipamento ou arraste o marcador vermelho
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -178,7 +178,6 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           details: {
             equipment_name: formData.name,
             client_id: userProfile.id,
-            company_id: userProfile.company_id,
             changes: equipmentData,
             operation: 'equipment_update'
           }

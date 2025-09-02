@@ -1622,6 +1622,54 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_additional_costs: {
         Row: {
           created_at: string
@@ -2042,6 +2090,10 @@ export type Database = {
           user_name: string
           user_role: string
         }[]
+      }
+      get_public_setting: {
+        Args: { setting_key: string }
+        Returns: string
       }
       get_role_permissions: {
         Args: { role_name: string }
