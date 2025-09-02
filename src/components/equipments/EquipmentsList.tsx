@@ -317,6 +317,7 @@ export const EquipmentsList: React.FC = () => {
       {qrEquipment && (
         <EquipmentQRCode
           equipment={qrEquipment}
+          companyName={qrEquipment.company?.name || 'Empresa'}
           open={showQRModal}
           onOpenChange={setShowQRModal}
         />

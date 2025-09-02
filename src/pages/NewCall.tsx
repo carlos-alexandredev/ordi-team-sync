@@ -59,14 +59,14 @@ const NewCall = () => {
           return;
         }
 
-        // Verify user has access to this equipment (same company)
+        // Verify user has access to this equipment (same company or admin_master)
         const { data: profile } = await supabase
           .from('profiles')
-          .select('company_id')
+          .select('company_id, role')
           .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
           .single();
 
-        if (profile?.company_id !== equipment.company_id) {
+        if (profile?.role !== 'admin_master' && profile?.company_id !== equipment.company_id) {
           toast({
             title: "Acesso negado",
             description: "Você não tem acesso a este equipamento.",
@@ -109,7 +109,7 @@ const NewCall = () => {
 
   return (
     <AuthLayout>
-      <ProtectedRoute allowedRoles={["cliente_final"]}>
+      <ProtectedRoute allowedRoles={["admin_master", "cliente_final"]}>
         <div className="container mx-auto p-6 space-y-6">
           <div className="flex justify-between items-center">
             <div>
