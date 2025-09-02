@@ -253,7 +253,14 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   };
 
   const handleFileUpload = async (file: File) => {
+    console.log('=== INÍCIO DO UPLOAD ===');
     console.log('Starting file upload with companyId:', companyId);
+    console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    });
     
     // Para admin_master, usar uma company_id padrão se não houver
     const effectiveCompanyId = companyId || 'admin-uploads';
@@ -261,18 +268,27 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     console.log('Effective companyId for upload:', effectiveCompanyId);
 
     try {
-      console.log('Uploading file:', file.name, 'size:', file.size);
+      console.log('=== STEP 1: Uploading to storage ===');
       
       // Upload file to storage
       const fileName = `${Date.now()}-${file.name}`;
+      console.log('Generated filename:', fileName);
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('floorplans')
         .upload(fileName, file);
 
-      console.log('Upload result:', { uploadData, uploadError });
+      console.log('=== STORAGE UPLOAD RESULT ===');
+      console.log('Upload data:', uploadData);
+      console.log('Upload error:', uploadError);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload failed:', uploadError);
+        throw new Error(`Falha no upload: ${uploadError.message}`);
+      }
 
+      console.log('=== STEP 2: Getting public URL ===');
+      
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('floorplans')
@@ -280,62 +296,88 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
       console.log('Public URL obtained:', publicUrl);
 
+      if (!publicUrl) {
+        throw new Error('Falha ao obter URL pública da imagem');
+      }
+
+      console.log('=== STEP 3: Processing image ===');
+      
       // Get image dimensions
       const img = new Image();
-      img.onload = async () => {
-        try {
-          console.log('Image loaded, dimensions:', img.width, 'x', img.height);
-          
-          const floorplanData = {
-            name: file.name.replace(/\.[^/.]+$/, ""),
-            image_url: publicUrl,
-            image_width: img.width,
-            image_height: img.height,
-            company_id: effectiveCompanyId
-          };
-          
-          console.log('Inserting floorplan data:', floorplanData);
-          
-          const { data, error } = await supabase
-            .from('floorplans')
-            .insert(floorplanData)
-            .select()
-            .single();
-
-          console.log('Insert result:', { data, error });
-
-          if (error) throw error;
-
-          toast({
-            title: "Sucesso",
-            description: "Planta baixa carregada com sucesso!"
-          });
-
-          setUploadMode(false);
-          loadFloorPlans();
-        } catch (error) {
-          console.error('Erro ao salvar planta:', error);
-          toast({
-            title: "Erro",
-            description: `Erro ao salvar planta baixa: ${error.message}`,
-            variant: "destructive"
-          });
-        }
-      };
-      img.onerror = (error) => {
-        console.error('Erro ao carregar imagem:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao processar imagem",
-          variant: "destructive"
-        });
-      };
+      
+      // Set up the image load promise
+      const imageLoadPromise = new Promise<{width: number, height: number}>((resolve, reject) => {
+        img.onload = () => {
+          console.log('Image loaded successfully');
+          console.log('Image dimensions:', img.width, 'x', img.height);
+          resolve({ width: img.width, height: img.height });
+        };
+        
+        img.onerror = (error) => {
+          console.error('Image load error:', error);
+          console.error('Failed to load image from URL:', publicUrl);
+          reject(new Error('Falha ao carregar imagem. Verifique se o arquivo é uma imagem válida.'));
+        };
+        
+        // Set timeout for image loading
+        setTimeout(() => {
+          reject(new Error('Timeout ao carregar imagem'));
+        }, 10000);
+      });
+      
+      console.log('Setting image src to:', publicUrl);
+      img.crossOrigin = 'anonymous'; // Handle CORS
       img.src = publicUrl;
+      
+      // Wait for image to load
+      const { width, height } = await imageLoadPromise;
+      
+      console.log('=== STEP 4: Saving to database ===');
+      
+      const floorplanData = {
+        name: file.name.replace(/\.[^/.]+$/, ""),
+        image_url: publicUrl,
+        image_width: width,
+        image_height: height,
+        company_id: effectiveCompanyId
+      };
+      
+      console.log('Inserting floorplan data:', floorplanData);
+      
+      const { data, error } = await supabase
+        .from('floorplans')
+        .insert(floorplanData)
+        .select()
+        .single();
+
+      console.log('=== DATABASE INSERT RESULT ===');
+      console.log('Insert data:', data);
+      console.log('Insert error:', error);
+
+      if (error) {
+        console.error('Database insert failed:', error);
+        throw new Error(`Falha ao salvar no banco: ${error.message}`);
+      }
+
+      console.log('=== UPLOAD COMPLETED SUCCESSFULLY ===');
+      
+      toast({
+        title: "Sucesso",
+        description: "Planta baixa carregada com sucesso!"
+      });
+
+      setUploadMode(false);
+      loadFloorPlans();
+      
     } catch (error) {
-      console.error('Erro no upload:', error);
+      console.error('=== UPLOAD FAILED ===');
+      console.error('Error details:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
       toast({
         title: "Erro",
-        description: `Erro ao fazer upload da planta: ${error.message}`,
+        description: error.message || "Erro desconhecido no upload",
         variant: "destructive"
       });
     }
