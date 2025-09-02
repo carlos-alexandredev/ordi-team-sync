@@ -53,6 +53,7 @@ import UsersOnline from "./pages/UsersOnline";
 import AIAnalyticsPage from "./pages/AIAnalytics";
 import NewCall from "./pages/NewCall";
 import NewOrder from "./pages/NewOrder";
+import Plantas from "./pages/Plantas";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ function AppContent() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/new" element={<NewOrder />} />
         <Route path="/equipments" element={<Equipments />} />
+        <Route path="/plantas" element={<Plantas />} />
         <Route path="/technician" element={<Technician />} />
         <Route path="/technician-schedule" element={<TechnicianSchedule />} />
         <Route path="/reports" element={<Reports />} />

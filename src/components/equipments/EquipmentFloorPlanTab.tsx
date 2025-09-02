@@ -1,20 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SimpleFileUpload } from "./SimpleFileUpload";
-import { Upload, Eye, Move, Save, Building2, Download } from "lucide-react";
-import { Canvas as FabricCanvas, FabricImage, Circle, Text, Group } from 'fabric';
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect, useRef } from 'react';
+import { Canvas as FabricCanvas, Circle, Text, Group, Point, FabricImage } from 'fabric';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, Download, Edit3, Save, X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 
 interface Equipment {
   id?: string;
   name?: string;
-  serial_number?: string;
   friendly_id?: number;
+  company_id?: string;
 }
 
 interface FloorPlan {
@@ -23,46 +20,43 @@ interface FloorPlan {
   image_url: string;
   image_width: number;
   image_height: number;
+  file_type: string;
+  original_file_url?: string;
 }
 
 interface EquipmentFloorPlanTabProps {
   equipment?: Equipment | null;
-  companyId?: string;
 }
 
 export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
-  equipment,
-  companyId
+  equipment
 }) => {
-  console.log('EquipmentFloorPlanTab rendered with:', { 
-    equipment: equipment?.id, 
-    companyId, 
-    hasCompanyId: !!companyId 
-  });
-  
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [selectedFloorPlan, setSelectedFloorPlan] = useState<string>('');
   const [uploadMode, setUploadMode] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [equipmentPosition, setEquipmentPosition] = useState<{x: number, y: number} | null>(null);
-  const [planName, setPlanName] = useState<string>('');
+  const [equipmentPosition, setEquipmentPosition] = useState<{ x: number; y: number } | null>(null);
+  const [canvasZoom, setCanvasZoom] = useState(1);
+  const [canvasPan, setCanvasPan] = useState({ x: 0, y: 0 });
+  const [isLoading, setIsLoading] = useState(false);
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
-  const { toast } = useToast();
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Load floor plans
   useEffect(() => {
-    console.log('Loading floor plans for companyId:', companyId);
     loadFloorPlans();
-  }, [companyId]);
+  }, [equipment?.company_id]);
 
-  // Auto-load equipment's most recent floor plan position when component loads
+  // Auto-load equipment's most recent position
   useEffect(() => {
     if (equipment?.id && floorPlans.length > 0) {
       loadMostRecentEquipmentPosition();
     }
   }, [equipment?.id, floorPlans]);
 
-  // Initialize canvas whenever selectedFloorPlan changes (not just in edit mode)
+  // Initialize canvas when floor plan is selected
   useEffect(() => {
     if (selectedFloorPlan) {
       initializeFabricCanvas();
@@ -75,37 +69,26 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     };
   }, [selectedFloorPlan]);
 
-
+  // Load floor plans from database
   const loadFloorPlans = async () => {
-    if (!companyId) {
-      console.log('No companyId provided, skipping floor plans load');
-      return;
-    }
+    if (!equipment?.company_id) return;
 
     try {
-      console.log('Fetching floor plans for company:', companyId);
-      
       const { data, error } = await supabase
         .from('floorplans')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', equipment.company_id)
         .order('created_at', { ascending: false });
-
-      console.log('Floor plans query result:', { data, error });
 
       if (error) throw error;
       setFloorPlans(data || []);
-      console.log('Floor plans loaded:', data?.length || 0, 'items');
     } catch (error) {
-      console.error('Erro ao carregar plantas:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar plantas baixas",
-        variant: "destructive"
-      });
+      console.error('Error loading floor plans:', error);
+      toast.error('Erro ao carregar plantas baixas');
     }
   };
 
+  // Load most recent equipment position
   const loadMostRecentEquipmentPosition = async () => {
     if (!equipment?.id) return;
 
@@ -124,12 +107,13 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         setEquipmentPosition({ x: data.x_position, y: data.y_position });
       }
     } catch (error) {
-      console.error('Erro ao carregar posição mais recente:', error);
+      console.error('Error loading position:', error);
     }
   };
 
+  // Load equipment position for selected floor plan
   const loadEquipmentPosition = async () => {
-    if (!equipment?.id || !selectedFloorPlan) return { x: 0, y: 0 };
+    if (!equipment?.id || !selectedFloorPlan) return null;
 
     try {
       const { data, error } = await supabase
@@ -147,529 +131,540 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       }
       return null;
     } catch (error) {
-      console.error('Erro ao carregar posição:', error);
+      console.error('Error loading position:', error);
       return null;
     }
   };
 
+  // Initialize Fabric canvas and load floor plan
   const initializeFabricCanvas = async () => {
     if (!canvasRef.current || !selectedFloorPlan) return;
 
-    const selectedPlan = floorPlans.find(p => p.id === selectedFloorPlan);
-    if (!selectedPlan) return;
+    // Dispose existing canvas if exists
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.dispose();
+    }
 
-    // Initialize canvas
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
+      width: 1000,
+      height: 700,
       backgroundColor: '#ffffff',
-      selection: editMode // Only allow selection in edit mode
     });
 
     fabricCanvasRef.current = canvas;
 
-    // Load floor plan image
-    try {
-      // Load image using fetch to avoid CORS issues
-      const response = await fetch(selectedPlan.image_url);
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-      
-      const image = await FabricImage.fromURL(imageUrl);
-    
-      // Scale image to fit canvas
-      const scaleX = 800 / selectedPlan.image_width;
-      const scaleY = 600 / selectedPlan.image_height;
-      const scale = Math.min(scaleX, scaleY);
-      
-      image.scale(scale);
-      image.set({
-        left: 0,
-        top: 0,
-        selectable: false,
-        evented: false
-      });
-      
-      canvas.add(image);
-
-      // Load existing position if any
-      const position = await loadEquipmentPosition();
-      
-      if (position) {
-        addEquipmentMarkerWithLabel(position.x * scale, position.y * scale);
+    // Load the floor plan
+    const floorPlan = floorPlans.find(fp => fp.id === selectedFloorPlan);
+    if (floorPlan) {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = async () => {
+          // Scale image to fit canvas while maintaining aspect ratio
+          const scaleX = canvas.width! / img.width;
+          const scaleY = canvas.height! / img.height;
+          const scale = Math.min(scaleX, scaleY);
+          
+          const fabricImg = new FabricImage(img, {
+            scaleX: scale,
+            scaleY: scale,
+            originX: 'center',
+            originY: 'center',
+            left: canvas.width! / 2,
+            top: canvas.height! / 2,
+            selectable: false,
+            evented: false
+          });
+          
+          canvas.backgroundImage = fabricImg;
+          canvas.renderAll();
+          
+          // Add equipment marker if position exists
+          const position = await loadEquipmentPosition();
+          if (position) {
+            addEquipmentMarkerWithLabel(canvas, position.x * scale, position.y * scale);
+          }
+        };
+        img.src = floorPlan.image_url;
+      } catch (error) {
+        console.error('Error loading floor plan:', error);
+        toast.error('Erro ao carregar planta baixa');
       }
-
-      canvas.renderAll();
-      
-      // Clean up blob URL
-      if (imageUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar imagem:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar planta baixa",
-        variant: "destructive"
-      });
     }
 
-    // Handle canvas clicks to place equipment marker (only in edit mode)
-    if (editMode) {
-      canvas.on('mouse:down', (event) => {
-        if (!event.pointer) return;
+    // Enable zoom and pan
+    canvas.on('mouse:wheel', (opt) => {
+      const delta = opt.e.deltaY;
+      let zoom = canvas.getZoom();
+      zoom *= 0.999 ** delta;
+      if (zoom > 20) zoom = 20;
+      if (zoom < 0.01) zoom = 0.01;
+      const pointer = new Point(opt.e.offsetX, opt.e.offsetY);
+      canvas.zoomToPoint(pointer, zoom);
+      setCanvasZoom(zoom);
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+    });
+
+    // Enable panning with middle mouse or ctrl+drag
+    let isDragging = false;
+    let selection = false;
+
+    canvas.on('mouse:down', (options) => {
+      const mouseEvent = options.e as MouseEvent;
+      if (editMode && options.e && !options.e.ctrlKey && !mouseEvent.button) {
+        // Edit mode - place equipment marker
+        const pointer = canvas.getPointer(options.e);
+        setEquipmentPosition({ x: pointer.x, y: pointer.y });
         
-        // Remove existing equipment markers
+        // Clear existing markers
         const objects = canvas.getObjects();
         objects.forEach(obj => {
-          if ((obj as any).equipmentMarker) {
+          if ((obj as any).name === 'equipment-marker') {
             canvas.remove(obj);
           }
         });
-
-        // Add new marker at click position
-        addEquipmentMarkerWithLabel(event.pointer.x, event.pointer.y);
+        
+        // Add new marker
+        addEquipmentMarkerWithLabel(canvas, pointer.x, pointer.y);
         canvas.renderAll();
-      });
-    }
+      } else if (options.e && (options.e.ctrlKey || (options.e as MouseEvent).button === 1)) {
+        // Pan mode
+        isDragging = true;
+        selection = canvas.selection!;
+        canvas.selection = false;
+        canvas.defaultCursor = 'move';
+      }
+    });
+
+    canvas.on('mouse:move', (options) => {
+      if (isDragging && options.e) {
+        const e = options.e as MouseEvent;
+        const vpt = canvas.viewportTransform!;
+        vpt[4] += e.movementX;
+        vpt[5] += e.movementY;
+        canvas.requestRenderAll();
+        setCanvasPan({ x: vpt[4], y: vpt[5] });
+      }
+    });
+
+    canvas.on('mouse:up', () => {
+      canvas.setViewportTransform(canvas.viewportTransform!);
+      isDragging = false;
+      canvas.selection = selection;
+      canvas.defaultCursor = 'default';
+    });
   };
 
-  const addEquipmentMarkerWithLabel = (x: number, y: number) => {
-    if (!fabricCanvasRef.current) return;
-
-    // Get equipment label
-    const label = equipment?.name || equipment?.serial_number || `EQP-${equipment?.friendly_id}` || 'Equipamento';
-
-    // Create equipment marker (red circle)
-    const marker = new Circle({
-      left: x - 12,
-      top: y - 12,
-      radius: 12,
+  // Add equipment marker with label
+  const addEquipmentMarkerWithLabel = (canvas: FabricCanvas, x: number, y: number) => {
+    // Create circle marker
+    const circle = new Circle({
+      left: x - 15,
+      top: y - 15,
+      radius: 15,
       fill: '#ef4444',
-      stroke: 'white',
-      strokeWidth: 3,
-      selectable: editMode,
-      hasControls: false,
-      evented: editMode
+      stroke: '#ffffff',
+      strokeWidth: 2,
+      selectable: false,
     });
+    (circle as any).name = 'equipment-marker';
 
-    // Create text label
-    const text = new Text(label, {
-      left: x - 12,
-      top: y + 18,
-      fontSize: 12,
+    // Create text label with equipment name
+    const equipmentLabel = equipment?.name || `Equipamento ${equipment?.friendly_id || ''}`;
+    const text = new Text(equipmentLabel, {
+      left: x + 20,
+      top: y - 10,
+      fontSize: 14,
       fill: '#1f2937',
-      fontFamily: 'Arial, sans-serif',
-      textAlign: 'center',
-      originX: 'center',
-      originY: 'top',
-      selectable: editMode,
-      hasControls: false,
-      evented: editMode,
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: 4
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      selectable: false,
     });
+    (text as any).name = 'equipment-marker';
 
-    // Group marker and text together
-    const group = new Group([marker, text], {
-      left: x - 12,
-      top: y - 12,
-      selectable: editMode,
-      hasControls: false,
-      evented: editMode
+    // Group the circle and text
+    const group = new Group([circle, text], {
+      left: x - 15,
+      top: y - 15,
+      selectable: false,
     });
-    
-    (group as any).equipmentMarker = true;
+    (group as any).name = 'equipment-marker';
 
-    fabricCanvasRef.current.add(group);
-    
-    // Store position for saving
-    const selectedPlan = floorPlans.find(p => p.id === selectedFloorPlan);
-    if (selectedPlan) {
-      const scaleX = 800 / selectedPlan.image_width;
-      const scaleY = 600 / selectedPlan.image_height;
-      const scale = Math.min(scaleX, scaleY);
-      
-      setEquipmentPosition({
-        x: Math.round(x / scale),
-        y: Math.round(y / scale)
-      });
+    canvas.add(group);
+  };
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    if (fabricCanvasRef.current) {
+      const zoom = Math.min(fabricCanvasRef.current.getZoom() * 1.1, 20);
+      fabricCanvasRef.current.setZoom(zoom);
+      setCanvasZoom(zoom);
     }
   };
 
+  const handleZoomOut = () => {
+    if (fabricCanvasRef.current) {
+      const zoom = Math.max(fabricCanvasRef.current.getZoom() / 1.1, 0.01);
+      fabricCanvasRef.current.setZoom(zoom);
+      setCanvasZoom(zoom);
+    }
+  };
+
+  const handleResetView = () => {
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.setViewportTransform([1, 0, 0, 1, 0, 0]);
+      fabricCanvasRef.current.setZoom(1);
+      setCanvasZoom(1);
+      setCanvasPan({ x: 0, y: 0 });
+    }
+  };
+
+  // Save position to database
   const savePosition = async () => {
-    if (!equipment?.id || !selectedFloorPlan || !equipmentPosition) {
-      toast({
-        title: "Erro",
-        description: "Posição do equipamento não definida",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!equipmentPosition || !selectedFloorPlan || !equipment) return;
 
+    setIsLoading(true);
     try {
-      const { error } = await supabase
+      // Check if position already exists
+      const { data: existingPosition } = await supabase
         .from('equipment_floorplan_positions')
-        .upsert({
-          equipment_id: equipment.id,
-          floorplan_id: selectedFloorPlan,
-          x_position: equipmentPosition.x,
-          y_position: equipmentPosition.y
-        });
+        .select('id')
+        .eq('equipment_id', equipment.id)
+        .eq('floorplan_id', selectedFloorPlan)
+        .single();
 
-      if (error) throw error;
+      if (existingPosition) {
+        // Update existing position
+        const { error } = await supabase
+          .from('equipment_floorplan_positions')
+          .update({
+            x_position: Math.round(equipmentPosition.x),
+            y_position: Math.round(equipmentPosition.y),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingPosition.id);
 
-      toast({
-        title: "Sucesso",
-        description: "Posição salva com sucesso!"
-      });
+        if (error) throw error;
+      } else {
+        // Create new position
+        const { error } = await supabase
+          .from('equipment_floorplan_positions')
+          .insert({
+            equipment_id: equipment.id,
+            floorplan_id: selectedFloorPlan,
+            x_position: Math.round(equipmentPosition.x),
+            y_position: Math.round(equipmentPosition.y)
+          });
+
+        if (error) throw error;
+      }
+
       setEditMode(false);
-      // Refresh canvas to update marker in view mode
-      initializeFabricCanvas();
+      toast.success('Posição do equipamento salva com sucesso!');
     } catch (error) {
-      console.error('Erro ao salvar posição:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar posição",
-        variant: "destructive"
-      });
+      console.error('Error saving position:', error);
+      toast.error('Erro ao salvar posição do equipamento');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Download PDF
   const downloadPDF = () => {
     if (!fabricCanvasRef.current) return;
 
     try {
-      // Get canvas as image
-      const dataUrl = fabricCanvasRef.current.toDataURL({
+      const canvas = fabricCanvasRef.current;
+      const dataUrl = canvas.toDataURL({
         format: 'png',
         quality: 1,
-        multiplier: 2 // Higher resolution
+        multiplier: 2
       });
 
-      // Create PDF
-      const canvas = fabricCanvasRef.current;
-      const canvasWidth = canvas.getWidth();
-      const canvasHeight = canvas.getHeight();
-      
-      // Determine orientation based on aspect ratio
-      const isLandscape = canvasWidth > canvasHeight;
-      const pdf = new jsPDF(isLandscape ? 'landscape' : 'portrait', 'mm', 'a4');
-      
-      // Calculate dimensions to fit A4
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
-      
-      const imgWidth = canvasWidth * ratio * 0.264583; // Convert pixels to mm
-      const imgHeight = canvasHeight * ratio * 0.264583;
-      const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
+      const pdf = new jsPDF({
+        orientation: canvas.width! > canvas.height! ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
 
-      pdf.addImage(dataUrl, 'PNG', x, y, imgWidth, imgHeight);
+      const imgWidth = pdf.internal.pageSize.getWidth();
+      const imgHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // Add title
       const selectedPlan = floorPlans.find(p => p.id === selectedFloorPlan);
-      const equipmentLabel = equipment?.name || equipment?.serial_number || `EQP-${equipment?.friendly_id}` || 'Equipamento';
+      const equipmentLabel = equipment?.name || `Equipamento ${equipment?.friendly_id || ''}`;
       const title = `${selectedPlan?.name || 'Planta'} - ${equipmentLabel}`;
       
-      pdf.setFontSize(16);
-      pdf.text(title, pdfWidth / 2, 15, { align: 'center' });
-
-      pdf.save(`planta-${equipmentLabel}-${Date.now()}.pdf`);
-      
-      toast({
-        title: "Sucesso",
-        description: "PDF gerado com sucesso!"
-      });
+      pdf.save(`${title}.pdf`);
+      toast.success('PDF baixado com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao gerar PDF",
-        variant: "destructive"
-      });
+      console.error('Error generating PDF:', error);
+      toast.error('Erro ao gerar PDF');
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    console.log('=== INÍCIO DO UPLOAD ===');
-    console.log('Starting file upload with companyId:', companyId);
-    console.log('File details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    });
-    
-    // Para admin_master, usar uma company_id padrão se não houver
-    const effectiveCompanyId = companyId || 'admin-uploads';
-    
-    console.log('Effective companyId for upload:', effectiveCompanyId);
+  // Handle file upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Tipo de arquivo não suportado. Use apenas imagens (JPG, PNG, GIF, WebP).');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      toast.error('Arquivo muito grande. O tamanho máximo é 10MB.');
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      console.log('=== STEP 1: Uploading to storage ===');
-      
-      // Upload file to storage
-      const fileName = `${Date.now()}-${file.name}`;
-      console.log('Generated filename:', fileName);
-      
+      // Upload to Supabase Storage
+      const fileName = `floorplan-${Date.now()}-${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('floorplans')
         .upload(fileName, file);
 
-      console.log('=== STORAGE UPLOAD RESULT ===');
-      console.log('Upload data:', uploadData);
-      console.log('Upload error:', uploadError);
+      if (uploadError) throw uploadError;
 
-      if (uploadError) {
-        console.error('Storage upload failed:', uploadError);
-        throw new Error(`Falha no upload: ${uploadError.message}`);
-      }
-
-      console.log('=== STEP 2: Getting public URL ===');
-      
-      // Get public URL
+      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('floorplans')
         .getPublicUrl(fileName);
 
-      console.log('Public URL obtained:', publicUrl);
+      // Get image dimensions
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          // Insert floor plan record
+          const { data: floorPlanData, error: insertError } = await supabase
+            .from('floorplans')
+            .insert({
+              name: file.name,
+              description: `Planta baixa carregada em ${new Date().toLocaleDateString('pt-BR')}`,
+              image_url: publicUrl,
+              image_width: img.width,
+              image_height: img.height,
+              company_id: equipment?.company_id,
+              file_type: 'image'
+            })
+            .select()
+            .single();
 
-      if (!publicUrl) {
-        throw new Error('Falha ao obter URL pública da imagem');
-      }
+          if (insertError) throw insertError;
 
-      console.log('=== STEP 3: Processing image ===');
-      
-      // Get image dimensions from the original file to avoid CSP issues
-      console.log('Processing image dimensions from original file...');
-      
-      try {
-        // Create FileReader to read the file as data URL
-        const reader = new FileReader();
-        
-        const imageLoadPromise = new Promise<{width: number, height: number}>((resolve, reject) => {
-          reader.onload = (e) => {
-            const img = new Image();
-            
-            img.onload = () => {
-              console.log('Image loaded successfully from file');
-              console.log('Image dimensions:', img.width, 'x', img.height);
-              resolve({ width: img.width, height: img.height });
-            };
-            
-            img.onerror = (error) => {
-              console.error('Image load error from file:', error);
-              reject(new Error('Falha ao processar dimensões da imagem.'));
-            };
-            
-            // Set timeout for image loading
-            setTimeout(() => {
-              reject(new Error('Timeout ao processar imagem'));
-            }, 10000);
-            
-            console.log('Setting image src to file data URL');
-            img.src = e.target?.result as string;
-          };
+          // Refresh floor plans list
+          await loadFloorPlans();
           
-          reader.onerror = (error) => {
-            console.error('FileReader error:', error);
-            reject(new Error('Falha ao ler arquivo de imagem.'));
-          };
-        });
-        
-        console.log('Reading file as data URL...');
-        reader.readAsDataURL(file);
-        
-        // Wait for image to load
-        const { width, height } = await imageLoadPromise;
-        
-        console.log('=== STEP 4: Saving to database ===');
-        
-        const floorplanData = {
-          name: planName.trim() || file.name.replace(/\.[^/.]+$/, ""),
-          image_url: publicUrl,  // Use Storage URL for database
-          image_width: width,
-          image_height: height,
-          company_id: effectiveCompanyId
-        };
-        
-        console.log('Inserting floorplan data:', floorplanData);
-        
-        const { data, error } = await supabase
-          .from('floorplans')
-          .insert(floorplanData)
-          .select()
-          .single();
-
-        console.log('=== DATABASE INSERT RESULT ===');
-        console.log('Insert data:', data);
-        console.log('Insert error:', error);
-
-        if (error) {
-          console.error('Database insert failed:', error);
-          throw new Error(`Falha ao salvar no banco: ${error.message}`);
+          // Auto-select the new floor plan
+          setSelectedFloorPlan(floorPlanData.id);
+          
+          setUploadMode(false);
+          toast.success('Planta baixa carregada com sucesso!');
+        } catch (error) {
+          console.error('Error saving floor plan:', error);
+          toast.error('Erro ao salvar planta baixa no banco de dados');
+        } finally {
+          setIsLoading(false);
         }
+      };
 
-        console.log('=== UPLOAD COMPLETED SUCCESSFULLY ===');
-        
-        toast({
-          title: "Sucesso",
-          description: "Planta baixa carregada com sucesso!"
-        });
+      img.onerror = () => {
+        toast.error('Erro ao processar a imagem');
+        setIsLoading(false);
+      };
 
-        setUploadMode(false);
-        setPlanName('');
-        loadFloorPlans();
-        
-      } catch (processError) {
-        console.error('Processing error:', processError);
-        throw new Error(`Erro ao processar imagem: ${processError.message}`);
-      }
-      
+      img.src = publicUrl;
     } catch (error) {
-      console.error('=== UPLOAD FAILED ===');
-      console.error('Error details:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      
-      toast({
-        title: "Erro",
-        description: error.message || "Erro desconhecido no upload",
-        variant: "destructive"
-      });
+      console.error('Error uploading file:', error);
+      toast.error('Erro ao fazer upload da planta baixa');
+      setIsLoading(false);
     }
   };
 
-  if (uploadMode) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Upload de Planta Baixa</h3>
-          <Button type="button" variant="outline" onClick={() => {
-            setUploadMode(false);
-            setPlanName('');
-          }}>
-            Cancelar
-          </Button>
-        </div>
-        
-        <div>
-          <Label htmlFor="planName">Nome da Planta</Label>
-          <Input
-            id="planName"
-            value={planName}
-            onChange={(e) => setPlanName(e.target.value)}
-            placeholder="Digite o nome da planta baixa"
-            className="mt-1"
-          />
-        </div>
-        
-        <SimpleFileUpload
-          onFileSelect={handleFileUpload}
-          accept="image/*"
-          maxSize={10 * 1024 * 1024} // 10MB
-        />
-        
-        <p className="text-sm text-muted-foreground">
-          Faça upload de uma imagem da planta baixa (PNG, JPG, etc.)
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setUploadMode(true)}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Nova Planta
-        </Button>
-
-        {selectedFloorPlan && (
-          <>
+      {uploadMode ? (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Carregar Nova Planta Baixa
+          </h3>
+          <p className="text-gray-500 mb-4">
+            Selecione uma imagem (JPG, PNG, GIF, WebP) até 10MB
+          </p>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+            id="floorplan-upload"
+          />
+          <div className="space-x-2">
             <Button
-              type="button"
-              variant={editMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setEditMode(!editMode)}
+              onClick={() => document.getElementById('floorplan-upload')?.click()}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isLoading}
             >
-              <Move className="h-4 w-4 mr-2" />
-              {editMode ? 'Sair da Edição' : 'Posicionar'}
+              {isLoading ? 'Carregando...' : 'Selecionar Arquivo'}
             </Button>
-            
             <Button
-              type="button"
               variant="outline"
-              size="sm"
-              onClick={downloadPDF}
+              onClick={() => setUploadMode(false)}
+              disabled={isLoading}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Baixar PDF
+              <X className="w-4 h-4 mr-2" />
+              Cancelar
             </Button>
-          </>
-        )}
-
-        {editMode && equipmentPosition && (
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={savePosition}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Posição
-          </Button>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="floorplan">Selecionar Planta Baixa</Label>
-        <Select value={selectedFloorPlan} onValueChange={setSelectedFloorPlan}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma planta baixa" />
-          </SelectTrigger>
-          <SelectContent>
-            {floorPlans.map((plan) => (
-              <SelectItem key={plan.id} value={plan.id}>
-                {plan.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {selectedFloorPlan && (
-        <div className="border rounded-lg p-4">
-          <div className="space-y-2">
-            {editMode && (
-              <p className="text-sm font-medium">Clique na planta para posicionar o equipamento</p>
-            )}
-            <canvas
-              ref={canvasRef}
-              className={`border rounded ${editMode ? 'cursor-crosshair' : 'cursor-default'}`}
-            />
-            {equipmentPosition && (
-              <p className="text-sm text-muted-foreground">
-                Posição: X={equipmentPosition.x}, Y={equipmentPosition.y}
-              </p>
-            )}
           </div>
         </div>
-      )}
+      ) : (
+        <>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Planta Baixa - Localização do Equipamento</h3>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setUploadMode(true)}
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Carregar Planta
+              </Button>
+              {selectedFloorPlan && (
+                <Button
+                  variant="outline"
+                  onClick={downloadPDF}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Baixar PDF
+                </Button>
+              )}
+            </div>
+          </div>
 
-      {!selectedFloorPlan && floorPlans.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          <Building2 className="h-12 w-12 mx-auto mb-4" />
-          <p>Nenhuma planta baixa encontrada</p>
-          <p className="text-sm">Faça upload de uma planta para começar</p>
-        </div>
+          {floorPlans.length > 0 ? (
+            <>
+              <div className="flex gap-4 items-center">
+                <div className="flex-1">
+                  <Select value={selectedFloorPlan} onValueChange={setSelectedFloorPlan}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma planta baixa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {floorPlans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedFloorPlan && (
+                  <div className="flex gap-2">
+                    {!editMode ? (
+                      <Button
+                        onClick={() => setEditMode(true)}
+                        variant="outline"
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                        disabled={isLoading}
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Posicionar
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={savePosition}
+                          className="bg-green-600 hover:bg-green-700"
+                          disabled={!equipmentPosition || isLoading}
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {isLoading ? 'Salvando...' : 'Salvar'}
+                        </Button>
+                        <Button
+                          onClick={() => setEditMode(false)}
+                          variant="outline"
+                          disabled={isLoading}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {editMode && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-blue-800 text-sm">
+                    <strong>Modo de Posicionamento:</strong> Clique na planta baixa onde deseja posicionar o equipamento.
+                  </p>
+                </div>
+              )}
+
+              {selectedFloorPlan && (
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 border-b">
+                    <div className="text-sm text-gray-600">
+                      Zoom: {Math.round(canvasZoom * 100)}%
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleZoomIn}
+                      >
+                        <ZoomIn className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleZoomOut}
+                      >
+                        <ZoomOut className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleResetView}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div 
+                    ref={containerRef}
+                    className="overflow-hidden bg-gray-100 relative"
+                    style={{ height: '700px' }}
+                  >
+                    <canvas
+                      ref={canvasRef}
+                      className="border-0 bg-white"
+                    />
+                  </div>
+                  <div className="p-2 bg-gray-50 text-xs text-gray-500 border-t">
+                    Use Ctrl+clique ou roda do mouse para navegar • {editMode ? 'Clique para posicionar equipamento' : 'Modo visualização'}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Nenhuma planta baixa disponível.</p>
+              <p className="text-sm">Clique em "Carregar Planta" para adicionar uma nova planta baixa.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -614,11 +614,13 @@ export type Database = {
           company_id: string
           created_at: string
           description: string | null
+          file_type: string
           id: string
           image_height: number
           image_url: string
           image_width: number
           name: string
+          original_file_url: string | null
           scale_meters_per_pixel: number | null
           updated_at: string
         }
@@ -626,11 +628,13 @@ export type Database = {
           company_id: string
           created_at?: string
           description?: string | null
+          file_type?: string
           id?: string
           image_height: number
           image_url: string
           image_width: number
           name: string
+          original_file_url?: string | null
           scale_meters_per_pixel?: number | null
           updated_at?: string
         }
@@ -638,11 +642,13 @@ export type Database = {
           company_id?: string
           created_at?: string
           description?: string | null
+          file_type?: string
           id?: string
           image_height?: number
           image_url?: string
           image_width?: number
           name?: string
+          original_file_url?: string | null
           scale_meters_per_pixel?: number | null
           updated_at?: string
         }
