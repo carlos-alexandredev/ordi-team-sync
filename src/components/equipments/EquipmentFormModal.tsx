@@ -17,6 +17,7 @@ import { useActivityLogger } from "@/hooks/useActivityLogger";
 import { EquipmentLocationTab } from "./EquipmentLocationTab";
 import { EquipmentFloorPlanTab } from "./EquipmentFloorPlanTab";
 import { EquipmentMapTab } from "./EquipmentMapTab";
+import { EquipmentPlantsTab } from "./EquipmentPlantsTab";
 
 interface Equipment {
   id: string;
@@ -284,7 +285,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Geral
@@ -296,6 +297,10 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
             <TabsTrigger value="floorplan" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Planta
+            </TabsTrigger>
+            <TabsTrigger value="plants" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Plantas
             </TabsTrigger>
             <TabsTrigger value="map" className="flex items-center gap-2">
               <Satellite className="h-4 w-4" />
@@ -424,6 +429,12 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
             <TabsContent value="floorplan">
               <EquipmentFloorPlanTab
+                equipment={equipment}
+              />
+            </TabsContent>
+
+            <TabsContent value="plants">
+              <EquipmentPlantsTab
                 equipment={equipment}
               />
             </TabsContent>
