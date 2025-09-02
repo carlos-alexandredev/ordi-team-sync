@@ -4,13 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SimpleFileUpload } from "./SimpleFileUpload";
-import { Upload, Eye, Move, Save, Building2 } from "lucide-react";
-import { Canvas as FabricCanvas, FabricImage, Circle } from 'fabric';
+import { Upload, Eye, Move, Save, Building2, Download } from "lucide-react";
+import { Canvas as FabricCanvas, FabricImage, Circle, Text, Group } from 'fabric';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
 
 interface Equipment {
   id?: string;
+  name?: string;
+  serial_number?: string;
+  friendly_id?: number;
 }
 
 interface FloorPlan {
@@ -51,8 +55,16 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     loadFloorPlans();
   }, [companyId]);
 
+  // Auto-load equipment's most recent floor plan position when component loads
   useEffect(() => {
-    if (selectedFloorPlan && editMode) {
+    if (equipment?.id && floorPlans.length > 0) {
+      loadMostRecentEquipmentPosition();
+    }
+  }, [equipment?.id, floorPlans]);
+
+  // Initialize canvas whenever selectedFloorPlan changes (not just in edit mode)
+  useEffect(() => {
+    if (selectedFloorPlan) {
       initializeFabricCanvas();
     }
     return () => {
@@ -61,7 +73,8 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         fabricCanvasRef.current = null;
       }
     };
-  }, [selectedFloorPlan, editMode]);
+  }, [selectedFloorPlan]);
+
 
   const loadFloorPlans = async () => {
     if (!companyId) {
@@ -93,8 +106,30 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     }
   };
 
+  const loadMostRecentEquipmentPosition = async () => {
+    if (!equipment?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('equipment_floorplan_positions')
+        .select('floorplan_id, x_position, y_position')
+        .eq('equipment_id', equipment.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setSelectedFloorPlan(data.floorplan_id);
+        setEquipmentPosition({ x: data.x_position, y: data.y_position });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar posição mais recente:', error);
+    }
+  };
+
   const loadEquipmentPosition = async () => {
-    if (!equipment?.id || !selectedFloorPlan) return;
+    if (!equipment?.id || !selectedFloorPlan) return { x: 0, y: 0 };
 
     try {
       const { data, error } = await supabase
@@ -102,14 +137,18 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         .select('x_position, y_position')
         .eq('equipment_id', equipment.id)
         .eq('floorplan_id', selectedFloorPlan)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       if (data) {
-        setEquipmentPosition({ x: data.x_position, y: data.y_position });
+        const position = { x: data.x_position, y: data.y_position };
+        setEquipmentPosition(position);
+        return position;
       }
+      return null;
     } catch (error) {
       console.error('Erro ao carregar posição:', error);
+      return null;
     }
   };
 
@@ -124,19 +163,20 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       width: 800,
       height: 600,
       backgroundColor: '#ffffff',
+      selection: editMode // Only allow selection in edit mode
     });
 
     fabricCanvasRef.current = canvas;
 
-      // Load floor plan image
-      try {
-        // Load image using fetch to avoid CORS issues
-        const response = await fetch(selectedPlan.image_url);
-        const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
-        
-        const image = await FabricImage.fromURL(imageUrl);
+    // Load floor plan image
+    try {
+      // Load image using fetch to avoid CORS issues
+      const response = await fetch(selectedPlan.image_url);
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
       
+      const image = await FabricImage.fromURL(imageUrl);
+    
       // Scale image to fit canvas
       const scaleX = 800 / selectedPlan.image_width;
       const scaleY = 600 / selectedPlan.image_height;
@@ -151,13 +191,12 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       });
       
       canvas.add(image);
-      // Image is background, markers will be on top
 
       // Load existing position if any
-      await loadEquipmentPosition();
+      const position = await loadEquipmentPosition();
       
-      if (equipmentPosition) {
-        addEquipmentMarker(equipmentPosition.x * scale, equipmentPosition.y * scale);
+      if (position) {
+        addEquipmentMarkerWithLabel(position.x * scale, position.y * scale);
       }
 
       canvas.renderAll();
@@ -175,42 +214,74 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       });
     }
 
-    // Handle canvas clicks to place equipment marker
-    canvas.on('mouse:down', (event) => {
-      if (!event.pointer) return;
-      
-      // Remove existing equipment markers
-      const objects = canvas.getObjects();
-      objects.forEach(obj => {
-        if ((obj as any).equipmentMarker) {
-          canvas.remove(obj);
-        }
-      });
+    // Handle canvas clicks to place equipment marker (only in edit mode)
+    if (editMode) {
+      canvas.on('mouse:down', (event) => {
+        if (!event.pointer) return;
+        
+        // Remove existing equipment markers
+        const objects = canvas.getObjects();
+        objects.forEach(obj => {
+          if ((obj as any).equipmentMarker) {
+            canvas.remove(obj);
+          }
+        });
 
-      // Add new marker at click position
-      addEquipmentMarker(event.pointer.x, event.pointer.y);
-      canvas.renderAll();
-    });
+        // Add new marker at click position
+        addEquipmentMarkerWithLabel(event.pointer.x, event.pointer.y);
+        canvas.renderAll();
+      });
+    }
   };
 
-  const addEquipmentMarker = (x: number, y: number) => {
+  const addEquipmentMarkerWithLabel = (x: number, y: number) => {
     if (!fabricCanvasRef.current) return;
+
+    // Get equipment label
+    const label = equipment?.name || equipment?.serial_number || `EQP-${equipment?.friendly_id}` || 'Equipamento';
 
     // Create equipment marker (red circle)
     const marker = new Circle({
-      left: x - 10,
-      top: y - 10,
-      radius: 10,
-      fill: 'red',
+      left: x - 12,
+      top: y - 12,
+      radius: 12,
+      fill: '#ef4444',
       stroke: 'white',
-      strokeWidth: 2,
-      selectable: true,
-      hasControls: false
+      strokeWidth: 3,
+      selectable: editMode,
+      hasControls: false,
+      evented: editMode
+    });
+
+    // Create text label
+    const text = new Text(label, {
+      left: x - 12,
+      top: y + 18,
+      fontSize: 12,
+      fill: '#1f2937',
+      fontFamily: 'Arial, sans-serif',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'top',
+      selectable: editMode,
+      hasControls: false,
+      evented: editMode,
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: 4
+    });
+
+    // Group marker and text together
+    const group = new Group([marker, text], {
+      left: x - 12,
+      top: y - 12,
+      selectable: editMode,
+      hasControls: false,
+      evented: editMode
     });
     
-    (marker as any).equipmentMarker = true;
+    (group as any).equipmentMarker = true;
 
-    fabricCanvasRef.current.add(marker);
+    fabricCanvasRef.current.add(group);
     
     // Store position for saving
     const selectedPlan = floorPlans.find(p => p.id === selectedFloorPlan);
@@ -253,11 +324,69 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         description: "Posição salva com sucesso!"
       });
       setEditMode(false);
+      // Refresh canvas to update marker in view mode
+      initializeFabricCanvas();
     } catch (error) {
       console.error('Erro ao salvar posição:', error);
       toast({
         title: "Erro",
         description: "Erro ao salvar posição",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const downloadPDF = () => {
+    if (!fabricCanvasRef.current) return;
+
+    try {
+      // Get canvas as image
+      const dataUrl = fabricCanvasRef.current.toDataURL({
+        format: 'png',
+        quality: 1,
+        multiplier: 2 // Higher resolution
+      });
+
+      // Create PDF
+      const canvas = fabricCanvasRef.current;
+      const canvasWidth = canvas.getWidth();
+      const canvasHeight = canvas.getHeight();
+      
+      // Determine orientation based on aspect ratio
+      const isLandscape = canvasWidth > canvasHeight;
+      const pdf = new jsPDF(isLandscape ? 'landscape' : 'portrait', 'mm', 'a4');
+      
+      // Calculate dimensions to fit A4
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
+      
+      const imgWidth = canvasWidth * ratio * 0.264583; // Convert pixels to mm
+      const imgHeight = canvasHeight * ratio * 0.264583;
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = (pdfHeight - imgHeight) / 2;
+
+      pdf.addImage(dataUrl, 'PNG', x, y, imgWidth, imgHeight);
+      
+      // Add title
+      const selectedPlan = floorPlans.find(p => p.id === selectedFloorPlan);
+      const equipmentLabel = equipment?.name || equipment?.serial_number || `EQP-${equipment?.friendly_id}` || 'Equipamento';
+      const title = `${selectedPlan?.name || 'Planta'} - ${equipmentLabel}`;
+      
+      pdf.setFontSize(16);
+      pdf.text(title, pdfWidth / 2, 15, { align: 'center' });
+
+      pdf.save(`planta-${equipmentLabel}-${Date.now()}.pdf`);
+      
+      toast({
+        title: "Sucesso",
+        description: "PDF gerado com sucesso!"
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar PDF",
         variant: "destructive"
       });
     }
@@ -464,15 +593,27 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         </Button>
 
         {selectedFloorPlan && (
-          <Button
-            type="button"
-            variant={editMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => setEditMode(!editMode)}
-          >
-            <Move className="h-4 w-4 mr-2" />
-            {editMode ? 'Sair da Edição' : 'Posicionar'}
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant={editMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setEditMode(!editMode)}
+            >
+              <Move className="h-4 w-4 mr-2" />
+              {editMode ? 'Sair da Edição' : 'Posicionar'}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={downloadPDF}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Baixar PDF
+            </Button>
+          </>
         )}
 
         {editMode && equipmentPosition && (
@@ -506,29 +647,20 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
       {selectedFloorPlan && (
         <div className="border rounded-lg p-4">
-          {editMode ? (
-            <div className="space-y-2">
+          <div className="space-y-2">
+            {editMode && (
               <p className="text-sm font-medium">Clique na planta para posicionar o equipamento</p>
-              <canvas
-                ref={canvasRef}
-                className="border rounded cursor-crosshair"
-              />
-              {equipmentPosition && (
-                <p className="text-sm text-muted-foreground">
-                  Posição: X={equipmentPosition.x}, Y={equipmentPosition.y}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-48 bg-muted/30 rounded">
-              <div className="text-center">
-                <Eye className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Clique em "Posicionar" para definir a localização do equipamento
-                </p>
-              </div>
-            </div>
-          )}
+            )}
+            <canvas
+              ref={canvasRef}
+              className={`border rounded ${editMode ? 'cursor-crosshair' : 'cursor-default'}`}
+            />
+            {equipmentPosition && (
+              <p className="text-sm text-muted-foreground">
+                Posição: X={equipmentPosition.x}, Y={equipmentPosition.y}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
