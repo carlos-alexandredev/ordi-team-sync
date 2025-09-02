@@ -302,72 +302,97 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
       console.log('=== STEP 3: Processing image ===');
       
-      // Get image dimensions
-      const img = new Image();
+      // Get image dimensions using fetch to avoid CSP issues
+      console.log('Fetching image to avoid CSP restrictions...');
       
-      // Set up the image load promise
-      const imageLoadPromise = new Promise<{width: number, height: number}>((resolve, reject) => {
-        img.onload = () => {
-          console.log('Image loaded successfully');
-          console.log('Image dimensions:', img.width, 'x', img.height);
-          resolve({ width: img.width, height: img.height });
+      try {
+        const response = await fetch(publicUrl);
+        if (!response.ok) {
+          throw new Error(`Falha ao baixar imagem: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        console.log('Image blob created, size:', blob.size);
+        
+        // Create blob URL for local processing
+        const blobUrl = URL.createObjectURL(blob);
+        console.log('Blob URL created:', blobUrl);
+        
+        // Get image dimensions using blob URL
+        const img = new Image();
+        
+        // Set up the image load promise
+        const imageLoadPromise = new Promise<{width: number, height: number}>((resolve, reject) => {
+          img.onload = () => {
+            console.log('Image loaded successfully from blob');
+            console.log('Image dimensions:', img.width, 'x', img.height);
+            
+            // Clean up blob URL
+            URL.revokeObjectURL(blobUrl);
+            
+            resolve({ width: img.width, height: img.height });
+          };
+          
+          img.onerror = (error) => {
+            console.error('Image load error from blob:', error);
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error('Falha ao processar dimensões da imagem.'));
+          };
+          
+          // Set timeout for image loading
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error('Timeout ao processar imagem'));
+          }, 10000);
+        });
+        
+        console.log('Setting image src to blob URL');
+        img.src = blobUrl;
+        
+        // Wait for image to load
+        const { width, height } = await imageLoadPromise;
+        
+        console.log('=== STEP 4: Saving to database ===');
+        
+        const floorplanData = {
+          name: file.name.replace(/\.[^/.]+$/, ""),
+          image_url: publicUrl,  // Use original URL for storage
+          image_width: width,
+          image_height: height,
+          company_id: effectiveCompanyId
         };
         
-        img.onerror = (error) => {
-          console.error('Image load error:', error);
-          console.error('Failed to load image from URL:', publicUrl);
-          reject(new Error('Falha ao carregar imagem. Verifique se o arquivo é uma imagem válida.'));
-        };
+        console.log('Inserting floorplan data:', floorplanData);
         
-        // Set timeout for image loading
-        setTimeout(() => {
-          reject(new Error('Timeout ao carregar imagem'));
-        }, 10000);
-      });
-      
-      console.log('Setting image src to:', publicUrl);
-      img.crossOrigin = 'anonymous'; // Handle CORS
-      img.src = publicUrl;
-      
-      // Wait for image to load
-      const { width, height } = await imageLoadPromise;
-      
-      console.log('=== STEP 4: Saving to database ===');
-      
-      const floorplanData = {
-        name: file.name.replace(/\.[^/.]+$/, ""),
-        image_url: publicUrl,
-        image_width: width,
-        image_height: height,
-        company_id: effectiveCompanyId
-      };
-      
-      console.log('Inserting floorplan data:', floorplanData);
-      
-      const { data, error } = await supabase
-        .from('floorplans')
-        .insert(floorplanData)
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from('floorplans')
+          .insert(floorplanData)
+          .select()
+          .single();
 
-      console.log('=== DATABASE INSERT RESULT ===');
-      console.log('Insert data:', data);
-      console.log('Insert error:', error);
+        console.log('=== DATABASE INSERT RESULT ===');
+        console.log('Insert data:', data);
+        console.log('Insert error:', error);
 
-      if (error) {
-        console.error('Database insert failed:', error);
-        throw new Error(`Falha ao salvar no banco: ${error.message}`);
+        if (error) {
+          console.error('Database insert failed:', error);
+          throw new Error(`Falha ao salvar no banco: ${error.message}`);
+        }
+
+        console.log('=== UPLOAD COMPLETED SUCCESSFULLY ===');
+        
+        toast({
+          title: "Sucesso",
+          description: "Planta baixa carregada com sucesso!"
+        });
+
+        setUploadMode(false);
+        loadFloorPlans();
+        
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        throw new Error(`Erro ao processar imagem: ${fetchError.message}`);
       }
-
-      console.log('=== UPLOAD COMPLETED SUCCESSFULLY ===');
-      
-      toast({
-        title: "Sucesso",
-        description: "Planta baixa carregada com sucesso!"
-      });
-
-      setUploadMode(false);
-      loadFloorPlans();
       
     } catch (error) {
       console.error('=== UPLOAD FAILED ===');
