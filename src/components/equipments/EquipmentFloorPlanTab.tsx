@@ -194,6 +194,10 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
             addEquipmentMarkerWithLabel(canvas, scaledX, scaledY);
           }
         };
+        img.onerror = (error) => {
+          console.error('Error loading floor plan image:', error, floorPlan.image_url);
+          toast.error('Erro ao carregar imagem da planta baixa');
+        };
         img.src = floorPlan.image_url;
       } catch (error) {
         console.error('Error loading floor plan:', error);

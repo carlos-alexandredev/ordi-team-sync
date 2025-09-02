@@ -327,6 +327,10 @@ const Plantas = () => {
         addEquipmentMarker(canvas, equipment.x_position, equipment.y_position, equipment);
       });
     };
+    img.onerror = (error) => {
+      console.error('Error loading floor plan image:', error, plan.image_url);
+      toast.error('Erro ao carregar imagem da planta baixa');
+    };
     img.src = plan.image_url;
 
     // Add zoom controls
