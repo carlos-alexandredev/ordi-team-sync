@@ -70,6 +70,11 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     };
   }, [selectedFloorPlan]);
 
+  // Sync editMode with ref
+  useEffect(() => {
+    editModeRef.current = editMode;
+  }, [editMode]);
+
   // Load floor plans from database
   const loadFloorPlans = async () => {
     if (!equipment?.company_id) return;
@@ -137,7 +142,94 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     }
   };
 
-  // Initialize Fabric canvas and load floor plan
+  // Resilient image loading with fallback to signed URL
+  const loadImageWithFallback = async (imageUrl: string): Promise<HTMLImageElement> => {
+    return new Promise(async (resolve, reject) => {
+      console.log('Attempting to load image:', imageUrl);
+      
+      // First try: Direct public URL with HEAD request validation
+      try {
+        const headResponse = await fetch(imageUrl, { method: 'HEAD' });
+        if (headResponse.ok) {
+          console.log('Public URL accessible via HEAD request');
+          
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          
+          const timeout = setTimeout(() => {
+            reject(new Error('Image loading timeout'));
+          }, 10000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            console.log('Image loaded successfully via public URL');
+            resolve(img);
+          };
+          
+          img.onerror = (error) => {
+            clearTimeout(timeout);
+            console.warn('Failed to load via public URL despite HEAD success:', error);
+            // Fall back to signed URL
+            loadViaSignedUrl();
+          };
+          
+          img.src = imageUrl;
+          return;
+        }
+      } catch (error) {
+        console.warn('HEAD request failed, trying signed URL:', error);
+      }
+      
+      // Fallback: Try signed URL
+      async function loadViaSignedUrl() {
+        try {
+          // Extract file path from public URL
+          const urlParts = imageUrl.split('/storage/v1/object/public/floorplans/');
+          if (urlParts.length !== 2) {
+            throw new Error('Cannot extract file path from URL');
+          }
+          
+          const filePath = urlParts[1];
+          console.log('Generating signed URL for path:', filePath);
+          
+          const { data, error } = await supabase.storage
+            .from('floorplans')
+            .createSignedUrl(filePath, 3600); // 1 hour expiry
+          
+          if (error) throw error;
+          
+          console.log('Signed URL generated:', data.signedUrl);
+          
+          const img = new Image();
+          
+          const timeout = setTimeout(() => {
+            reject(new Error('Signed URL image loading timeout'));
+          }, 10000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            console.log('Image loaded successfully via signed URL');
+            resolve(img);
+          };
+          
+          img.onerror = (error) => {
+            clearTimeout(timeout);
+            console.error('Failed to load via signed URL:', error);
+            reject(new Error('All image loading methods failed'));
+          };
+          
+          img.src = data.signedUrl;
+        } catch (signedUrlError) {
+          console.error('Signed URL generation failed:', signedUrlError);
+          reject(new Error(`All loading methods failed: ${signedUrlError.message}`));
+        }
+      }
+      
+      loadViaSignedUrl();
+    });
+  };
+
+  // Initialize Fabric canvas and load floor plan (improved)
   const initializeFabricCanvas = async () => {
     if (!canvasRef.current || !selectedFloorPlan || !containerRef.current) return;
 
@@ -159,110 +251,48 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
     fabricCanvasRef.current = canvas;
 
-    // Load the floor plan
+    // Load the floor plan (with improved error handling)
     const floorPlan = floorPlans.find(fp => fp.id === selectedFloorPlan);
     if (floorPlan) {
       try {
         console.log('Loading floor plan:', floorPlan.name, floorPlan.image_url);
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = async () => {
-          console.log('Floor plan image loaded successfully:', img.width, 'x', img.height);
-          // Scale image to fit canvas while maintaining aspect ratio
-          const scaleX = canvas.width! / img.width;
-          const scaleY = canvas.height! / img.height;
-          const scale = Math.min(scaleX, scaleY);
-          
-          const fabricImg = new FabricImage(img, {
-            scaleX: scale,
-            scaleY: scale,
-            originX: 'center',
-            originY: 'center',
-            left: canvas.width! / 2,
-            top: canvas.height! / 2,
-            selectable: false,
-            evented: false
-          });
-          
-          canvas.backgroundImage = fabricImg;
-          canvas.renderAll();
-          
-          // Add equipment marker if position exists
-          const position = await loadEquipmentPosition();
-          if (position) {
-            // Scale position to match the scaled image
-            const scaledX = (position.x / img.width) * (img.width * scale) + (canvas.width! - img.width * scale) / 2;
-            const scaledY = (position.y / img.height) * (img.height * scale) + (canvas.height! - img.height * scale) / 2;
-            addEquipmentMarkerWithLabel(canvas, scaledX, scaledY);
-          }
-        };
-        img.onerror = (error) => {
-          console.error('Error loading floor plan image:', error, floorPlan.image_url);
-          console.error('Image dimensions in DB:', floorPlan.image_width, 'x', floorPlan.image_height);
-          
-          // Try loading without crossOrigin
-          const img2 = new Image();
-          img2.onload = async () => {
-            console.log('Floor plan image loaded without CORS:', img2.width, 'x', img2.height);
-            const scaleX = canvas.width! / img2.width;
-            const scaleY = canvas.height! / img2.height;
-            const scale = Math.min(scaleX, scaleY);
-            
-            const fabricImg = new FabricImage(img2, {
-              scaleX: scale,
-              scaleY: scale,
-              originX: 'center',
-              originY: 'center',
-              left: canvas.width! / 2,
-              top: canvas.height! / 2,
-              selectable: false,
-              evented: false
-            });
-            
-            canvas.backgroundImage = fabricImg;
-            canvas.renderAll();
-            
-            const position = await loadEquipmentPosition();
-            if (position) {
-              const scaledX = (position.x / img2.width) * (img2.width * scale) + (canvas.width! - img2.width * scale) / 2;
-              const scaledY = (position.y / img2.height) * (img2.height * scale) + (canvas.height! - img2.height * scale) / 2;
-              addEquipmentMarkerWithLabel(canvas, scaledX, scaledY);
-            }
-          };
-          img2.onerror = (error2) => {
-            console.error('Failed to load image even without CORS:', error2);
-            toast.error('Erro ao carregar imagem da planta baixa. Verifique se o arquivo existe.');
-          };
-          img2.src = floorPlan.image_url;
-        };
         
-        // Add a timeout to detect hanging requests
-        const timeout = setTimeout(() => {
-          console.error('Image loading timeout for:', floorPlan.image_url);
-          toast.error('Timeout ao carregar imagem da planta baixa');
-        }, 10000);
+        const img = await loadImageWithFallback(floorPlan.image_url);
         
-        const originalOnload = img.onload;
-        const originalOnerror = img.onerror;
+        console.log('Floor plan image loaded successfully:', img.width, 'x', img.height);
         
-        img.onload = function(event) {
-          clearTimeout(timeout);
-          if (originalOnload) {
-            originalOnload.call(this, event);
-          }
-        };
+        // Scale image to fit canvas while maintaining aspect ratio
+        const scaleX = canvas.width! / img.width;
+        const scaleY = canvas.height! / img.height;
+        const scale = Math.min(scaleX, scaleY);
         
-        img.onerror = function(event) {
-          clearTimeout(timeout);
-          if (originalOnerror) {
-            originalOnerror.call(this, event);
-          }
-        };
+        const fabricImg = new FabricImage(img, {
+          scaleX: scale,
+          scaleY: scale,
+          originX: 'center',
+          originY: 'center',
+          left: canvas.width! / 2,
+          top: canvas.height! / 2,
+          selectable: false,
+          evented: false
+        });
         
-        img.src = floorPlan.image_url;
+        canvas.backgroundImage = fabricImg;
+        canvas.renderAll();
+        
+        // Add equipment marker if position exists
+        const position = await loadEquipmentPosition();
+        if (position) {
+          // Scale position to match the scaled image
+          const scaledX = (position.x / img.width) * (img.width * scale) + (canvas.width! - img.width * scale) / 2;
+          const scaledY = (position.y / img.height) * (img.height * scale) + (canvas.height! - img.height * scale) / 2;
+          addEquipmentMarkerWithLabel(canvas, scaledX, scaledY);
+        }
+        
+        toast.success('Planta baixa carregada com sucesso!');
       } catch (error) {
-        console.error('Error in initializeFabricCanvas:', error);
-        toast.error('Erro ao inicializar canvas da planta baixa');
+        console.error('Error loading floor plan:', error);
+        toast.error(`Erro ao carregar imagem da planta baixa: ${error.message}`);
       }
     }
 
@@ -492,94 +522,97 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Tipo de arquivo não suportado. Use apenas imagens (JPG, PNG, GIF, WebP).');
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-    if (file.size > maxSize) {
-      toast.error('Arquivo muito grande. O tamanho máximo é 10MB.');
-      return;
-    }
+  // Handle file upload (improved with dimension calculation)
+  const handleFileUpload = async (file: File) => {
+    if (!equipment?.company_id) return;
 
     setIsLoading(true);
     try {
-      // Upload to Supabase Storage
-      const fileName = `floorplan-${Date.now()}-${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      // Calculate image dimensions locally before upload
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      
+      const { width, height } = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve({ width: img.width, height: img.height });
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Failed to load image for dimensions'));
+        };
+        img.src = objectUrl;
+      });
+
+      console.log('Image dimensions calculated:', width, 'x', height);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${equipment.company_id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
         .from('floorplans')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        toast.error('Erro ao fazer upload do arquivo');
+        return;
+      }
 
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('floorplans')
         .getPublicUrl(fileName);
 
-      // Get image dimensions
-      const img = new Image();
-      img.onload = async () => {
-        try {
-          // Insert floor plan record
-          const { data: floorPlanData, error: insertError } = await supabase
-            .from('floorplans')
-            .insert({
-              name: file.name,
-              description: `Planta baixa carregada em ${new Date().toLocaleDateString('pt-BR')}`,
-              image_url: publicUrl,
-              image_width: img.width,
-              image_height: img.height,
-              company_id: equipment?.company_id,
-              file_type: 'image'
-            })
-            .select()
-            .single();
+      console.log('Generated public URL:', publicUrl);
 
-          if (insertError) throw insertError;
+      const { error: dbError } = await supabase
+        .from('floorplans')
+        .insert({
+          name: file.name,
+          company_id: equipment.company_id,
+          image_url: publicUrl,
+          image_width: width,
+          image_height: height,
+        });
 
-          // Refresh floor plans list
-          await loadFloorPlans();
-          
-          // Auto-select the new floor plan
-          setSelectedFloorPlan(floorPlanData.id);
-          
-          setUploadMode(false);
-          toast.success('Planta baixa carregada com sucesso!');
-        } catch (error) {
-          console.error('Error saving floor plan:', error);
-          toast.error('Erro ao salvar planta baixa no banco de dados');
-        } finally {
-          setIsLoading(false);
-        }
-      };
+      if (dbError) {
+        console.error('Error saving to database:', dbError);
+        toast.error('Erro ao salvar no banco de dados');
+        return;
+      }
 
-      img.onerror = () => {
-        toast.error('Erro ao processar a imagem');
-        setIsLoading(false);
-      };
-
-      img.src = publicUrl;
+      toast.success('Planta baixa carregada com sucesso!');
+      loadFloorPlans();
+      setUploadMode(false);
     } catch (error) {
-      console.error('Error uploading file:', error);
-      toast.error('Erro ao fazer upload da planta baixa');
+      console.error('Error in file upload:', error);
+      toast.error('Erro ao processar arquivo');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Sync editMode with ref
-  useEffect(() => {
-    editModeRef.current = editMode;
-  }, [editMode]);
+  // Handle file upload from input event
+  const handleFileUploadEvent = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione um arquivo de imagem válido');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast.error('Arquivo muito grande. Máximo 10MB');
+      return;
+    }
+
+    await handleFileUpload(file);
+    
+    // Reset input
+    event.target.value = '';
+  };
 
   return (
     <div className="space-y-4" ref={containerRef}>
@@ -595,7 +628,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
           <input
             type="file"
             accept="image/*"
-            onChange={handleFileUpload}
+            onChange={handleFileUploadEvent}
             className="hidden"
             id="floorplan-upload"
           />
