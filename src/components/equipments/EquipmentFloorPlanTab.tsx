@@ -30,7 +30,11 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   equipment,
   companyId
 }) => {
-  console.log('EquipmentFloorPlanTab rendered with:', { equipment, companyId });
+  console.log('EquipmentFloorPlanTab rendered with:', { 
+    equipment: equipment?.id, 
+    companyId, 
+    hasCompanyId: !!companyId 
+  });
   
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [selectedFloorPlan, setSelectedFloorPlan] = useState<string>('');
@@ -42,6 +46,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Loading floor plans for companyId:', companyId);
     loadFloorPlans();
   }, [companyId]);
 
@@ -58,17 +63,25 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   }, [selectedFloorPlan, editMode]);
 
   const loadFloorPlans = async () => {
-    if (!companyId) return;
+    if (!companyId) {
+      console.log('No companyId provided, skipping floor plans load');
+      return;
+    }
 
     try {
+      console.log('Fetching floor plans for company:', companyId);
+      
       const { data, error } = await supabase
         .from('floorplans')
         .select('*')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
+      console.log('Floor plans query result:', { data, error });
+
       if (error) throw error;
       setFloorPlans(data || []);
+      console.log('Floor plans loaded:', data?.length || 0, 'items');
     } catch (error) {
       console.error('Erro ao carregar plantas:', error);
       toast({

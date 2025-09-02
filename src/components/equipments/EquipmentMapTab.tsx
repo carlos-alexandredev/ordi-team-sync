@@ -54,8 +54,13 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
     // Listen for token updates from MapSettings
     const handleTokenUpdate = (event: CustomEvent) => {
       const newToken = event.detail.token;
-      setMapboxToken(newToken);
-      localStorage.setItem('mapbox_token', newToken);
+      console.log('Token updated via event:', newToken ? newToken.substring(0, 20) + '...' : 'none');
+      if (newToken && newToken.startsWith('pk.')) {
+        setMapboxToken(newToken);
+        localStorage.setItem('mapbox_token', newToken);
+        setNeedsToken(false);
+        setLoadingToken(false);
+      }
     };
 
     window.addEventListener('mapbox_token_updated', handleTokenUpdate as EventListener);
@@ -69,7 +74,10 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
     try {
       // Check localStorage first for better performance
       const cachedToken = localStorage.getItem('mapbox_token');
-      if (cachedToken) {
+      console.log('Cached token from localStorage:', cachedToken ? cachedToken.substring(0, 20) + '...' : 'none');
+      
+      if (cachedToken && cachedToken.startsWith('pk.')) {
+        console.log('Using cached token');
         setMapboxToken(cachedToken);
         setNeedsToken(false);
       }
@@ -78,13 +86,17 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
         setting_key: 'mapbox_public_token' 
       });
       
-      if (data && data.trim() !== '') {
+      console.log('Token from database:', data ? data.substring(0, 20) + '...' : 'none');
+      
+      if (data && data.trim() !== '' && data.startsWith('pk.')) {
         if (data !== cachedToken) {
+          console.log('Updating token from database');
           setMapboxToken(data);
           localStorage.setItem('mapbox_token', data);
         }
         setNeedsToken(false);
       } else {
+        console.log('No valid token found, needs configuration');
         setNeedsToken(true);
       }
     } catch (error) {
@@ -96,8 +108,19 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
   };
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || needsToken || loadingToken) return;
+    if (!mapContainer.current || !mapboxToken || needsToken || loadingToken) {
+      console.log('Map initialization blocked:', { 
+        hasContainer: !!mapContainer.current, 
+        hasToken: !!mapboxToken, 
+        needsToken, 
+        loadingToken,
+        tokenLength: mapboxToken?.length 
+      });
+      return;
+    }
 
+    console.log('Initializing Mapbox with token:', mapboxToken.substring(0, 20) + '...');
+    
     mapboxgl.accessToken = mapboxToken;
 
     const mapInstance = new mapboxgl.Map({
@@ -105,6 +128,16 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
       style: 'mapbox://styles/mapbox/streets-v11',
       center: [formData.longitude || -46.6333, formData.latitude || -23.5505],
       zoom: formData.latitude && formData.longitude ? 15 : 10
+    });
+
+    console.log('Map instance created');
+
+    mapInstance.on('load', () => {
+      console.log('Map loaded successfully');
+    });
+
+    mapInstance.on('error', (e) => {
+      console.error('Map error:', e);
     });
 
     mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
