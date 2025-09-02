@@ -69,16 +69,36 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
   const loadUserProfile = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('User from auth:', user);
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, company_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
+      console.log('Profile data loaded:', data);
+      console.log('Profile error:', error);
+
       if (error) throw error;
+      
+      if (!data.company_id) {
+        throw new Error('Usuário não possui company_id associado');
+      }
+      
       setUserProfile(data);
     } catch (error: any) {
       console.error('Erro ao carregar perfil do usuário:', error);
+      toast({
+        title: "Erro",
+        description: `Erro ao carregar perfil: ${error.message}`,
+        variant: "destructive"
+      });
       await logError('load_user_profile', error, { context: 'EquipmentFormModal' });
     }
   };
@@ -133,8 +153,19 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !userProfile) {
-      const validationError = "Nome é obrigatório";
+    if (!formData.name || !userProfile || !userProfile.company_id) {
+      const validationError = !formData.name ? "Nome é obrigatório" : 
+                             !userProfile ? "Perfil do usuário não carregado" :
+                             "Usuário sem empresa associada";
+      
+      console.log('Validation failed:', { 
+        formData, 
+        userProfile, 
+        hasName: !!formData.name,
+        hasUserProfile: !!userProfile,
+        hasCompanyId: !!(userProfile?.company_id)
+      });
+      
       toast({
         title: "Erro",
         description: validationError,
@@ -146,7 +177,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         userProfile,
         missingFields: {
           name: !formData.name,
-          userProfile: !userProfile
+          userProfile: !userProfile,
+          companyId: !userProfile?.company_id
         }
       });
       return;
@@ -155,6 +187,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     setLoading(true);
 
     try {
+      console.log('Preparing equipment data with:', { userProfile, formData });
+      
       const equipmentData = {
         ...formData,
         client_id: userProfile.id,
@@ -162,6 +196,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         installation_date: installationDate?.toISOString().split('T')[0] || null,
         last_maintenance_date: maintenanceDate?.toISOString().split('T')[0] || null
       };
+
+      console.log('Equipment data to be saved:', equipmentData);
 
       if (equipment) {
         const { error } = await supabase

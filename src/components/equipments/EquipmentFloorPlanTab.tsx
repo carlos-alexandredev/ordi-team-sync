@@ -30,6 +30,8 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   equipment,
   companyId
 }) => {
+  console.log('EquipmentFloorPlanTab rendered with:', { equipment, companyId });
+  
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [selectedFloorPlan, setSelectedFloorPlan] = useState<string>('');
   const [uploadMode, setUploadMode] = useState(false);
@@ -238,14 +240,28 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!companyId) return;
+    console.log('Starting file upload with companyId:', companyId);
+    
+    if (!companyId) {
+      console.error('No companyId provided for file upload');
+      toast({
+        title: "Erro",
+        description: "Empresa não identificada para upload",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
+      console.log('Uploading file:', file.name, 'size:', file.size);
+      
       // Upload file to storage
       const fileName = `${Date.now()}-${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('floorplans')
         .upload(fileName, file);
+
+      console.log('Upload result:', { uploadData, uploadError });
 
       if (uploadError) throw uploadError;
 
@@ -254,21 +270,31 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         .from('floorplans')
         .getPublicUrl(fileName);
 
+      console.log('Public URL obtained:', publicUrl);
+
       // Get image dimensions
       const img = new Image();
       img.onload = async () => {
         try {
+          console.log('Image loaded, dimensions:', img.width, 'x', img.height);
+          
+          const floorplanData = {
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            image_url: publicUrl,
+            image_width: img.width,
+            image_height: img.height,
+            company_id: companyId
+          };
+          
+          console.log('Inserting floorplan data:', floorplanData);
+          
           const { data, error } = await supabase
             .from('floorplans')
-            .insert({
-              name: file.name.replace(/\.[^/.]+$/, ""),
-              image_url: publicUrl,
-              image_width: img.width,
-              image_height: img.height,
-              company_id: companyId
-            })
+            .insert(floorplanData)
             .select()
             .single();
+
+          console.log('Insert result:', { data, error });
 
           if (error) throw error;
 
@@ -283,17 +309,25 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
           console.error('Erro ao salvar planta:', error);
           toast({
             title: "Erro",
-            description: "Erro ao salvar planta baixa",
+            description: `Erro ao salvar planta baixa: ${error.message}`,
             variant: "destructive"
           });
         }
+      };
+      img.onerror = (error) => {
+        console.error('Erro ao carregar imagem:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao processar imagem",
+          variant: "destructive"
+        });
       };
       img.src = publicUrl;
     } catch (error) {
       console.error('Erro no upload:', error);
       toast({
         title: "Erro",
-        description: "Erro ao fazer upload da planta",
+        description: `Erro ao fazer upload da planta: ${error.message}`,
         variant: "destructive"
       });
     }
