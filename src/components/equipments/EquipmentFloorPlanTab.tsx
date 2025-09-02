@@ -163,9 +163,11 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     const floorPlan = floorPlans.find(fp => fp.id === selectedFloorPlan);
     if (floorPlan) {
       try {
+        console.log('Loading floor plan:', floorPlan.name, floorPlan.image_url);
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = async () => {
+          console.log('Floor plan image loaded successfully:', img.width, 'x', img.height);
           // Scale image to fit canvas while maintaining aspect ratio
           const scaleX = canvas.width! / img.width;
           const scaleY = canvas.height! / img.height;
@@ -196,12 +198,71 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         };
         img.onerror = (error) => {
           console.error('Error loading floor plan image:', error, floorPlan.image_url);
-          toast.error('Erro ao carregar imagem da planta baixa');
+          console.error('Image dimensions in DB:', floorPlan.image_width, 'x', floorPlan.image_height);
+          
+          // Try loading without crossOrigin
+          const img2 = new Image();
+          img2.onload = async () => {
+            console.log('Floor plan image loaded without CORS:', img2.width, 'x', img2.height);
+            const scaleX = canvas.width! / img2.width;
+            const scaleY = canvas.height! / img2.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const fabricImg = new FabricImage(img2, {
+              scaleX: scale,
+              scaleY: scale,
+              originX: 'center',
+              originY: 'center',
+              left: canvas.width! / 2,
+              top: canvas.height! / 2,
+              selectable: false,
+              evented: false
+            });
+            
+            canvas.backgroundImage = fabricImg;
+            canvas.renderAll();
+            
+            const position = await loadEquipmentPosition();
+            if (position) {
+              const scaledX = (position.x / img2.width) * (img2.width * scale) + (canvas.width! - img2.width * scale) / 2;
+              const scaledY = (position.y / img2.height) * (img2.height * scale) + (canvas.height! - img2.height * scale) / 2;
+              addEquipmentMarkerWithLabel(canvas, scaledX, scaledY);
+            }
+          };
+          img2.onerror = (error2) => {
+            console.error('Failed to load image even without CORS:', error2);
+            toast.error('Erro ao carregar imagem da planta baixa. Verifique se o arquivo existe.');
+          };
+          img2.src = floorPlan.image_url;
         };
+        
+        // Add a timeout to detect hanging requests
+        const timeout = setTimeout(() => {
+          console.error('Image loading timeout for:', floorPlan.image_url);
+          toast.error('Timeout ao carregar imagem da planta baixa');
+        }, 10000);
+        
+        const originalOnload = img.onload;
+        const originalOnerror = img.onerror;
+        
+        img.onload = function(event) {
+          clearTimeout(timeout);
+          if (originalOnload) {
+            originalOnload.call(this, event);
+          }
+        };
+        
+        img.onerror = function(event) {
+          clearTimeout(timeout);
+          if (originalOnerror) {
+            originalOnerror.call(this, event);
+          }
+        };
+        
         img.src = floorPlan.image_url;
       } catch (error) {
-        console.error('Error loading floor plan:', error);
-        toast.error('Erro ao carregar planta baixa');
+        console.error('Error in initializeFabricCanvas:', error);
+        toast.error('Erro ao inicializar canvas da planta baixa');
       }
     }
 
