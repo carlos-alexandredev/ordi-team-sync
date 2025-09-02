@@ -24,7 +24,7 @@ export function MapSettings() {
         .from('system_settings')
         .select('value')
         .eq('key', 'mapbox_public_token')
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -59,6 +59,14 @@ export function MapSettings() {
         });
 
       if (error) throw error;
+
+      // Update localStorage and dispatch event for real-time update
+      localStorage.setItem('mapbox_token', mapboxToken);
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('mapbox_token_updated', {
+        detail: { token: mapboxToken }
+      }));
 
       toast({
         title: "Sucesso",

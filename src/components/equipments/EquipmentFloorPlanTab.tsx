@@ -304,7 +304,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Upload de Planta Baixa</h3>
-          <Button variant="outline" onClick={() => setUploadMode(false)}>
+          <Button type="button" variant="outline" onClick={() => setUploadMode(false)}>
             Cancelar
           </Button>
         </div>
@@ -326,6 +326,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
           onClick={() => setUploadMode(true)}
@@ -336,6 +337,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
         {selectedFloorPlan && (
           <Button
+            type="button"
             variant={editMode ? "default" : "outline"}
             size="sm"
             onClick={() => setEditMode(!editMode)}
@@ -347,6 +349,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
         {editMode && equipmentPosition && (
           <Button
+            type="button"
             variant="default"
             size="sm"
             onClick={savePosition}

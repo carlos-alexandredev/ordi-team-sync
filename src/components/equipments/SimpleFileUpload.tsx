@@ -44,7 +44,7 @@ export const SimpleFileUpload: React.FC<SimpleFileUploadProps> = ({
         Selecione uma imagem (PNG, JPG, etc.) - Máximo {Math.round(maxSize / 1024 / 1024)}MB
       </p>
       
-      <Button onClick={handleClick}>
+      <Button type="button" onClick={handleClick}>
         Selecionar Arquivo
       </Button>
       

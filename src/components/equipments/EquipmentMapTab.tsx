@@ -50,16 +50,39 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
 
   useEffect(() => {
     loadMapboxToken();
+
+    // Listen for token updates from MapSettings
+    const handleTokenUpdate = (event: CustomEvent) => {
+      const newToken = event.detail.token;
+      setMapboxToken(newToken);
+      localStorage.setItem('mapbox_token', newToken);
+    };
+
+    window.addEventListener('mapbox_token_updated', handleTokenUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('mapbox_token_updated', handleTokenUpdate as EventListener);
+    };
   }, []);
 
   const loadMapboxToken = async () => {
     try {
+      // Check localStorage first for better performance
+      const cachedToken = localStorage.getItem('mapbox_token');
+      if (cachedToken) {
+        setMapboxToken(cachedToken);
+        setNeedsToken(false);
+      }
+
       const { data } = await supabase.rpc('get_public_setting', { 
         setting_key: 'mapbox_public_token' 
       });
       
       if (data && data.trim() !== '') {
-        setMapboxToken(data);
+        if (data !== cachedToken) {
+          setMapboxToken(data);
+          localStorage.setItem('mapbox_token', data);
+        }
         setNeedsToken(false);
       } else {
         setNeedsToken(true);
@@ -267,6 +290,7 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
         <CardContent>
           {isAdminMaster && (
             <Button 
+              type="button"
               variant="outline" 
               onClick={() => window.open('/settings?tab=map', '_blank')}
             >

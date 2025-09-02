@@ -329,7 +329,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                   <Label>Data de Instalação</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Button type="button" variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate) ? 
                           format(equipment?.installation_date ? new Date(equipment.installation_date) : installationDate!, "PPP", { locale: ptBR }) : 
@@ -352,7 +352,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                   <Label>Última Manutenção</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Button type="button" variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate) ? 
                           format(equipment?.last_maintenance_date ? new Date(equipment.last_maintenance_date) : maintenanceDate!, "PPP", { locale: ptBR }) : 
