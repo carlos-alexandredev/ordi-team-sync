@@ -43,6 +43,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const editModeRef = useRef(false);
 
   // Load floor plans
   useEffect(() => {
@@ -138,16 +139,21 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
   // Initialize Fabric canvas and load floor plan
   const initializeFabricCanvas = async () => {
-    if (!canvasRef.current || !selectedFloorPlan) return;
+    if (!canvasRef.current || !selectedFloorPlan || !containerRef.current) return;
 
     // Dispose existing canvas if exists
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.dispose();
     }
 
+    // Get container dimensions
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const canvasWidth = Math.min(containerRect.width - 40, 1200); // Max 1200px with padding
+    const canvasHeight = Math.min(containerRect.height - 100, 800); // Max 800px with controls space
+
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 1000,
-      height: 700,
+      width: canvasWidth,
+      height: canvasHeight,
       backgroundColor: '#ffffff',
     });
 
@@ -182,7 +188,10 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
           // Add equipment marker if position exists
           const position = await loadEquipmentPosition();
           if (position) {
-            addEquipmentMarkerWithLabel(canvas, position.x * scale, position.y * scale);
+            // Scale position to match the scaled image
+            const scaledX = (position.x / img.width) * (img.width * scale) + (canvas.width! - img.width * scale) / 2;
+            const scaledY = (position.y / img.height) * (img.height * scale) + (canvas.height! - img.height * scale) / 2;
+            addEquipmentMarkerWithLabel(canvas, scaledX, scaledY);
           }
         };
         img.src = floorPlan.image_url;
@@ -212,10 +221,24 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
     canvas.on('mouse:down', (options) => {
       const mouseEvent = options.e as MouseEvent;
-      if (editMode && options.e && !options.e.ctrlKey && !mouseEvent.button) {
+      if (editModeRef.current && options.e && !options.e.ctrlKey && !mouseEvent.button) {
         // Edit mode - place equipment marker
         const pointer = canvas.getPointer(options.e);
-        setEquipmentPosition({ x: pointer.x, y: pointer.y });
+        
+        // Convert pointer position back to original image coordinates
+        const backgroundImg = canvas.backgroundImage;
+        if (backgroundImg) {
+          const imgScale = Math.min(backgroundImg.scaleX || 1, backgroundImg.scaleY || 1);
+          const imgLeft = backgroundImg.left || 0;
+          const imgTop = backgroundImg.top || 0;
+          
+          const originalX = (pointer.x - imgLeft + (backgroundImg.width! * imgScale) / 2) / imgScale;
+          const originalY = (pointer.y - imgTop + (backgroundImg.height! * imgScale) / 2) / imgScale;
+          
+          setEquipmentPosition({ x: originalX, y: originalY });
+        } else {
+          setEquipmentPosition({ x: pointer.x, y: pointer.y });
+        }
         
         // Clear existing markers
         const objects = canvas.getObjects();
@@ -488,8 +511,13 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     }
   };
 
+  // Sync editMode with ref
+  useEffect(() => {
+    editModeRef.current = editMode;
+  }, [editMode]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={containerRef}>
       {uploadMode ? (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
