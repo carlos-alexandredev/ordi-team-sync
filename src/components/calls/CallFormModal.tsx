@@ -31,9 +31,10 @@ interface CallFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  preselectedEquipmentId?: string;
 }
 
-export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalProps) {
+export const CallFormModal = ({ open, onOpenChange, onSuccess, preselectedEquipmentId }: CallFormModalProps) => {
   const [loading, setLoading] = useState(false);
   const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
   const [clientId, setClientId] = useState<string>("");
@@ -49,25 +50,47 @@ export function CallFormModal({ open, onOpenChange, onSuccess }: CallFormModalPr
   });
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profile) {
-        setClientId(profile.id);
-      }
-    };
-
     if (open) {
+      // Buscar o perfil do usuário para obter o clientId
+      const loadUserProfile = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id, company_id")
+            .eq("user_id", user.id)
+            .single();
+          
+          if (profile) {
+            setClientId(profile.id);
+
+            // Handle preselected equipment
+            if (preselectedEquipmentId) {
+              const { data: equipment } = await supabase
+                .from("equipments")
+                .select("id, name, client_id, company_id")
+                .eq("id", preselectedEquipmentId)
+                .single();
+
+              if (equipment && equipment.company_id === profile.company_id) {
+                setSelectedEquipments([{
+                  equipment_id: equipment.id,
+                  action_type: "manutenção",
+                  observations: ""
+                }]);
+              }
+            }
+          }
+        }
+      };
+      
       loadUserProfile();
+    } else {
+      // Reset form when modal closes
+      form.reset();
+      setSelectedEquipments([]);
     }
-  }, [open]);
+  }, [open, form, preselectedEquipmentId]);
 
   const onSubmit = async (data: CallFormData) => {
     try {

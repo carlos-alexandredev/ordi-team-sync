@@ -50,6 +50,8 @@ interface OrderFormModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   order?: Order;
+  preselectedEquipmentId?: string;
+  initialClientId?: string;
 }
 
 interface Profile {
@@ -58,7 +60,7 @@ interface Profile {
   role: string;
 }
 
-export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFormModalProps) {
+export function OrderFormModal({ open, onOpenChange, onSuccess, order, preselectedEquipmentId, initialClientId }: OrderFormModalProps) {
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Profile[]>([]);
   const [technicians, setTechnicians] = useState<Profile[]>([]);
@@ -80,6 +82,7 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
 
   const selectedClientId = form.watch("client_id");
 
+  // Reset form when order prop changes
   useEffect(() => {
     if (order) {
       form.reset({
@@ -98,13 +101,33 @@ export function OrderFormModal({ open, onOpenChange, onSuccess, order }: OrderFo
         description: "",
         priority: "média",
         status: "pendente",
-        client_id: "",
+        client_id: initialClientId || "",
         technician_id: "",
         scheduled_date: "",
       });
       setSelectedEquipments([]);
+
+      // Handle preselected equipment
+      if (preselectedEquipmentId && open) {
+        const loadPreselectedEquipment = async () => {
+          const { data: equipment } = await supabase
+            .from("equipments")
+            .select("id, name, client_id, company_id")
+            .eq("id", preselectedEquipmentId)
+            .single();
+
+          if (equipment) {
+            setSelectedEquipments([{
+              equipment_id: equipment.id,
+              action_type: "manutenção",
+              observations: ""
+            }]);
+          }
+        };
+        loadPreselectedEquipment();
+      }
     }
-  }, [order, form]);
+  }, [order, form, initialClientId, preselectedEquipmentId, open]);
 
   // Clear selected equipment when client changes
   useEffect(() => {

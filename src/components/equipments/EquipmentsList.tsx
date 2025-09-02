@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Edit, Wrench } from "lucide-react";
+import { Edit, Search, Filter, Plus, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EquipmentFormModal } from './EquipmentFormModal';
+import { EquipmentQRCode } from './EquipmentQRCode';
 
 interface Equipment {
   id: string;
@@ -38,8 +39,10 @@ export const EquipmentsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedClientId, setSelectedClientId] = useState('');
-  const [showModal, setShowModal] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [qrEquipment, setQrEquipment] = useState<Equipment | null>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [userRole, setUserRole] = useState<string>('');
   const [showClientFilter, setShowClientFilter] = useState(false);
@@ -152,6 +155,11 @@ export const EquipmentsList: React.FC = () => {
     setShowModal(false);
     setEditingEquipment(null);
     loadEquipments();
+  };
+
+  const handleShowQR = (equipment: Equipment) => {
+    setQrEquipment(equipment);
+    setShowQRModal(true);
   };
 
   if (loading) {
@@ -277,8 +285,17 @@ export const EquipmentsList: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(equipment)}
+                          title="Editar equipamento"
                         >
                           <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleShowQR(equipment)}
+                          title="Gerar QR Code"
+                        >
+                          <QrCode className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
@@ -294,6 +311,14 @@ export const EquipmentsList: React.FC = () => {
         <EquipmentFormModal
           equipment={editingEquipment}
           onClose={handleModalClose}
+        />
+      )}
+
+      {qrEquipment && (
+        <EquipmentQRCode
+          equipment={qrEquipment}
+          open={showQRModal}
+          onOpenChange={setShowQRModal}
         />
       )}
     </div>

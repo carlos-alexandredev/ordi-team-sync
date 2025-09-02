@@ -51,6 +51,8 @@ import FAQ from "./pages/FAQ";
 import FAQHelp from "./pages/FAQHelp";
 import UsersOnline from "./pages/UsersOnline";
 import AIAnalyticsPage from "./pages/AIAnalytics";
+import NewCall from "./pages/NewCall";
+import NewOrder from "./pages/NewOrder";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,7 +91,9 @@ function AppContent() {
         <Route path="/clients" element={<Clients />} />
         <Route path="/suppliers" element={<Suppliers />} />
         <Route path="/calls" element={<Calls />} />
+        <Route path="/calls/new" element={<NewCall />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/new" element={<NewOrder />} />
         <Route path="/equipments" element={<Equipments />} />
         <Route path="/technician" element={<Technician />} />
         <Route path="/technician-schedule" element={<TechnicianSchedule />} />
