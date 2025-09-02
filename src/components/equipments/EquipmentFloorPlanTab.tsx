@@ -302,52 +302,45 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
       console.log('=== STEP 3: Processing image ===');
       
-      // Get image dimensions using fetch to avoid CSP issues
-      console.log('Fetching image to avoid CSP restrictions...');
+      // Get image dimensions from the original file to avoid CSP issues
+      console.log('Processing image dimensions from original file...');
       
       try {
-        const response = await fetch(publicUrl);
-        if (!response.ok) {
-          throw new Error(`Falha ao baixar imagem: ${response.status}`);
-        }
+        // Create FileReader to read the file as data URL
+        const reader = new FileReader();
         
-        const blob = await response.blob();
-        console.log('Image blob created, size:', blob.size);
-        
-        // Create blob URL for local processing
-        const blobUrl = URL.createObjectURL(blob);
-        console.log('Blob URL created:', blobUrl);
-        
-        // Get image dimensions using blob URL
-        const img = new Image();
-        
-        // Set up the image load promise
         const imageLoadPromise = new Promise<{width: number, height: number}>((resolve, reject) => {
-          img.onload = () => {
-            console.log('Image loaded successfully from blob');
-            console.log('Image dimensions:', img.width, 'x', img.height);
+          reader.onload = (e) => {
+            const img = new Image();
             
-            // Clean up blob URL
-            URL.revokeObjectURL(blobUrl);
+            img.onload = () => {
+              console.log('Image loaded successfully from file');
+              console.log('Image dimensions:', img.width, 'x', img.height);
+              resolve({ width: img.width, height: img.height });
+            };
             
-            resolve({ width: img.width, height: img.height });
+            img.onerror = (error) => {
+              console.error('Image load error from file:', error);
+              reject(new Error('Falha ao processar dimensões da imagem.'));
+            };
+            
+            // Set timeout for image loading
+            setTimeout(() => {
+              reject(new Error('Timeout ao processar imagem'));
+            }, 10000);
+            
+            console.log('Setting image src to file data URL');
+            img.src = e.target?.result as string;
           };
           
-          img.onerror = (error) => {
-            console.error('Image load error from blob:', error);
-            URL.revokeObjectURL(blobUrl);
-            reject(new Error('Falha ao processar dimensões da imagem.'));
+          reader.onerror = (error) => {
+            console.error('FileReader error:', error);
+            reject(new Error('Falha ao ler arquivo de imagem.'));
           };
-          
-          // Set timeout for image loading
-          setTimeout(() => {
-            URL.revokeObjectURL(blobUrl);
-            reject(new Error('Timeout ao processar imagem'));
-          }, 10000);
         });
         
-        console.log('Setting image src to blob URL');
-        img.src = blobUrl;
+        console.log('Reading file as data URL...');
+        reader.readAsDataURL(file);
         
         // Wait for image to load
         const { width, height } = await imageLoadPromise;
@@ -356,7 +349,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         
         const floorplanData = {
           name: file.name.replace(/\.[^/.]+$/, ""),
-          image_url: publicUrl,  // Use original URL for storage
+          image_url: publicUrl,  // Use Storage URL for database
           image_width: width,
           image_height: height,
           company_id: effectiveCompanyId
@@ -389,9 +382,9 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         setUploadMode(false);
         loadFloorPlans();
         
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        throw new Error(`Erro ao processar imagem: ${fetchError.message}`);
+      } catch (processError) {
+        console.error('Processing error:', processError);
+        throw new Error(`Erro ao processar imagem: ${processError.message}`);
       }
       
     } catch (error) {
