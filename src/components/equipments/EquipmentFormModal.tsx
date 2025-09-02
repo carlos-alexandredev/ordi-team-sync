@@ -59,7 +59,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
   const [installationDate, setInstallationDate] = useState<Date | undefined>();
   const [maintenanceDate, setMaintenanceDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState<{id: string, company_id: string} | null>(null);
+  const [userProfile, setUserProfile] = useState<{id: string, company_id: string | null, role: string} | null>(null);
   const { toast } = useToast();
   const { logActivity, logError } = useActivityLogger();
 
@@ -78,7 +78,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, company_id')
+        .select('id, company_id, role')
         .eq('user_id', user.id)
         .single();
 
@@ -86,10 +86,6 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       console.log('Profile error:', error);
 
       if (error) throw error;
-      
-      if (!data.company_id) {
-        throw new Error('Usuário não possui company_id associado');
-      }
       
       setUserProfile(data);
     } catch (error: any) {
@@ -153,17 +149,15 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !userProfile || !userProfile.company_id) {
-      const validationError = !formData.name ? "Nome é obrigatório" : 
-                             !userProfile ? "Perfil do usuário não carregado" :
-                             "Usuário sem empresa associada";
+    if (!formData.name || !userProfile) {
+      const validationError = !formData.name ? "Nome é obrigatório" : "Perfil do usuário não carregado";
       
       console.log('Validation failed:', { 
         formData, 
         userProfile, 
         hasName: !!formData.name,
         hasUserProfile: !!userProfile,
-        hasCompanyId: !!(userProfile?.company_id)
+        userRole: userProfile?.role
       });
       
       toast({
@@ -177,8 +171,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         userProfile,
         missingFields: {
           name: !formData.name,
-          userProfile: !userProfile,
-          companyId: !userProfile?.company_id
+          userProfile: !userProfile
         }
       });
       return;
@@ -192,7 +185,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       const equipmentData = {
         ...formData,
         client_id: userProfile.id,
-        company_id: userProfile.company_id,
+        // Para admin_master sem company_id, usar uma empresa padrão ou deixar null
+        company_id: userProfile.company_id || (userProfile.role === 'admin_master' ? null : userProfile.company_id),
         installation_date: installationDate?.toISOString().split('T')[0] || null,
         last_maintenance_date: maintenanceDate?.toISOString().split('T')[0] || null
       };

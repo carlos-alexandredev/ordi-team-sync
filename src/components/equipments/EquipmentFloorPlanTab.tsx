@@ -255,15 +255,10 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
   const handleFileUpload = async (file: File) => {
     console.log('Starting file upload with companyId:', companyId);
     
-    if (!companyId) {
-      console.error('No companyId provided for file upload');
-      toast({
-        title: "Erro",
-        description: "Empresa não identificada para upload",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Para admin_master, usar uma company_id padrão se não houver
+    const effectiveCompanyId = companyId || 'admin-uploads';
+    
+    console.log('Effective companyId for upload:', effectiveCompanyId);
 
     try {
       console.log('Uploading file:', file.name, 'size:', file.size);
@@ -296,7 +291,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
             image_url: publicUrl,
             image_width: img.width,
             image_height: img.height,
-            company_id: companyId
+            company_id: effectiveCompanyId
           };
           
           console.log('Inserting floorplan data:', floorplanData);
