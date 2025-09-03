@@ -32,12 +32,14 @@ interface EquipmentMapTabProps {
   formData: EquipmentFormData;
   setFormData: (data: EquipmentFormData) => void;
   equipment?: Equipment | null;
+  active?: boolean;
 }
 
 export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
   formData,
   setFormData,
-  equipment
+  equipment,
+  active = false
 }) => {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [marker, setMarker] = useState<mapboxgl.Marker | null>(null);
@@ -138,6 +140,11 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
 
     mapInstance.on('error', (e) => {
       console.error('Map error:', e);
+      toast({
+        title: "Erro no Mapa",
+        description: "Falha ao carregar o mapa. Verifique sua conexão ou se o token Mapbox está válido.",
+        variant: "destructive"
+      });
     });
 
     mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -194,6 +201,16 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
       mapInstance.remove();
     };
   }, [mapboxToken, needsToken, loadingToken]);
+
+  // Resize map when tab becomes active
+  useEffect(() => {
+    if (active && map) {
+      // Small delay to ensure the container is visible
+      setTimeout(() => {
+        map.resize();
+      }, 100);
+    }
+  }, [active, map]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {

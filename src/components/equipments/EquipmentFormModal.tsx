@@ -60,6 +60,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
   const [installationDate, setInstallationDate] = useState<Date | undefined>();
   const [maintenanceDate, setMaintenanceDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
   const [userProfile, setUserProfile] = useState<{id: string, company_id: string | null, role: string} | null>(null);
   const { toast } = useToast();
   const { logActivity, logError } = useActivityLogger();
@@ -284,7 +285,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5 max-sm:flex max-sm:overflow-x-auto max-sm:scrollbar-hide max-sm:gap-2">
             <TabsTrigger value="general" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
               <Building2 className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
@@ -449,6 +450,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                 formData={formData}
                 setFormData={setFormData}
                 equipment={equipment}
+                active={activeTab === "map"}
               />
             </TabsContent>
 
