@@ -44,8 +44,9 @@ export const SimpleImageUpload = () => {
       // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('floorplans')
-        .getPublicUrl(fileName);
+        .getPublicUrl(data.path);
 
+      console.log('URL da imagem:', publicUrl);
       setImageUrl(publicUrl);
       toast.success('Imagem enviada com sucesso!');
 
