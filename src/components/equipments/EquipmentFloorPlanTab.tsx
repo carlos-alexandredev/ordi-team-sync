@@ -238,17 +238,21 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
   // Initialize Fabric canvas and load floor plan (improved)
   const initializeFabricCanvas = async () => {
-    if (!canvasRef.current || !selectedFloorPlan || !containerRef.current) return;
+    if (!canvasRef.current || !selectedFloorPlan) return;
 
     // Dispose existing canvas if exists
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.dispose();
     }
 
-    // Get container dimensions
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const canvasWidth = Math.min(containerRect.width - 40, 1200); // Max 1200px with padding
-    const canvasHeight = Math.min(containerRect.height - 100, 800); // Max 800px with controls space
+    // Get canvas container dimensions
+    const canvasContainer = canvasRef.current.parentElement;
+    const containerWidth = canvasContainer?.clientWidth || 800;
+    const containerHeight = canvasContainer?.clientHeight || 600;
+    
+    // Use responsive dimensions
+    const canvasWidth = Math.min(containerWidth, 1200);
+    const canvasHeight = Math.min(containerHeight, 800);
 
     const canvas = new FabricCanvas(canvasRef.current, {
       width: canvasWidth,
@@ -303,7 +307,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       }
     }
 
-    // Enable zoom and pan
+    // Enable zoom and pan (improved for mobile)
     canvas.on('mouse:wheel', (opt) => {
       const delta = opt.e.deltaY;
       let zoom = canvas.getZoom();
@@ -320,22 +324,30 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     // Enable panning with middle mouse or ctrl+drag
     let isDragging = false;
     let selection = false;
+    let lastPosX: number | undefined;
+    let lastPosY: number | undefined;
 
+    // Mobile-friendly touch and mouse handling
     canvas.on('mouse:down', (options) => {
       const mouseEvent = options.e as MouseEvent;
+      const touchEvent = options.e as TouchEvent;
+      
+      // Handle both mouse and touch events for mobile
       if (editModeRef.current && options.e && !options.e.ctrlKey && !mouseEvent.button) {
         // Edit mode - place equipment marker
         const pointer = canvas.getPointer(options.e);
         
         // Convert pointer position back to original image coordinates
-        const backgroundImg = canvas.backgroundImage;
+        const backgroundImg = canvas.backgroundImage as FabricImage;
         if (backgroundImg) {
           const imgScale = Math.min(backgroundImg.scaleX || 1, backgroundImg.scaleY || 1);
           const imgLeft = backgroundImg.left || 0;
           const imgTop = backgroundImg.top || 0;
+          const imgWidth = backgroundImg.width || 0;
+          const imgHeight = backgroundImg.height || 0;
           
-          const originalX = (pointer.x - imgLeft + (backgroundImg.width! * imgScale) / 2) / imgScale;
-          const originalY = (pointer.y - imgTop + (backgroundImg.height! * imgScale) / 2) / imgScale;
+          const originalX = (pointer.x - imgLeft + (imgWidth * imgScale) / 2) / imgScale;
+          const originalY = (pointer.y - imgTop + (imgHeight * imgScale) / 2) / imgScale;
           
           setEquipmentPosition({ x: originalX, y: originalY });
         } else {
@@ -353,21 +365,41 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
         // Add new marker
         addEquipmentMarkerWithLabel(canvas, pointer.x, pointer.y);
         canvas.renderAll();
-      } else if (options.e && (options.e.ctrlKey || (options.e as MouseEvent).button === 1)) {
-        // Pan mode
+      } else if (options.e && (options.e.ctrlKey || mouseEvent.button === 1 || touchEvent.touches?.length > 1)) {
+        // Pan mode (include multi-touch for mobile)
         isDragging = true;
         selection = canvas.selection!;
         canvas.selection = false;
         canvas.defaultCursor = 'move';
+        
+        // Initialize touch position tracking
+        if (touchEvent.touches && touchEvent.touches.length === 1) {
+          lastPosX = touchEvent.touches[0].clientX;
+          lastPosY = touchEvent.touches[0].clientY;
+        }
       }
     });
 
     canvas.on('mouse:move', (options) => {
       if (isDragging && options.e) {
-        const e = options.e as MouseEvent;
+        const e = options.e as MouseEvent | TouchEvent;
         const vpt = canvas.viewportTransform!;
-        vpt[4] += e.movementX;
-        vpt[5] += e.movementY;
+        
+        // Handle both mouse and touch movement
+        if ('movementX' in e && 'movementY' in e) {
+          vpt[4] += e.movementX;
+          vpt[5] += e.movementY;
+        } else if ('touches' in e && e.touches.length === 1) {
+          // Handle touch movement for mobile
+          const touch = e.touches[0];
+          if (lastPosX !== undefined && lastPosY !== undefined) {
+            vpt[4] += touch.clientX - lastPosX;
+            vpt[5] += touch.clientY - lastPosY;
+          }
+          lastPosX = touch.clientX;
+          lastPosY = touch.clientY;
+        }
+        
         canvas.requestRenderAll();
         setCanvasPan({ x: vpt[4], y: vpt[5] });
       }
@@ -378,6 +410,10 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       isDragging = false;
       canvas.selection = selection;
       canvas.defaultCursor = 'default';
+      
+      // Clear touch position tracking
+      lastPosX = undefined;
+      lastPosY = undefined;
     });
   };
 
@@ -612,9 +648,12 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione um arquivo de imagem válido');
+    // Enhanced file validation
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const fileType = file.type || `image/${file.name.split('.').pop()?.toLowerCase()}`;
+    
+    if (!validTypes.includes(fileType) && !file.type.startsWith('image/')) {
+      toast.error('Formato não suportado. Use JPG, PNG, GIF ou WebP');
       return;
     }
 
@@ -783,17 +822,19 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
                       </Button>
                     </div>
                   </div>
-                  <div 
-                    className="overflow-hidden bg-gray-100 relative"
-                    style={{ height: '700px' }}
-                  >
+                  <div className="overflow-hidden bg-gray-100 relative" style={{ height: '700px' }}>
                     <canvas
                       ref={canvasRef}
-                      className="border-0 bg-white"
+                      className="border-0 bg-white touch-none"
+                      style={{ 
+                        touchAction: 'none',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none'
+                      }}
                     />
                   </div>
                   <div className="p-2 bg-gray-50 text-xs text-gray-500 border-t">
-                    Use Ctrl+clique ou roda do mouse para navegar • {editMode ? 'Clique para posicionar equipamento' : 'Modo visualização'}
+                    {editMode ? '📍 Toque para posicionar equipamento' : '👀 Modo visualização'} • Use Ctrl+clique ou multi-toque para navegar
                   </div>
                 </div>
               )}
