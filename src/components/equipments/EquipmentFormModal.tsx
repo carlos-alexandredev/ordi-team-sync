@@ -37,6 +37,8 @@ interface Equipment {
   company_id: string;
 }
 
+import { SimpleImageUpload } from "@/components/simple/SimpleImageUpload";
+
 interface EquipmentFormModalProps {
   equipment?: Equipment | null;
   onClose: () => void;
@@ -286,11 +288,16 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 max-sm:flex max-sm:overflow-x-auto max-sm:scrollbar-hide max-sm:gap-2">
+          <TabsList className="grid w-full grid-cols-6 max-sm:flex max-sm:overflow-x-auto max-sm:scrollbar-hide max-sm:gap-2">
             <TabsTrigger value="general" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
               <Building2 className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
               <span className="max-sm:hidden">Geral</span>
               <span className="sm:hidden">Geral</span>
+            </TabsTrigger>
+            <TabsTrigger value="images" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
+              <Building2 className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
+              <span className="max-sm:hidden">Imagens</span>
+              <span className="sm:hidden">Img</span>
             </TabsTrigger>
             <TabsTrigger value="location" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
               <MapPin className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
@@ -423,6 +430,10 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                   rows={3}
                 />
               </div>
+            </TabsContent>
+
+            <TabsContent value="images">
+              <SimpleImageUpload />
             </TabsContent>
 
             <TabsContent value="location">
