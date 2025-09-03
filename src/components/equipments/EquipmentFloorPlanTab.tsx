@@ -688,6 +688,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
           />
           <div className="space-x-2">
             <Button
+              type="button"
               onClick={() => document.getElementById('floorplan-upload')?.click()}
               className="bg-blue-600 hover:bg-blue-700"
               disabled={isLoading}
@@ -695,6 +696,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
               {isLoading ? 'Carregando...' : 'Selecionar Arquivo'}
             </Button>
             <Button
+              type="button"
               variant="outline"
               onClick={() => setUploadMode(false)}
               disabled={isLoading}
@@ -710,6 +712,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
             <h3 className="text-lg font-medium">Planta Baixa - Localização do Equipamento</h3>
             <div className="flex gap-2">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setUploadMode(true)}
                 className="text-blue-600 border-blue-600 hover:bg-blue-50"
@@ -719,6 +722,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
               </Button>
               {selectedFloorPlan && (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={downloadPDF}
                   className="text-green-600 border-green-600 hover:bg-green-50"
@@ -752,6 +756,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
                   <div className="flex gap-2">
                     {!editMode ? (
                       <Button
+                        type="button"
                         onClick={() => setEditMode(true)}
                         variant="outline"
                         className="text-orange-600 border-orange-600 hover:bg-orange-50"
@@ -763,6 +768,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
                     ) : (
                       <>
                         <Button
+                          type="button"
                           onClick={savePosition}
                           className="bg-green-600 hover:bg-green-700"
                           disabled={!equipmentPosition || isLoading}
@@ -771,6 +777,7 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
                           {isLoading ? 'Salvando...' : 'Salvar'}
                         </Button>
                         <Button
+                          type="button"
                           onClick={() => setEditMode(false)}
                           variant="outline"
                           disabled={isLoading}

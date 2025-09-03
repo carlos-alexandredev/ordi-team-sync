@@ -277,7 +277,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto max-sm:max-w-[100vw] max-sm:h-[100dvh]">
         <DialogHeader>
           <DialogTitle>
             {equipment ? 'Editar Equipamento' : 'Novo Equipamento'}
@@ -285,7 +285,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-5 max-sm:grid-cols-1 max-sm:overflow-x-auto max-sm:whitespace-nowrap max-sm:flex">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Geral
@@ -310,7 +310,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
           <form onSubmit={handleSubmit}>
             <TabsContent value="general" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Nome *</Label>
                   <Input
@@ -333,7 +333,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="serial_number">Número de Série</Label>
                   <Input
@@ -359,7 +359,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Data de Instalação</Label>
                   <Popover>
@@ -447,7 +447,7 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
               />
             </TabsContent>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-2 pt-4 max-sm:sticky max-sm:bottom-0 max-sm:bg-background max-sm:p-4 max-sm:border-t max-sm:-mx-6">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
