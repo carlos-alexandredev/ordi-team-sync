@@ -142,7 +142,7 @@ export const EquipmentMapTab: React.FC<EquipmentMapTabProps> = ({
       console.error('Map error:', e);
       toast({
         title: "Erro no Mapa",
-        description: "Falha ao carregar o mapa. Verifique sua conexão ou se o token Mapbox está válido.",
+        description: "Token Mapbox inválido ou domínio não autorizado. Configure o token no painel administrativo e adicione este domínio às URLs permitidas.",
         variant: "destructive"
       });
     });
