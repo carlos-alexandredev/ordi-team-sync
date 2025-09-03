@@ -205,6 +205,7 @@ export const EquipmentPlantsTab: React.FC<EquipmentPlantsTabProps> = ({
       }
 
       // Insert floor plan record
+      console.log('Inserting floor plan with company_id:', equipment.company_id);
       const { error: insertError } = await supabase
         .from('floorplans')
         .insert({
@@ -218,14 +219,30 @@ export const EquipmentPlantsTab: React.FC<EquipmentPlantsTabProps> = ({
           original_file_url: file.type === 'application/pdf' ? imageUrl : null
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error details:', insertError);
+        throw insertError;
+      }
 
       await loadFloorPlans();
       setUploadMode(false);
       toast.success('Planta baixa carregada com sucesso!');
     } catch (error) {
       console.error('Error uploading file:', error);
-      toast.error('Erro ao fazer upload da planta baixa');
+      
+      // More detailed error handling
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMsg = (error as any).message;
+        if (errorMsg.includes('row-level security policy')) {
+          toast.error('Erro de permissão: Você não tem autorização para fazer upload de plantas baixas.');
+        } else if (errorMsg.includes('violates not-null')) {
+          toast.error('Erro de dados: Alguns campos obrigatórios estão faltando.');
+        } else {
+          toast.error(`Erro ao fazer upload: ${errorMsg}`);
+        }
+      } else {
+        toast.error('Erro ao fazer upload da planta baixa');
+      }
     } finally {
       setIsLoading(false);
     }
