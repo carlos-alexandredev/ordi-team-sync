@@ -49,26 +49,55 @@ export const EquipmentPlantsTab: React.FC<EquipmentPlantsTabProps> = ({
   const [equipmentsOnPlan, setEquipmentsOnPlan] = useState<EquipmentPosition[]>([]);
   const [canvasZoom, setCanvasZoom] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load floor plans
+  // Get user's company ID if not available from equipment
   useEffect(() => {
-    if (equipment?.company_id) {
-      loadFloorPlans();
-    }
+    const getUserCompany = async () => {
+      if (equipment?.company_id) {
+        setUserCompanyId(equipment.company_id);
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        setUserCompanyId(profile?.company_id || null);
+      } catch (error) {
+        console.error('Error getting user company:', error);
+      }
+    };
+
+    getUserCompany();
   }, [equipment?.company_id]);
 
+  // Load floor plans when company ID is available
+  useEffect(() => {
+    if (userCompanyId) {
+      loadFloorPlans();
+    }
+  }, [userCompanyId]);
+
   const loadFloorPlans = async () => {
-    if (!equipment?.company_id) return;
+    if (!userCompanyId) return;
 
     try {
       const { data, error } = await supabase
         .from('floorplans')
         .select('*')
-        .eq('company_id', equipment.company_id)
+        .eq('company_id', userCompanyId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -128,7 +157,12 @@ export const EquipmentPlantsTab: React.FC<EquipmentPlantsTabProps> = ({
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !equipment?.company_id) return;
+    if (!file) return;
+
+    if (!userCompanyId) {
+      toast.error('Erro: ID da empresa não encontrado. Verifique se você está logado corretamente.');
+      return;
+    }
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
@@ -150,101 +184,146 @@ export const EquipmentPlantsTab: React.FC<EquipmentPlantsTabProps> = ({
       let imageHeight: number;
 
       if (file.type === 'application/pdf') {
-        // Convert PDF to image
-        const imageDataUrl = await convertPdfToImage(file);
-        const imageBlob = await fetch(imageDataUrl).then(r => r.blob());
-        
-        const imageFileName = `floorplan-preview-${Date.now()}.png`;
-        const { error: imageUploadError } = await supabase.storage
-          .from('floorplans')
-          .upload(imageFileName, imageBlob);
+        console.log('Processing PDF file...');
+        // Convert PDF to image for preview
+        try {
+          const imageDataUrl = await convertPdfToImage(file);
+          const imageBlob = await fetch(imageDataUrl).then(r => r.blob());
+          
+          const imageFileName = `floorplan-preview-${Date.now()}.png`;
+          const { error: imageUploadError } = await supabase.storage
+            .from('floorplans')
+            .upload(imageFileName, imageBlob);
 
-        if (imageUploadError) throw imageUploadError;
+          if (imageUploadError) throw new Error(`Erro no upload da imagem: ${imageUploadError.message}`);
 
-        const { data: { publicUrl: imagePublicUrl } } = supabase.storage
-          .from('floorplans')
-          .getPublicUrl(imageFileName);
+          const { data: { publicUrl: imagePublicUrl } } = supabase.storage
+            .from('floorplans')
+            .getPublicUrl(imageFileName);
 
-        imageUrl = imagePublicUrl;
-        fileType = 'pdf';
+          // Also upload original PDF
+          const originalFileName = `floorplan-original-${Date.now()}.pdf`;
+          const { error: pdfUploadError } = await supabase.storage
+            .from('floorplans')
+            .upload(originalFileName, file);
 
-        // Get image dimensions
-        const img = new Image();
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = imageDataUrl;
-        });
-        imageWidth = img.width;
-        imageHeight = img.height;
+          if (pdfUploadError) throw new Error(`Erro no upload do PDF: ${pdfUploadError.message}`);
+
+          const { data: { publicUrl: pdfPublicUrl } } = supabase.storage
+            .from('floorplans')
+            .getPublicUrl(originalFileName);
+
+          imageUrl = imagePublicUrl;
+          fileType = 'pdf';
+
+          // Get image dimensions from the converted image
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = imageDataUrl;
+          });
+          imageWidth = img.width;
+          imageHeight = img.height;
+          
+          console.log('PDF processed successfully:', { imageUrl, imageWidth, imageHeight });
+        } catch (pdfError) {
+          throw new Error(`Erro ao processar PDF: ${pdfError}`);
+        }
       } else {
+        console.log('Processing image file...');
         // Handle image upload
-        const fileName = `floorplan-${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('floorplans')
-          .upload(fileName, file);
+        try {
+          const fileName = `floorplan-${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('floorplans')
+            .upload(fileName, file);
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw new Error(`Erro no upload da imagem: ${uploadError.message}`);
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('floorplans')
-          .getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabase.storage
+            .from('floorplans')
+            .getPublicUrl(fileName);
 
-        imageUrl = publicUrl;
-        fileType = 'image';
+          imageUrl = publicUrl;
+          fileType = 'image';
 
-        // Get image dimensions
-        const img = new Image();
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = publicUrl;
-        });
-        imageWidth = img.width;
-        imageHeight = img.height;
+          // Get image dimensions
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = publicUrl;
+          });
+          imageWidth = img.width;
+          imageHeight = img.height;
+          
+          console.log('Image processed successfully:', { imageUrl, imageWidth, imageHeight });
+        } catch (imageError) {
+          throw new Error(`Erro ao processar imagem: ${imageError}`);
+        }
       }
 
-      // Insert floor plan record
-      console.log('Inserting floor plan with company_id:', equipment.company_id);
-      const { error: insertError } = await supabase
+      // Insert floor plan record into database
+      console.log('Inserting floor plan with company_id:', userCompanyId);
+      const floorPlanData = {
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        description: `Planta baixa carregada em ${new Date().toLocaleDateString('pt-BR')}`,
+        image_url: imageUrl,
+        image_width: imageWidth,
+        image_height: imageHeight,
+        company_id: userCompanyId,
+        file_type: fileType,
+        original_file_url: file.type === 'application/pdf' ? imageUrl : null
+      };
+
+      console.log('Floor plan data to insert:', floorPlanData);
+
+      const { data: insertData, error: insertError } = await supabase
         .from('floorplans')
-        .insert({
-          name: file.name.replace(/\.[^/.]+$/, ''),
-          description: `Planta baixa carregada em ${new Date().toLocaleDateString('pt-BR')}`,
-          image_url: imageUrl,
-          image_width: imageWidth,
-          image_height: imageHeight,
-          company_id: equipment.company_id,
-          file_type: fileType,
-          original_file_url: file.type === 'application/pdf' ? imageUrl : null
-        });
+        .insert(floorPlanData)
+        .select();
 
       if (insertError) {
-        console.error('Insert error details:', insertError);
-        throw insertError;
+        console.error('Database insert error:', insertError);
+        throw new Error(`Erro ao salvar no banco de dados: ${insertError.message}`);
       }
+
+      console.log('Floor plan inserted successfully:', insertData);
 
       await loadFloorPlans();
       setUploadMode(false);
       toast.success('Planta baixa carregada com sucesso!');
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('Complete error uploading file:', error);
       
-      // More detailed error handling
+      // Enhanced error handling with specific messages
       if (error && typeof error === 'object' && 'message' in error) {
         const errorMsg = (error as any).message;
-        if (errorMsg.includes('row-level security policy')) {
-          toast.error('Erro de permissão: Você não tem autorização para fazer upload de plantas baixas.');
-        } else if (errorMsg.includes('violates not-null')) {
-          toast.error('Erro de dados: Alguns campos obrigatórios estão faltando.');
+        console.error('Error message:', errorMsg);
+        
+        if (errorMsg.includes('row-level security') || errorMsg.includes('permission')) {
+          toast.error('Erro de permissão: Você não tem autorização para fazer upload de plantas baixas. Verifique se está logado com o usuário correto.');
+        } else if (errorMsg.includes('not-null') || errorMsg.includes('null value')) {
+          toast.error('Erro de dados: Alguns campos obrigatórios estão faltando. Tente novamente.');
+        } else if (errorMsg.includes('upload') || errorMsg.includes('storage')) {
+          toast.error('Erro no upload do arquivo. Verifique sua conexão e tente novamente.');
+        } else if (errorMsg.includes('database') || errorMsg.includes('insert')) {
+          toast.error('Erro ao salvar no banco de dados. Tente novamente.');
+        } else if (errorMsg.includes('PDF') || errorMsg.includes('processar')) {
+          toast.error('Erro ao processar o arquivo. Verifique se o arquivo não está corrompido.');
         } else {
-          toast.error(`Erro ao fazer upload: ${errorMsg}`);
+          toast.error(`Erro detalhado: ${errorMsg}`);
         }
       } else {
-        toast.error('Erro ao fazer upload da planta baixa');
+        toast.error('Erro desconhecido ao fazer upload da planta baixa. Tente novamente.');
       }
     } finally {
       setIsLoading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
