@@ -147,37 +147,44 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
     return new Promise(async (resolve, reject) => {
       console.log('Attempting to load image:', imageUrl);
       
-      // First try: Direct public URL with HEAD request validation
-      try {
-        const headResponse = await fetch(imageUrl, { method: 'HEAD' });
-        if (headResponse.ok) {
-          console.log('Public URL accessible via HEAD request');
-          
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          
-          const timeout = setTimeout(() => {
-            reject(new Error('Image loading timeout'));
-          }, 10000);
-          
-          img.onload = () => {
-            clearTimeout(timeout);
-            console.log('Image loaded successfully via public URL');
-            resolve(img);
-          };
-          
-          img.onerror = (error) => {
-            clearTimeout(timeout);
-            console.warn('Failed to load via public URL despite HEAD success:', error);
-            // Fall back to signed URL
-            loadViaSignedUrl();
-          };
-          
-          img.src = imageUrl;
-          return;
+      // Check if we're on mobile to skip HEAD request (can be problematic)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (!isMobile) {
+        // First try: Direct public URL with HEAD request validation (desktop only)
+        try {
+          const headResponse = await fetch(imageUrl, { method: 'HEAD' });
+          if (headResponse.ok) {
+            console.log('Public URL accessible via HEAD request');
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            const timeout = setTimeout(() => {
+              reject(new Error('Image loading timeout'));
+            }, 10000);
+            
+            img.onload = () => {
+              clearTimeout(timeout);
+              console.log('Image loaded successfully via public URL');
+              resolve(img);
+            };
+            
+            img.onerror = (error) => {
+              clearTimeout(timeout);
+              console.warn('Failed to load via public URL despite HEAD success:', error);
+              // Fall back to signed URL
+              loadViaSignedUrl();
+            };
+            
+            img.src = imageUrl;
+            return;
+          }
+        } catch (error) {
+          console.warn('HEAD request failed, trying signed URL:', error);
         }
-      } catch (error) {
-        console.warn('HEAD request failed, trying signed URL:', error);
+      } else {
+        console.log('Mobile device detected, skipping HEAD request');
       }
       
       // Fallback: Try signed URL
@@ -546,16 +553,22 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
 
       console.log('Image dimensions calculated:', width, 'x', height);
 
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'png';
       const fileName = `${equipment.company_id}/${Date.now()}.${fileExt}`;
 
+      // Force contentType if not provided (common on mobile)
+      const contentType = file.type || `image/${fileExt}`;
+      
       const { error: uploadError } = await supabase.storage
         .from('floorplans')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          contentType,
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Error uploading file:', uploadError);
-        toast.error('Erro ao fazer upload do arquivo');
+        toast.error(`Erro no upload: ${uploadError.message || 'Falha no upload do arquivo'}`);
         return;
       }
 
@@ -573,11 +586,12 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
           image_url: publicUrl,
           image_width: width,
           image_height: height,
+          file_type: contentType
         });
 
       if (dbError) {
         console.error('Error saving to database:', dbError);
-        toast.error('Erro ao salvar no banco de dados');
+        toast.error(`Erro no banco: ${dbError.message || 'Falha ao salvar no banco de dados'}`);
         return;
       }
 
@@ -586,7 +600,8 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
       setUploadMode(false);
     } catch (error) {
       console.error('Error in file upload:', error);
-      toast.error('Erro ao processar arquivo');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao processar: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -769,7 +784,6 @@ export const EquipmentFloorPlanTab: React.FC<EquipmentFloorPlanTabProps> = ({
                     </div>
                   </div>
                   <div 
-                    ref={containerRef}
                     className="overflow-hidden bg-gray-100 relative"
                     style={{ height: '700px' }}
                   >
