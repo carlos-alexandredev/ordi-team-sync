@@ -285,26 +285,31 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 max-sm:grid-cols-1 max-sm:overflow-x-auto max-sm:whitespace-nowrap max-sm:flex">
-            <TabsTrigger value="general" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Geral
+          <TabsList className="grid w-full grid-cols-5 max-sm:flex max-sm:overflow-x-auto max-sm:scrollbar-hide max-sm:gap-2">
+            <TabsTrigger value="general" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
+              <Building2 className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
+              <span className="max-sm:hidden">Geral</span>
+              <span className="sm:hidden">Geral</span>
             </TabsTrigger>
-            <TabsTrigger value="location" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Localização
+            <TabsTrigger value="location" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
+              <MapPin className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
+              <span className="max-sm:hidden">Localização</span>
+              <span className="sm:hidden">Local</span>
             </TabsTrigger>
-            <TabsTrigger value="floorplan" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Planta
+            <TabsTrigger value="floorplan" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
+              <Building2 className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
+              <span className="max-sm:hidden">Planta</span>
+              <span className="sm:hidden">Planta</span>
             </TabsTrigger>
-            <TabsTrigger value="plants" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Plantas
+            <TabsTrigger value="plants" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
+              <Building2 className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
+              <span className="max-sm:hidden">Plantas</span>
+              <span className="sm:hidden">Plant</span>
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <Satellite className="h-4 w-4" />
-              Mapa
+            <TabsTrigger value="map" className="flex items-center gap-2 max-sm:min-w-0 max-sm:text-xs max-sm:px-3">
+              <Satellite className="h-4 w-4 max-sm:h-3 max-sm:w-3" />
+              <span className="max-sm:hidden">Mapa</span>
+              <span className="sm:hidden">Mapa</span>
             </TabsTrigger>
           </TabsList>
 

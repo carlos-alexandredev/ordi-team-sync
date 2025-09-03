@@ -110,26 +110,102 @@ All colors MUST be HSL.
   }
 }
 
-/* Mobile utilities and safe areas */
+/* Mobile-first responsive utilities */
+.container-mobile {
+  @apply mx-auto px-4 max-w-7xl;
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Enhanced mobile utilities */
 @media (max-width: 640px) {
   .container { @apply px-4; }
   .dialog-content { @apply p-4; }
 }
 
-/* Safe area handling for mobile */
+/* Safe area handling for mobile with fallback */
 @supports (padding: max(0px)) {
   .safe-area-top { padding-top: max(1rem, env(safe-area-inset-top)); }
   .safe-area-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
 }
 
-/* Responsive images */
-img { @apply max-w-full h-auto; }
+/* Prevent zoom on input focus (mobile) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  [role="button"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Responsive images and media */
+img, iframe, embed, object, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 
 /* Touch optimization */
-.touch-action-none { touch-action: none; }
-.touch-action-pan { touch-action: pan-x pan-y; }
+.touch-action-none { 
+  touch-action: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
-/* Prevent zoom on inputs in iOS */
+.touch-action-pan { 
+  touch-action: pan-x pan-y;
+}
+
+/* Mobile viewport optimization */
 @media screen and (max-width: 640px) {
-  input, select, textarea { font-size: 16px; }
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
