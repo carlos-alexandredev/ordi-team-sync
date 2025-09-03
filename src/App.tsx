@@ -53,6 +53,7 @@ import UsersOnline from "./pages/UsersOnline";
 import AIAnalyticsPage from "./pages/AIAnalytics";
 import NewCall from "./pages/NewCall";
 import NewOrder from "./pages/NewOrder";
+import TestUpload from "./pages/TestUpload";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -124,6 +125,7 @@ function AppContent() {
         {/* Páginas avançadas alternativas para teste */}
         <Route path="/clients-advanced" element={<ClientsAdvanced />} />
         <Route path="/suppliers-advanced" element={<SuppliersAdvanced />} />
+        <Route path="/test-upload" element={<TestUpload />} />
         
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
