@@ -1,12 +1,13 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useActivityLogger } from "@/hooks/useActivityLogger";
-import { Upload, FileImage, FileText, X } from "lucide-react";
+import { Upload, FileImage, FileText, X, CloudUpload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface EquipmentFileUploadProps {
   equipmentId?: string;
@@ -30,7 +31,9 @@ export const EquipmentFileUpload: React.FC<EquipmentFileUploadProps> = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const { logActivity, logError } = useActivityLogger();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
     return new Promise((resolve) => {
@@ -74,19 +77,42 @@ export const EquipmentFileUpload: React.FC<EquipmentFileUploadProps> = ({
     return null;
   };
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDrag = useCallback((e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(async (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (uploading) return;
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    // Handle multiple files
+    for (const file of files) {
+      const validationError = validateFile(file);
+      if (validationError) {
+        toast.error(`${file.name}: ${validationError}`);
+        continue;
+      }
+
+      await processFileUpload(file);
+    }
+  }, [uploading]);
+
+  const processFileUpload = async (file: File) => {
     try {
       setUploading(true);
       setUploadProgress(0);
-      
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      const validationError = validateFile(file);
-      if (validationError) {
-        toast.error(validationError);
-        return;
-      }
 
       console.log('Iniciando upload:', file.name, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
 
@@ -113,7 +139,7 @@ export const EquipmentFileUpload: React.FC<EquipmentFileUploadProps> = ({
 
       if (error) {
         console.error('Erro no upload:', error);
-        toast.error(`Erro no upload: ${error.message}`);
+        toast.error(`Erro no upload de ${file.name}: ${error.message}`);
         await logError('file_upload', error, {
           fileName: file.name,
           fileSize: file.size,
@@ -154,7 +180,7 @@ export const EquipmentFileUpload: React.FC<EquipmentFileUploadProps> = ({
         }
       });
 
-      toast.success(`${file.type.startsWith('image/') ? 'Imagem' : 'Arquivo'} enviado com sucesso!`);
+      toast.success(`${file.type.startsWith('image/') ? 'Imagem' : 'Arquivo'} ${file.name} enviado com sucesso!`);
       
       if (onFileUploaded) {
         onFileUploaded(publicUrl, file.name, file.type);
@@ -162,18 +188,36 @@ export const EquipmentFileUpload: React.FC<EquipmentFileUploadProps> = ({
 
     } catch (error) {
       console.error('Erro geral:', error);
-      toast.error('Erro inesperado no upload');
+      toast.error(`Erro inesperado no upload de ${file.name}`);
       await logError('file_upload_general', error, {
         equipmentId,
-        companyId
+        companyId,
+        fileName: file.name
       });
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      // Reset input
-      if (event.target) {
-        event.target.value = '';
+    }
+  };
+
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    // Handle multiple files
+    for (const file of files) {
+      const validationError = validateFile(file);
+      if (validationError) {
+        toast.error(`${file.name}: ${validationError}`);
+        continue;
       }
+
+      await processFileUpload(file);
+    }
+
+    // Reset input
+    if (event.target) {
+      event.target.value = '';
     }
   }, [equipmentId, companyId, onFileUploaded, logActivity, logError]);
 
@@ -191,80 +235,119 @@ export const EquipmentFileUpload: React.FC<EquipmentFileUploadProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center space-y-4">
-        <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-        <div>
-          <h3 className="text-lg font-medium mb-2">Upload de Arquivos</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Selecione imagens (JPEG, PNG, GIF, WebP) ou arquivos PDF - Máximo 10MB
-          </p>
+      <div 
+        className={cn(
+          "border-2 border-dashed rounded-lg p-8 text-center space-y-4 transition-colors cursor-pointer",
+          dragActive 
+            ? "border-primary bg-primary/5 border-solid" 
+            : "border-muted-foreground/25 hover:border-muted-foreground/40",
+          uploading && "pointer-events-none opacity-60"
+        )}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+      >
+        <div className="flex flex-col items-center">
+          {dragActive ? (
+            <CloudUpload className="h-16 w-16 text-primary animate-bounce" />
+          ) : (
+            <Upload className="h-12 w-12 text-muted-foreground" />
+          )}
+          
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">
+              {dragActive ? "Solte os arquivos aqui" : "Upload de Arquivos"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {dragActive 
+                ? "Solte para fazer upload" 
+                : "Arraste arquivos aqui ou clique para selecionar"
+              }
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Imagens (JPEG, PNG, GIF, WebP) ou PDFs - Máximo 10MB cada
+            </p>
+          </div>
         </div>
         
-        <div className="space-y-3">
-          <Input
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
-            onChange={handleFileUpload}
-            disabled={uploading}
-            className="cursor-pointer"
-          />
-          
-          {uploading && (
-            <div className="space-y-2">
-              <Progress value={uploadProgress} className="w-full" />
-              <p className="text-sm text-muted-foreground">
-                Enviando... {uploadProgress}%
-              </p>
-            </div>
-          )}
-        </div>
+        <Input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+          onChange={handleFileUpload}
+          disabled={uploading}
+          className="hidden"
+          multiple
+        />
+        
+        {uploading && (
+          <div className="space-y-2 pt-4">
+            <Progress value={uploadProgress} className="w-full" />
+            <p className="text-sm text-muted-foreground">
+              Enviando... {uploadProgress}%
+            </p>
+          </div>
+        )}
       </div>
 
       {uploadedFiles.length > 0 && (
         <div className="space-y-3">
-          <h4 className="font-medium">Arquivos Enviados</h4>
-          <div className="grid gap-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium">Arquivos Enviados ({uploadedFiles.length})</h4>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setUploadedFiles([])}
+            >
+              Limpar lista
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             {uploadedFiles.map((file, index) => (
-              <Card key={index}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      {file.type.startsWith('image/') ? (
-                        <FileImage className="h-8 w-8 text-blue-500" />
-                      ) : (
-                        <FileText className="h-8 w-8 text-red-500" />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{file.name}</p>
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <p>Tamanho: {formatFileSize(file.size)}</p>
-                        {file.dimensions && (
-                          <p>Dimensões: {file.dimensions.width} × {file.dimensions.height}px</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                      className="flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
+              <Card key={index} className="overflow-hidden">
+                <CardContent className="p-0">
                   {file.type.startsWith('image/') && (
-                    <div className="mt-3">
+                    <div className="aspect-video relative overflow-hidden">
                       <img 
                         src={file.url} 
                         alt={file.name}
-                        className="max-w-full h-auto rounded border max-h-32 object-cover"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   )}
+                  
+                  <div className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        {file.type.startsWith('image/') ? (
+                          <FileImage className="h-6 w-6 text-blue-500" />
+                        ) : (
+                          <FileText className="h-6 w-6 text-red-500" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{file.name}</p>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <p>{formatFileSize(file.size)}</p>
+                          {file.dimensions && (
+                            <p>{file.dimensions.width} × {file.dimensions.height}px</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="flex-shrink-0 h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
