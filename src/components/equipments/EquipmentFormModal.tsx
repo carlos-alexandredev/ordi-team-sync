@@ -37,7 +37,8 @@ interface Equipment {
   company_id: string;
 }
 
-import { SimpleImageUpload } from "@/components/simple/SimpleImageUpload";
+import { EquipmentFileUpload } from "@/components/equipments/EquipmentFileUpload";
+import { EquipmentFilesList } from "@/components/equipments/EquipmentFilesList";
 
 interface EquipmentFormModalProps {
   equipment?: Equipment | null;
@@ -57,13 +58,15 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
     latitude: null as number | null,
     longitude: null as number | null,
     status: 'ativo',
-    observations: ''
+    observations: '',
+    company_id: ''
   });
   const [installationDate, setInstallationDate] = useState<Date | undefined>();
   const [maintenanceDate, setMaintenanceDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
   const [userProfile, setUserProfile] = useState<{id: string, company_id: string | null, role: string} | null>(null);
+  const [filesRefreshTrigger, setFilesRefreshTrigger] = useState(0);
   const { toast } = useToast();
   const { logActivity, logError } = useActivityLogger();
 
@@ -92,6 +95,12 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
       if (error) throw error;
       
       setUserProfile(data);
+      
+      // Update formData with company_id when userProfile loads
+      setFormData(prev => ({
+        ...prev,
+        company_id: data.company_id || ''
+      }));
     } catch (error: any) {
       console.error('Erro ao carregar perfil do usuário:', error);
       toast({
@@ -115,7 +124,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         latitude: equipment.latitude,
         longitude: equipment.longitude,
         status: equipment.status,
-        observations: equipment.observations || ''
+        observations: equipment.observations || '',
+        company_id: equipment.company_id
       };
       console.log('Definindo formData:', newFormData);
       setFormData(newFormData);
@@ -142,7 +152,8 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
         latitude: null,
         longitude: null,
         status: 'ativo',
-        observations: ''
+        observations: '',
+        company_id: ''
       });
       setInstallationDate(undefined);
       setMaintenanceDate(undefined);
@@ -432,14 +443,34 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
               </div>
             </TabsContent>
 
-            <TabsContent value="images">
-              <SimpleImageUpload />
+            <TabsContent value="images" className="space-y-6">
+              <EquipmentFileUpload 
+                equipmentId={equipment?.id}
+                companyId={formData.company_id}
+                onFileUploaded={() => setFilesRefreshTrigger(prev => prev + 1)}
+              />
+              
+              <EquipmentFilesList 
+                equipmentId={equipment?.id}
+                companyId={formData.company_id}
+                refreshTrigger={filesRefreshTrigger}
+              />
             </TabsContent>
 
             <TabsContent value="location">
               <EquipmentLocationTab
-                formData={formData}
-                setFormData={setFormData}
+                formData={{
+                  name: formData.name,
+                  model: formData.model,
+                  serial_number: formData.serial_number,
+                  location: formData.location,
+                  location_detail: formData.location_detail,
+                  latitude: formData.latitude,
+                  longitude: formData.longitude,
+                  status: formData.status,
+                  observations: formData.observations
+                }}
+                setFormData={(data) => setFormData(prev => ({ ...prev, ...data }))}
                 equipment={equipment}
               />
             </TabsContent>
@@ -458,8 +489,18 @@ export const EquipmentFormModal: React.FC<EquipmentFormModalProps> = ({
 
             <TabsContent value="map">
               <EquipmentMapTab
-                formData={formData}
-                setFormData={setFormData}
+                formData={{
+                  name: formData.name,
+                  model: formData.model,
+                  serial_number: formData.serial_number,
+                  location: formData.location,
+                  location_detail: formData.location_detail,
+                  latitude: formData.latitude,
+                  longitude: formData.longitude,
+                  status: formData.status,
+                  observations: formData.observations
+                }}
+                setFormData={(data) => setFormData(prev => ({ ...prev, ...data }))}
                 equipment={equipment}
                 active={activeTab === "map"}
               />
